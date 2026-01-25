@@ -3,37 +3,16 @@ const chat = document.getElementById("chat");
 const input = document.getElementById("userInput");
 const btn = document.getElementById("sendBtn");
 
-// ================= ESTADO (MEMÓRIA SIMPLES) =================
-let lastTopic = null;
-let userMood = "normal";
-
 // ================= UI =================
 function addMessage(text, sender = "bot") {
     const msg = document.createElement("div");
-    msg.className = "message";
-    msg.innerHTML =
-        sender === "user"
-            ? `<div class="user">${text}</div>`
-            : `<div class="bot">${text}</div>`;
+    msg.className = sender;
+    msg.innerHTML = text;
     chat.appendChild(msg);
     chat.scrollTop = chat.scrollHeight;
 }
 
-function showLoading() {
-    const load = document.createElement("div");
-    load.id = "loadingMsg";
-    load.className = "message";
-    load.innerHTML = `<div class="bot">🤔 Pensando...</div>`;
-    chat.appendChild(load);
-    chat.scrollTop = chat.scrollHeight;
-}
-
-function removeLoading() {
-    const load = document.getElementById("loadingMsg");
-    if (load) load.remove();
-}
-
-// ================= UTIL =================
+// ================= NORMALIZA =================
 function normalize(text) {
     return text
         .toLowerCase()
@@ -44,102 +23,52 @@ function normalize(text) {
         .replace(/ú/g, "u");
 }
 
-// ================= MATEMÁTICA =================
-const numbers = {
-    zero: 0, um: 1, dois: 2, tres: 3, quatro: 4, cinco: 5,
-    seis: 6, sete: 7, oito: 8, nove: 9, dez: 10,
-    onze: 11, doze: 12, treze: 13, quatorze: 14, quinze: 15,
-    dezesseis: 16, dezessete: 17, dezoito: 18, dezenove: 19,
-    vinte: 20, trinta: 30, quarenta: 40, cinquenta: 50,
-    sessenta: 60, setenta: 70, oitenta: 80, noventa: 90,
-    cem: 100
+// ================= RESPOSTAS FIXAS (DICIONÁRIO) =================
+const dictionary = {
+    "javascript": "JavaScript é uma linguagem de programação usada para criar sites interativos.",
+    "html": "HTML é a linguagem usada para estruturar páginas da web.",
+    "css": "CSS serve para estilizar páginas HTML.",
+    "internet": "A internet é uma rede mundial que conecta milhões de dispositivos."
 };
 
-function convertMathText(text) {
-    let t = normalize(text);
-
-    for (let word in numbers) {
-        t = t.replace(new RegExp(`\\b${word}\\b`, "g"), numbers[word]);
+function checkDictionary(text) {
+    const t = normalize(text);
+    for (let key in dictionary) {
+        if (t.includes(key)) return dictionary[key];
     }
-
-    t = t
-        .replace(/mais/g, "+")
-        .replace(/menos/g, "-")
-        .replace(/vezes|multiplicado por|x/g, "*")
-        .replace(/dividido por/g, "/")
-        .replace(/quanto e|quanto da|calcule|resultado de/g, "")
-        .replace(/[^0-9+\-*/(). ]/g, "");
-
-    return t.trim();
+    return null;
 }
 
+// ================= MATEMÁTICA =================
 function tryMath(text) {
     try {
-        const expr = convertMathText(text);
+        const cleaned = normalize(text)
+            .replace(/quanto e|calcule|resultado de/g, "")
+            .replace(/mais/g, "+")
+            .replace(/menos/g, "-")
+            .replace(/vezes|x/g, "*")
+            .replace(/dividido por/g, "/")
+            .replace(/[^0-9+\-*/().]/g, "");
 
-        if (!expr) return null;
-
-        if (normalize(text).includes("raiz")) {
-            const num = parseFloat(expr);
-            if (!isNaN(num)) return `🧮 Resultado: <b>${Math.sqrt(num)}</b>`;
-        }
-
-        if (/^[0-9+\-*/(). ]+$/.test(expr)) {
-            const result = eval(expr);
-            if (!isNaN(result)) return `🧮 Resultado: <b>${result}</b>`;
+        if (cleaned && /^[0-9+\-*/().]+$/.test(cleaned)) {
+            const result = eval(cleaned);
+            if (!isNaN(result)) {
+                return `🧮 O resultado é <b>${result}</b>.`;
+            }
         }
     } catch {}
     return null;
 }
 
-// ================= CONVERSA (AMIGO) =================
-function friendlyTalk(text) {
+// ================= CONVERSA =================
+function talkLikeFriend(text) {
     const t = normalize(text);
 
-    if (t === "oi" || t === "ola") {
-        lastTopic = "greeting";
-        return "Oi 😄 Que bom te ver aqui! O que vamos conversar hoje?";
-    }
-
-    if (t.includes("tudo bem")) {
-        return "Tudo bem sim 😊 E você, como está?";
-    }
-
-    if (t.includes("estou triste") || t.includes("to triste")) {
-        userMood = "triste";
-        return "Poxa 😔 sinto muito… quer me contar o que aconteceu? Estou aqui pra ouvir.";
-    }
-
-    if (t.includes("estou feliz") || t.includes("to feliz")) {
-        userMood = "feliz";
-        return "Que notícia boa 😄 Fico feliz por você!";
-    }
-
-    if (t.includes("seu nome")) {
-        return "Meu nome é <b>InfoBot</b> 🤖 mas pode me chamar como quiser 😄";
-    }
-
-    if (t.includes("quem te criou")) {
-        return "Você 😎 com uma ajudinha minha. Projeto top demais!";
-    }
-
-    if (t.includes("amizade")) {
-        lastTopic = "amizade";
-        return "Amizade é estar junto, apoiar e respeitar. Igual a gente aqui 🤝";
-    }
-
-    if (t.includes("amor")) {
-        lastTopic = "amor";
-        return "❤️ Amor é cuidado, carinho e querer o bem do outro.";
-    }
-
-    if (t.includes("me ajuda")) {
-        return "Claro! 😄 Me diz com o que você precisa de ajuda.";
-    }
-
-    if (lastTopic === "amor") {
-        return "Quer falar mais sobre isso ou prefere mudar de assunto?";
-    }
+    if (t === "oi" || t === "ola") return "Oi 😄 tudo bem?";
+    if (t.includes("tudo bem")) return "Tô bem sim 😊 e você?";
+    if (t.includes("seu nome")) return "Eu sou o InfoBot 🤖";
+    if (t.includes("me ajuda")) return "Claro! No que posso ajudar?";
+    if (t.includes("obrigado")) return "De nada 😄";
 
     return null;
 }
@@ -147,7 +76,7 @@ function friendlyTalk(text) {
 // ================= INTERNET =================
 async function internetSearch(query) {
     const url = `https://api.allorigins.win/get?url=${encodeURIComponent(
-        "https://api.duckduckgo.com/?q=" + query + "&format=json&no_html=1&skip_disambig=1"
+        "https://api.duckduckgo.com/?q=" + query + "&format=json&no_html=1"
     )}`;
 
     const res = await fetch(url);
@@ -155,40 +84,45 @@ async function internetSearch(query) {
     const json = JSON.parse(data.contents);
 
     if (json.AbstractText) return json.AbstractText;
-    if (json.Answer) return json.Answer;
     if (json.RelatedTopics && json.RelatedTopics.length > 0)
         return json.RelatedTopics[0].Text;
 
-    return "🤔 Não achei uma resposta clara, mas posso tentar explicar de outra forma.";
+    return null;
 }
 
-// ================= MOTOR PRINCIPAL =================
+// ================= MOTOR =================
 async function answer(question) {
     addMessage(question, "user");
 
-    // 1️⃣ Matemática
+    // Matemática
     const math = tryMath(question);
     if (math) {
         addMessage(math);
         return;
     }
 
-    // 2️⃣ Conversa amiga
-    const talk = friendlyTalk(question);
+    // Conversa
+    const talk = talkLikeFriend(question);
     if (talk) {
         addMessage(talk);
         return;
     }
 
-    // 3️⃣ Internet
-    showLoading();
-    try {
-        const result = await internetSearch(question);
-        removeLoading();
-        addMessage(result);
-    } catch {
-        removeLoading();
-        addMessage("❌ Não consegui acessar a internet agora.");
+    // Dicionário
+    const dict = checkDictionary(question);
+    if (dict) {
+        addMessage(dict);
+        return;
+    }
+
+    // Internet
+    addMessage("🤔 Pesquisando...");
+    const info = await internetSearch(question);
+
+    if (info) {
+        addMessage("📌 De forma simples:\n" + info);
+    } else {
+        addMessage("Não achei isso agora 😕 tenta perguntar de outro jeito.");
     }
 }
 
@@ -205,4 +139,5 @@ input.addEventListener("keydown", e => {
 });
 
 // ================= INÍCIO =================
-addMessage("👋 Oi! Eu sou o <b>InfoBot</b>. oque procura?");
+addMessage("👋 Oi! Eu sou o InfoBot. Pode falar comigo 😄");
+
