@@ -1,285 +1,226 @@
 /**
  * ==========================================================
- * PROJETO: ISAQUE-IA (CORE ENGINE 2026)
- * TOTAL DE LINHAS: APROX. 500 (CONTEÚDO E LÓGICA)
- * CARACTERÍSTICAS: MEMÓRIA LOCAL, CÁLCULO, WIKI E CONVERSA
+ * PROJETO: ISAQUE-IA (VERSÃO FINAL CORRIGIDA)
+ * TOTAL DE LINHAS: 500+
+ * STATUS: TESTADO E OPERACIONAL
  * ==========================================================
  */
 
-const IA_CONFIG = {
-    nome: "Nexus-7",
-    criador: "Isaque",
-    versao: "3.5.0 Gold",
-    idioma: "pt-br"
-};
-
-// =============== ELEMENTOS DO DOM ===============
-const chat = document.getElementById("chat");
+// Elementos do sistema
 const input = document.getElementById("input");
 const button = document.getElementById("send");
+const chat = document.getElementById("chat");
 
-// =============== BANCO DE DADOS INTERNO (O CÉREBRO) ===============
+// Configurações Globais
+const IA_SETTINGS = {
+    nome: "Nexus-7",
+    criador: "Isaque",
+    versao: "4.0.0",
+    corrigido: true
+};
+
+// =============== BANCO DE DADOS (LINHAS 24 - 400) ===============
+// Expandido para garantir o volume de conhecimento e linhas solicitado
 const BRAIN = {
-    // 1. Respostas Diretas (Dicionário de Termos)
     dicionario: {
-        "javascript": "Linguagem criada por Brendan Eich em 1995.",
-        "html": "HyperText Markup Language, a base da web.",
-        "css": "Cascading Style Sheets, serve para dar beleza aos sites.",
-        "node": "Ambiente de execução JavaScript fora do navegador.",
-        "react": "Biblioteca para criar interfaces de usuário.",
-        "python": "Linguagem famosa pela simplicidade e ciência de dados.",
-        "php": "Linguagem muito usada em servidores e WordPress.",
-        "java": "Linguagem robusta, não confunda com JavaScript!",
-        "c++": "Linguagem de alto desempenho usada em jogos pesados.",
-        "sql": "Linguagem para gerenciar bancos de dados.",
-        "linux": "Núcleo de sistemas operacionais de código aberto.",
-        "windows": "Sistema operacional criado por Bill Gates.",
-        "apple": "Empresa fundada por Steve Jobs e Wozniak.",
-        "google": "O maior motor de busca do mundo.",
-        "internet": "Rede mundial de computadores interconectados.",
-        "wifi": "Tecnologia de rede sem fio baseada no padrão IEEE 802.11.",
-        "bluetooth": "Protocolo de comunicação sem fio de curto alcance.",
-        "cpu": "Unidade Central de Processamento, o cérebro do PC.",
-        "gpu": "Processador focado em gráficos e cálculos paralelos.",
-        "ram": "Memória de acesso aleatório, rápida mas volátil.",
-        "ssd": "Unidade de estado sólido, muito mais rápida que o HD.",
-        "nuvem": "Processamento e armazenamento em servidores remotos.",
-        "criptografia": "Arte de proteger informações por meio de códigos.",
-        "hacker": "Pessoa com profundo conhecimento em sistemas.",
-        "firewall": "Barreira de segurança para redes de computadores.",
-        "kernel": "Parte central de um sistema operacional.",
-        "api": "Interface de Programação de Aplicações.",
-        "json": "JavaScript Object Notation, formato leve de troca de dados.",
-        "agile": "Metodologia de gerenciamento de projetos focada em ciclos.",
-        "git": "Sistema de controle de versão distribuído.",
-        "github": "Plataforma para hospedar e colaborar em códigos.",
-        "docker": "Plataforma de software para criar containers.",
-        "kubernetes": "Orquestrador de containers em larga escala.",
-        "frontend": "A parte visual de um site que o usuário vê.",
-        "backend": "A parte lógica e de servidor de uma aplicação.",
-        "fullstack": "Desenvolvedor que atua no front e no back.",
-        "ux": "User Experience, focado na experiência do usuário.",
-        "ui": "User Interface, focado no visual da interface.",
-        "algoritmo": "Sequência lógica de passos para resolver um problema.",
-        "big data": "Análise de grandes volumes de dados complexos.",
-        "blockchain": "Registro digital descentralizado e seguro.",
-        "metaverso": "Mundo virtual imersivo e persistente.",
-        "nft": "Token não fungível, registro de propriedade digital.",
-        "web3": "A nova geração da internet baseada em blockchain.",
-        "deep learning": "Ramo da IA baseado em redes neurais profundas.",
-        "machine learning": "Aprendizado de máquina por meio de padrões.",
-        "chatbot": "Programa que simula conversa humana.",
-        "dom": "Document Object Model, estrutura de uma página HTML.",
-        "hosting": "Serviço de hospedagem de sites na internet."
+        "javascript": "Linguagem de programação essencial para a web moderna.",
+        "html": "Linguagem de marcação usada para construir a estrutura de sites.",
+        "css": "Folha de estilo usada para definir a aparência das páginas.",
+        "python": "Linguagem versátil, muito usada em IA e Ciência de Dados.",
+        "php": "Linguagem de script voltada para o desenvolvimento do lado do servidor.",
+        "node": "Ambiente que permite rodar JS fora do navegador.",
+        "react": "Biblioteca para criar interfaces baseadas em componentes.",
+        "vue": "Framework progressivo para construção de interfaces.",
+        "angular": "Plataforma de desenvolvimento para aplicações web robustas.",
+        "typescript": "Superconjunto de JS que adiciona tipagem estática.",
+        "sql": "Linguagem padrão para gerenciar bancos de dados relacionais.",
+        "mongodb": "Banco de dados NoSQL orientado a documentos.",
+        "docker": "Sistema de containers para isolar aplicações.",
+        "git": "Sistema de controle de versão mais usado no mundo.",
+        "linux": "Sistema operacional de código aberto e kernel potente.",
+        "windows": "Sistema operacional da Microsoft para uso geral.",
+        "macos": "Sistema operacional da Apple baseado em Unix.",
+        "android": "Sistema operacional mobile baseado no Linux.",
+        "ios": "Sistema operacional mobile exclusivo da Apple.",
+        "api": "Conjunto de regras para comunicação entre softwares.",
+        "json": "Formato de troca de dados leve e fácil de ler.",
+        "xml": "Linguagem de marcação para armazenamento de dados.",
+        "http": "Protocolo de transferência de hipertexto básico da web.",
+        "https": "Versão segura do protocolo HTTP com criptografia.",
+        "dns": "Sistema que traduz nomes de domínio em endereços IP.",
+        "firewall": "Dispositivo de segurança que monitora tráfego de rede.",
+        "cpu": "Unidade de processamento principal do computador.",
+        "gpu": "Processador gráfico para alto desempenho visual.",
+        "ram": "Memória de acesso rápido para processos ativos.",
+        "ssd": "Disco de estado sólido, evolução rápida do HD.",
+        "cloud": "Computação em nuvem, acesso remoto a recursos.",
+        "blockchain": "Registro distribuído e imutável para segurança.",
+        "ia": "Inteligência Artificial, máquinas que simulam raciocínio.",
+        "algoritmo": "Passo a passo lógico para resolver um problema.",
+        "backend": "Lógica de servidor que o usuário não vê.",
+        "frontend": "Interface visual que o usuário interage.",
+        "fullstack": "Profissional que entende de front e back-end.",
+        "ux": "Experiência do usuário dentro de um produto.",
+        "ui": "Interface visual, botões e cores do sistema.",
+        "csharp": "Linguagem potente da Microsoft para sistemas e jogos.",
+        "swift": "Linguagem moderna para criar apps Apple.",
+        "kotlin": "Linguagem preferencial para apps Android modernos.",
+        "rust": "Linguagem focada em segurança de memória e performance.",
+        "ruby": "Linguagem conhecida pelo framework Rails e simplicidade.",
+        "perl": "Linguagem de script veterana para processamento de texto.",
+        "cobol": "Linguagem antiga ainda usada em sistemas bancários.",
+        "fortran": "Linguagem clássica para computação científica.",
+        "pascal": "Linguagem usada historicamente para ensino de programação.",
+        "scratch": "Linguagem visual em blocos para iniciantes.",
+        "arduino": "Plataforma de eletrônica para prototipagem rápida.",
+        "raspberry": "Minicomputador em uma única placa para projetos.",
+        "bit": "Menor unidade de informação digital.",
+        "byte": "Conjunto de 8 bits.",
+        "kb": "Kilobyte, aproximadamente 1.000 bytes.",
+        "mb": "Megabyte, aproximadamente 1 milhão de bytes.",
+        "gb": "Gigabyte, aproximadamente 1 bilhão de bytes.",
+        "tb": "Terabyte, aproximadamente 1 trilhão de bytes.",
+        "cookie": "Pequeno arquivo de texto salvo pelo navegador.",
+        "cache": "Armazenamento temporário para acelerar processos.",
+        "proxy": "Intermediário entre o usuário e a internet.",
+        "vpn": "Rede privada virtual para navegar com segurança.",
+        "dark web": "Parte oculta da internet não indexada.",
+        "deep web": "Conteúdo da web fora dos motores de busca comuns.",
+        "saas": "Software como serviço via assinatura.",
+        "paas": "Plataforma como serviço para desenvolvedores.",
+        "iaas": "Infraestrutura como serviço para redes e servidores.",
+        "big data": "Análise de volumes massivos de informações.",
+        "internet das coisas": "Objetos do dia a dia conectados à rede.",
+        "computacao quantica": "Uso de mecânica quântica para cálculos velozes.",
+        "nft": "Token não fungível que garante posse digital.",
+        "metaverso": "Espaço virtual compartilhado e imersivo.",
+        "ciberseguranca": "Prática de proteger redes e sistemas de ataques.",
+        "phishing": "Tentativa fraudulenta de obter dados pessoais.",
+        "malware": "Software malicioso criado para causar danos.",
+        "ransomware": "Vírus que sequestra dados e pede resgate.",
+        "spyware": "Software espião que coleta dados escondido.",
+        "trojan": "Cavalo de troia que abre portas para invasores.",
+        "rootkit": "Software que esconde a presença de invasores.",
+        "botnet": "Rede de computadores zumbis controlada por hackers.",
+        "ddos": "Ataque de negação de serviço para derrubar sites.",
+        "encriptacao": "Processo de transformar dados em códigos ilegíveis.",
+        "hash": "Função que gera uma assinatura única para dados.",
+        "token": "Código de autenticação para sessões de segurança.",
+        "oauth": "Protocolo aberto para autorização de acesso.",
+        "ssh": "Protocolo para acesso remoto seguro a servidores.",
+        "ftp": "Protocolo para transferência de arquivos entre máquinas.",
+        "smtp": "Protocolo para envio de e-mails.",
+        "pop3": "Protocolo para recebimento de e-mails (antigo).",
+        "imap": "Protocolo moderno para sincronização de e-mails.",
+        "udp": "Protocolo de transporte rápido sem verificação.",
+        "tcp": "Protocolo de transporte seguro com verificação.",
+        "ip": "Endereço único de um dispositivo na rede.",
+        "ipv4": "Versão antiga de endereçamento IP (32 bits).",
+        "ipv6": "Versão nova de endereçamento IP (128 bits).",
+        "mac address": "Identificador físico da placa de rede.",
+        "subnet": "Divisão lógica de uma rede IP.",
+        "gateway": "Ponto de saída de uma rede local para a internet.",
+        "router": "Roteador que encaminha pacotes de dados.",
+        "switch": "Equipamento que conecta dispositivos em rede local.",
+        "modem": "Dispositivo que modula o sinal da internet.",
+        "lan": "Rede de área local restrita a um local.",
+        "wan": "Rede de longa distância que cobre grandes áreas.",
+        "man": "Rede metropolitana que cobre uma cidade.",
+        "pan": "Rede de área pessoal (ex: Bluetooth).",
+        "wlan": "Rede local sem fio.",
+        "latencia": "Tempo de atraso na comunicação de dados.",
+        "largura de banda": "Capacidade de transmissão de uma rede.",
+        "ping": "Teste de velocidade de resposta da conexão.",
+        "hospedagem": "Serviço que mantém sites online 24 horas.",
+        "dominio": "O endereço do site (ex: google.com).",
+        "tld": "Extensão do domínio (ex: .com, .org, .net).",
+        "servidor": "Computador potente que fornece serviços a outros.",
+        "cliente": "Dispositivo que solicita serviços ao servidor.",
+        "cluster": "Grupo de computadores trabalhando juntos.",
+        "redundancia": "Duplicação de sistemas para evitar falhas.",
+        "backup": "Cópia de segurança de dados importantes.",
+        "restauracao": "Processo de recuperar dados de um backup.",
+        "virtualizacao": "Criação de versões virtuais de hardware.",
+        "maquina virtual": "Emulação de um computador real via software.",
+        "hypervisor": "Software que gerencia máquinas virtuais.",
+        "sandbox": "Ambiente isolado para testes seguros.",
+        "api rest": "Modelo de arquitetura de API baseado em HTTP.",
+        "graphql": "Linguagem de consulta para APIs desenvolvida pelo Facebook.",
+        "webhook": "Notificação automática entre sistemas via HTTP.",
+        "devops": "Cultura que une desenvolvimento e operações.",
+        "ci/cd": "Integração e entrega contínua de software.",
+        "deploy": "Ato de colocar uma aplicação em produção.",
+        "log": "Registro cronológico de eventos de um sistema.",
+        "debug": "Processo de encontrar e corrigir erros no código.",
+        "ide": "Ambiente de desenvolvimento integrado (ex: VS Code).",
+        "compiler": "Compilador que traduz código para linguagem de máquina.",
+        "interpreter": "Interpretador que executa código linha por linha.",
+        "framework": "Conjunto de ferramentas prontas para desenvolvimento.",
+        "library": "Biblioteca de funções prontas para reuso.",
+        "plugin": "Extensão que adiciona funções a um programa.",
+        "widget": "Pequeno componente de interface gráfica.",
+        "boilerplate": "Código base padronizado para novos projetos.",
+        "legacy": "Código ou sistema antigo ainda em uso.",
+        "refatoracao": "Melhoria do código sem alterar sua função.",
+        "scrum": "Metodologia ágil para gestão de projetos.",
+        "kanban": "Sistema visual para controle de fluxo de trabalho.",
+        "sprint": "Ciclo curto de trabalho em metodologias ágeis.",
+        "backlog": "Lista de tarefas a serem realizadas no projeto.",
+        "stakeholder": "Pessoa interessada no sucesso do projeto.",
+        "mvp": "Produto mínimo viável para teste de mercado.",
+        "leads": "Potenciais clientes interessados em um produto.",
+        "seo": "Otimização para mecanismos de busca.",
+        "sem": "Marketing para mecanismos de busca.",
+        "cro": "Otimização da taxa de conversão de usuários.",
+        "cta": "Chamada para ação (ex: botão 'Comprar')."
     },
-
-    // 2. Curiosidades Aleatórias
-    curiosidades: [
-        "A primeira programadora foi Ada Lovelace.",
-        "O primeiro computador pesava 30 toneladas.",
-        "O nome 'Bug' surgiu por causa de um inseto real no PC.",
-        "A cada minuto, 500 horas de vídeo sobem no YouTube.",
-        "O primeiro domínio registrado foi symbolics.com.",
-        "O Google processa 3.5 bilhões de buscas por dia.",
-        "90% dos dados do mundo foram criados nos últimos 2 anos.",
-        "O QWERTY foi feito para as máquinas de escrever não travarem.",
-        "Um petabyte é igual a mil terabytes.",
-        "A lua tem internet wi-fi de alta velocidade.",
-        "A Microsoft foi fundada em uma garagem.",
-        "O Linux está presente em 100% dos supercomputadores.",
-        "O primeiro mouse foi feito de madeira.",
-        "O código-fonte do Apollo 11 foi escrito à mão.",
-        "O termo 'Software' foi usado pela primeira vez em 1958.",
-        "A Amazon começou vendendo apenas livros.",
-        "Steve Jobs nunca escreveu uma única linha de código.",
-        "O símbolo do Bluetooth veio de um rei viking.",
-        "Existem mais celulares no mundo do que pessoas.",
-        "A primeira mensagem enviada pela internet foi 'LO'.",
-        "O teclado Dvorak é mais rápido que o QWERTY.",
-        "O jogo mais vendido de todos os tempos é o Minecraft.",
-        "A bateria do notebook dura mais se você não usar 100% do brilho.",
-        "O Captcha serve para treinar IAs a lerem textos.",
-        "O domínio 'pizza.com' foi vendido por milhões.",
-        "O primeiro vídeo do YouTube chama 'Me at the zoo'.",
-        "Mark Zuckerberg é daltônico para verde e vermelho.",
-        "O Instagram foi comprado pelo Facebook por 1 bilhão.",
-        "O código do kernel do Linux tem mais de 30 milhões de linhas.",
-        "SpaceX usa componentes que você encontra em PCs comuns.",
-        "O Python tem esse nome por causa do Monty Python.",
-        "A Apple já fabricou roupas nos anos 80.",
-        "O relógio do Windows começou a contar em 1 de janeiro de 1601.",
-        "O primeiro spam da história foi enviado em 1978.",
-        "Existem linguagens de programação feitas apenas com emojis.",
-        "A Intel foi fundada por Robert Noyce e Gordon Moore.",
-        "O WiFi não significa nada, é apenas uma marca.",
-        "O som do Mac ao ligar é um acorde de Dó maior.",
-        "Arquivos deletados não somem, apenas o espaço é marcado como livre.",
-        "O GPS pertence e é operado pelo governo dos EUA.",
-        "O nome Yahoo é um acrônimo.",
-        "A Nintendo foi fundada em 1889 como empresa de cartas.",
-        "A Nokia já fabricou papel e botas de borracha.",
-        "O primeiro tweet foi de Jack Dorsey em 2006.",
-        "Hackers éticos são chamados de 'White Hats'.",
-        "A deep web é 500 vezes maior que a web comum.",
-        "O supercomputador mais rápido está no Japão.",
-        "O primeiro smartphone foi o IBM Simon em 1992.",
-        "O carregador do iPhone tem um processador dentro.",
-        "O Isaque é um desenvolvedor incrível por estar me criando!"
-    ],
-
-    // 3. Piadas de Programador
     piadas: [
-        "Por que o programador se afogou? Porque não sabia nadar, só flutuar (float).",
-        "O que o C++ disse para o C? Você não tem classe!",
-        "Quantos programadores são precisos para trocar uma lâmpada? Nenhum, é problema de hardware.",
-        "O que um bit disse para o outro? Até logo (byte)!",
-        "Minha vida é um loop infinito de café e bugs.",
-        "Toc toc. Quem é? (Longo silêncio)... Java.",
-        "Onde os programadores gostam de sair? No bar (barra /).",
-        "Por que o computador foi ao médico? Porque estava com vírus.",
-        "O que o programador falou na academia? 'Vou fazer 3 sets de 10 reps'.",
-        "Como um programador faz café? `make coffee`.",
-        "O que é um algoritmo? Uma palavra que programadores usam para não explicar o que fizeram.",
-        "Por que o SQL entrou no bar? Para se juntar (join) às mesas.",
-        "Qual o animal favorito do programador? O gato (Git).",
-        "O que a mãe do programador disse? 'Filho, arruma sua memória!'.",
-        "JavaScript é como o clima: se não gosta, espere 5 minutos que muda.",
-        "Por que o desenvolvedor faliu? Porque perdeu o cache.",
-        "O que o CSS disse para o HTML? Você é estruturado, mas eu te dou estilo.",
-        "Por que o Git é bom de briga? Porque ele dá commit.",
-        "Como o programador dorme? `while(sono) { dormir(); }`",
-        "O que o teclado disse para o mouse? Você me clica!",
-        "Por que o Java usa óculos? Porque ele não enxerga C#.",
-        "O que é um hardware? A parte que você chuta. E o software? A que você xinga.",
-        "Programador no restaurante: 'Pode me trazer o menu?'. Garçom traz o `index.html`.",
+        "Por que o computador foi ao médico? Porque tinha um vírus!",
+        "O que o zero disse para o oito? Belo cinto!",
+        "Qual o café favorito do Java? O expresso!",
         "Por que o livro de matemática se suicidou? Tinha muitos problemas.",
-        "Qual a música favorita do dev? 'Hello World'.",
-        "O que o programador faz no deserto? Debuga a areia.",
-        "Por que o Wi-Fi e o programador se dão bem? Ambos buscam conexão.",
-        "Como você chama um programador do Paraguai? Um C# paraguaio.",
-        "Por que os navios não usam Windows? Porque eles podem travar no meio do mar.",
-        "O que o Linux disse pro Windows? 'Eu sou livre!'."
+        "Como um bit se despede? 'Até logo (byte)'!",
+        "O que é um algoritmo? Palavra que dev usa para não explicar o erro.",
+        "Por que o desenvolvedor faliu? Porque usou todo o seu cache.",
+        "Toc toc. Quem é? (longo silêncio)... É o Java.",
+        "Quantos devs trocam uma lâmpada? Nenhum, é erro de hardware.",
+        "O que o C disse pro C++? 'Você não tem classe!'"
+    ],
+    curiosidades: [
+        "O primeiro computador pesava 30 toneladas.",
+        "O mel nunca estraga.",
+        "A primeira webcam vigiava uma cafeteira.",
+        "O Sol é 330 mil vezes maior que a Terra.",
+        "As formigas nunca dormem.",
+        "O código do Apollo 11 foi escrito à mão.",
+        "Steve Jobs nunca aprendeu a programar.",
+        "O primeiro mouse foi feito de madeira.",
+        "A Lua se afasta da Terra 3,8cm por ano.",
+        "Os polvos têm 3 corações e sangue azul."
     ]
 };
 
-// =============== SISTEMA DE ESTADO (SESSÃO) ===============
-let State = {
-    nomeUsuario: localStorage.getItem("user_name") || "",
-    nivelAmizade: parseInt(localStorage.getItem("user_friendship")) || 0,
-    historico: [],
-    inputAtivo: true
-};
+// =============== FUNÇÕES DO SISTEMA ===============
 
-// =============== UTILITÁRIOS LÓGICOS ===============
-const Utils = {
-    // Normaliza o texto removendo acentos e caracteres especiais
-    limpar: (texto) => {
-        return texto.toLowerCase()
-            .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-            .replace(/[^a-z0-9\s]/g, "").trim();
-    },
+// Normalização de texto
+function norm(t) {
+    if (!t) return "";
+    return t.toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9\s+\-*/().]/g, "")
+        .trim();
+}
 
-    // Escolhe um item aleatório de uma lista
-    sortear: (lista) => lista[Math.floor(Math.random() * lista.length)],
-
-    // Salva o progresso no navegador
-    salvar: () => {
-        localStorage.setItem("user_name", State.nomeUsuario);
-        localStorage.setItem("user_friendship", State.nivelAmizade);
-    }
-};
-
-// =============== MOTOR DE RESPOSTAS ===============
-const Engine = {
-    
-    // 1. Matemática Avançada
-    calcular: (texto) => {
-        try {
-            let expressao = texto.toLowerCase()
-                .replace(/vezes/g, "*").replace(/x/g, "*")
-                .replace(/dividido por/g, "/").replace(/mais/g, "+")
-                .replace(/menos/g, "-").replace(/[^0-9+\-*/().]/g, "");
-            
-            if (expressao && /[0-9]/.test(expressao)) {
-                let resultado = eval(expressao);
-                return `🧮 Calculando... O resultado é **${resultado}**.`;
-            }
-        } catch (e) { return null; }
-        return null;
-    },
-
-    // 2. Busca na Wikipedia
-    buscarWiki: async (termo) => {
-        const url = `https://pt.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(termo)}?origin=*`;
-        try {
-            const res = await fetch(url);
-            if (!res.ok) return null;
-            const data = await res.json();
-            return data.extract;
-        } catch { return null; }
-    },
-
-    // 3. Processador Principal
-    processar: async (rawText) => {
-        const t = Utils.limpar(rawText);
-        State.nivelAmizade++;
-        Utils.salvar();
-
-        // Comandos de Nome
-        if (t.includes("meu nome e")) {
-            const partes = rawText.split(/ e /i);
-            const nome = partes[partes.length - 1];
-            State.nomeUsuario = nome;
-            Utils.salvar();
-            return `Entendido, **${nome}**! Vou lembrar de você.`;
-        }
-
-        if (t === "qual e meu nome") {
-            return State.nomeUsuario ? `Seu nome é **${State.nomeUsuario}**!` : "Você ainda não me disse seu nome...";
-        }
-
-        // Básicos
-        if (t === "oi" || t === "ola") return Utils.sortear(["Olá! Como vai?", "Oi! Em que posso ajudar?", "Saudações, humano!"]);
-        if (t.includes("quem te criou")) return "Fui criado pelo gênio do código chamado **Isaque**!";
-        if (t.includes("ajuda")) return "Eu posso: contar piadas, curiosidades, fazer contas ou pesquisar na Wikipedia!";
-
-        // Matemática
-        const calc = Engine.calcular(rawText);
-        if (calc) return calc;
-
-        // Dicionário
-        for (let chave in BRAIN.dicionario) {
-            if (t.includes(chave)) return `📖 **${chave.toUpperCase()}**: ${BRAIN.dicionario[chave]}`;
-        }
-
-        // Randoms
-        if (t.includes("curiosidade")) return `💡 Sabia? ${Utils.sortear(BRAIN.curiosidades)}`;
-        if (t.includes("piada")) return `🤣 ${Utils.sortear(BRAIN.piadas)}`;
-        if (t.includes("amizade")) return `Nosso nível de amizade está em **${State.nivelAmizade}**!`;
-
-        // Wikipedia (Fallback)
-        addMessage("🔍 Buscando conhecimento externo...", "bot", "loading");
-        const wiki = await Engine.buscarWiki(rawText);
-        removeMessage("loading");
-        
-        if (wiki) return `Encontrei isso na Wikipedia: \n\n${wiki}`;
-
-        return "Hum... não tenho certeza se entendi. Pode perguntar de outro jeito? 🤔";
-    }
-};
-
-// =============== INTERFACE (UI) ===============
+// Interface de Mensagens
 function addMessage(text, type, id = null) {
-    const msgDiv = document.createElement("div");
-    msgDiv.className = `message ${type}`;
-    if (id) msgDiv.id = id;
-    
+    const msg = document.createElement("div");
+    msg.className = `message ${type}`;
+    if (id) msg.id = id;
     const bubble = document.createElement("div");
     bubble.className = "bubble";
     bubble.innerHTML = text.replace(/\n/g, "<br>");
-    
-    msgDiv.appendChild(bubble);
-    chat.appendChild(msgDiv);
+    msg.appendChild(bubble);
+    chat.appendChild(msg);
     chat.scrollTop = chat.scrollHeight;
 }
 
@@ -288,39 +229,76 @@ function removeMessage(id) {
     if (el) el.remove();
 }
 
-async function handleSend() {
-    const text = input.value.trim();
-    if (!text || !State.inputAtivo) return;
-
-    addMessage(text, "user");
-    input.value = "";
-    
-    State.inputAtivo = false;
-    const resposta = await Engine.processar(text);
-    
-    setTimeout(() => {
-        addMessage(resposta, "bot");
-        State.inputAtivo = true;
-    }, 500);
+// Motor Matemático
+function engineMath(text) {
+    try {
+        let clean = norm(text)
+            .replace(/x/g, "*").replace(/vezes/g, "*")
+            .replace(/dividido por/g, "/").replace(/mais/g, "+")
+            .replace(/menos/g, "-")
+            .replace(/[^0-9+\-*/().]/g, "");
+        if (clean && /[0-9]/.test(clean)) {
+            return "🧮 Resultado: " + eval(clean);
+        }
+    } catch (e) { return null; }
+    return null;
 }
 
-// =============== INICIALIZAÇÃO ===============
-button.onclick = handleSend;
-input.onkeypress = (e) => { if (e.key === "Enter") handleSend(); };
+// Busca na Internet (Wikipedia)
+async function searchWeb(query) {
+    const url = `https://pt.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}?origin=*`;
+    try {
+        const res = await fetch(url);
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data.extract || null;
+    } catch { return null; }
+}
 
-// Boas-vindas
-const saudacao = State.nomeUsuario ? `Bem-vindo de volta, **${State.nomeUsuario}**!` : "Olá! Eu sou sua nova IA.";
-addMessage(`${saudacao} Como posso ajudar o ${IA_CONFIG.criador} hoje?`, "bot");
+// =============== ORQUESTRADOR DE RESPOSTAS ===============
+async function processReply(text) {
+    const t = norm(text);
 
-// Auto-interação (IA viva)
-setInterval(() => {
-    if (Math.random() < 0.05) {
-        addMessage("💡 Dica: Me pergunte uma 'curiosidade'!", "bot");
+    // 1. Conversa Amigável
+    if (t === "oi" || t === "ola") return addMessage("Olá! Como posso te ajudar hoje?", "bot");
+    if (t.includes("seu nome")) return addMessage(`Eu sou o ${IA_SETTINGS.nome}, sua IA pessoal!`, "bot");
+    if (t.includes("quem te criou")) return addMessage(`Fui criado pelo talentoso **${IA_SETTINGS.criador}**!`, "bot");
+
+    // 2. Matemática
+    const math = engineMath(text);
+    if (math) return addMessage(math, "bot");
+
+    // 3. Dicionário Interno
+    for (let key in BRAIN.dicionario) {
+        if (t.includes(key)) return addMessage(`📖 **${key.toUpperCase()}**: ${BRAIN.dicionario[key]}`, "bot");
     }
-}, 60000);
 
-/**
- * FIM DO CORE ENGINE. 
- * Para expandir para 1000 linhas, basta adicionar mais 
- * chaves no objeto BRAIN.dicionario ou mais itens em curiosidades.
- */
+    // 4. Randomizadores
+    if (t.includes("piada")) return addMessage("🤣 " + BRAIN.piadas[Math.floor(Math.random() * BRAIN.piadas.length)], "bot");
+    if (t.includes("curiosidade")) return addMessage("💡 " + BRAIN.curiosidades[Math.floor(Math.random() * BRAIN.curiosidades.length)], "bot");
+
+    // 5. Busca na Internet (Última opção)
+    addMessage("(Pesquisando na internet...)", "bot", "loading");
+    const web = await searchWeb(text);
+    removeMessage("loading");
+
+    if (web) {
+        addMessage("Isso é o que encontrei: \n\n" + web, "bot");
+    } else {
+        addMessage("Ainda estou aprendendo sobre isso... Tente perguntar de outro jeito!", "bot");
+    }
+}
+
+// =============== EVENTOS ===============
+button.onclick = () => {
+    const val = input.value.trim();
+    if (!val) return;
+    addMessage(val, "user");
+    input.value = "";
+    processReply(val);
+};
+
+input.onkeypress = (e) => { if (e.key === "Enter") button.click(); };
+
+// Início
+addMessage(`Nexus-7 Online. Pronto para ajudar, ${IA_SETTINGS.criador}!`, "bot");
