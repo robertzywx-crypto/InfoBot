@@ -1,13 +1,24 @@
 <script>
-// ================= CONFIG =================
+// ==================================================
+// ELEMENTOS
+// ==================================================
 const chat = document.getElementById("chat");
 const input = document.getElementById("userInput");
 const button = document.getElementById("sendBtn");
 
-const memory = [];
+// ==================================================
+// MEMÓRIA INTELIGENTE
+// ==================================================
+const brainMemory = {
+    topic: null,
+    mode: "normal", // normal | study | chat
+    lastAnswer: null
+};
 
-// ================= UI =================
-function addMessage(text, type) {
+// ==================================================
+// UI
+// ==================================================
+function addBubble(text, type) {
     const msg = document.createElement("div");
     msg.className = "message";
 
@@ -20,150 +31,181 @@ function addMessage(text, type) {
     chat.scrollTop = chat.scrollHeight;
 }
 
-function botTyping(text) {
+function botType(text) {
     const msg = document.createElement("div");
     msg.className = "message";
-
     const bubble = document.createElement("div");
     bubble.className = "bot";
     msg.appendChild(bubble);
     chat.appendChild(msg);
 
     let i = 0;
-    const interval = setInterval(() => {
+    const speed = 13;
+    const typing = setInterval(() => {
         bubble.innerText += text[i];
         i++;
         chat.scrollTop = chat.scrollHeight;
-        if (i >= text.length) clearInterval(interval);
-    }, 20);
+        if (i >= text.length) clearInterval(typing);
+    }, speed);
 }
 
-// ================= EVENTS =================
-button.onclick = sendMessage;
-input.onkeypress = e => e.key === "Enter" && sendMessage();
+// ==================================================
+// EVENTOS
+// ==================================================
+button.onclick = send;
+input.onkeypress = e => e.key === "Enter" && send();
 
-function sendMessage() {
+function send() {
     const text = input.value.trim();
     if (!text) return;
 
-    addMessage(text, "user");
+    addBubble(text, "user");
     input.value = "";
-    memory.push({ role: "user", text });
 
     setTimeout(() => {
-        botTyping("Pensando...");
-        processQuestion(text);
-    }, 400);
+        botType("Pensando...");
+        mainAI(text);
+    }, 250);
 }
 
-// ================= INTELIGÊNCIA =================
-function processQuestion(q) {
-    const question = q.toLowerCase();
+// ==================================================
+// IA PRINCIPAL
+// ==================================================
+function mainAI(text) {
+    const q = text.toLowerCase();
 
-    // 1️⃣ MATEMÁTICA
-    if (isMath(question)) {
-        return botTyping("🧮 " + solveMath(question));
-    }
+    // Classificação de intenção
+    if (isMath(q)) return mathAI(q);
+    if (isStudy(q)) return studyAI(q);
+    if (isConversation(q)) return chatAI(q);
+    if (isDefinition(q)) return definitionAI(q);
 
-    // 2️⃣ CONVERSA
-    const talk = conversationAI(question);
-    if (talk) return botTyping(talk);
-
-    // 3️⃣ ESCOLA / ESTUDO
-    const study = schoolHelper(question);
-    if (study) return botTyping(study);
-
-    // 4️⃣ INTERNET
-    searchInternet(question);
+    // Internet só se nada resolver
+    internetAI(q);
 }
 
-// ================= MATEMÁTICA =================
+// ==================================================
+// MATEMÁTICA INTELIGENTE (SEM eval)
+// ==================================================
 function isMath(q) {
-    return /\d+/.test(q) && /[\+\-\*\/]/.test(q);
+    return /\d/.test(q) && /[\+\-\*\/]/.test(q);
 }
 
-function solveMath(q) {
+function mathAI(q) {
     try {
-        const exp = q
-            .replace("quanto é", "")
-            .replace("?", "")
-            .replace(",", ".")
-            .match(/[\d\.\+\-\*\/\(\) ]+/)[0];
+        const exp = q.match(/[\d\+\-\*\/\(\)\. ]+/)[0];
+        const result = Function(`return ${exp}`)();
 
-        const result = eval(exp);
-        return `O resultado é ${result}.`;
+        botType(
+            `🧮 Vamos resolver juntos:\n\n` +
+            `Expressão: ${exp}\n` +
+            `Calculando passo a passo...\n` +
+            `✅ Resultado final: ${result}`
+        );
     } catch {
-        return "Não consegui resolver essa conta 😕";
+        botType("Não consegui entender essa conta 😕");
     }
 }
 
-// ================= CONVERSA =================
-function conversationAI(q) {
+// ==================================================
+// MODO PROFESSOR
+// ==================================================
+function isStudy(q) {
+    return q.includes("explique") ||
+           q.includes("estudar") ||
+           q.includes("prova") ||
+           q.includes("trabalho");
+}
+
+function studyAI(q) {
+    brainMemory.mode = "study";
+    brainMemory.topic = q;
+
+    botType(
+        "🎓 **Modo Professor ativado**\n\n" +
+        "Vou explicar assim:\n" +
+        "1️⃣ O que é\n" +
+        "2️⃣ Como funciona\n" +
+        "3️⃣ Exemplo\n" +
+        "4️⃣ Resumo\n\n" +
+        "Diga o conteúdo que quer aprender."
+    );
+}
+
+// ==================================================
+// DEFINIÇÕES HUMANAS
+// ==================================================
+function isDefinition(q) {
+    return q.startsWith("o que é") ||
+           q.startsWith("quem é") ||
+           q.startsWith("o que significa");
+}
+
+function definitionAI(q) {
+    const topic = q
+        .replace("o que é", "")
+        .replace("quem é", "")
+        .replace("o que significa", "")
+        .trim();
+
+    brainMemory.topic = topic;
+
+    botType(
+        `📘 **${topic}** explicado de forma simples:\n\n` +
+        `É um conceito importante que aparece muito em estudos.\n` +
+        `Se quiser, posso explicar com exemplos ou resumir 🙂`
+    );
+}
+
+// ==================================================
+// CONVERSA NATURAL
+// ==================================================
+function isConversation(q) {
+    return ["oi","olá","tudo bem","obrigado","bom dia","boa tarde"].some(w => q.includes(w));
+}
+
+function chatAI(q) {
     if (q.includes("oi") || q.includes("olá"))
-        return "Oi 😄 Eu sou o InfoBot. Como posso te ajudar?";
+        return botType("Oi 😄 Eu sou o InfoBot. O que vamos aprender hoje?");
 
-    if (q.includes("quem é você"))
-        return "Sou o InfoBot 🤖, uma IA criada para ajudar em estudos, perguntas e conversas.";
+    if (q.includes("tudo bem"))
+        return botType("Tudo sim 😊 E você?");
 
-    if (q.includes("o que é o amor"))
-        return "❤️ O amor é um sentimento de cuidado, conexão e afeto entre pessoas.";
-
-    if (q.includes("você é inteligente"))
-        return "Estou sempre aprendendo 😊";
-
-    return null;
+    if (q.includes("obrigado"))
+        return botType("De nada! Sempre feliz em ajudar 🤝");
 }
 
-// ================= ESCOLA / FACULDADE =================
-function schoolHelper(q) {
-    if (q.includes("explique")) {
-        return "📘 Claro! Vou explicar de forma simples e direta.";
-    }
-
-    if (q.includes("dica de prova")) {
-        return "📝 Estude o conteúdo, resolva exercícios e descanse antes da prova.";
-    }
-
-    if (q.includes("como estudar")) {
-        return "📚 Estude um pouco todo dia, faça exercícios e explique o conteúdo em voz alta.";
-    }
-
-    if (q.includes("resumo")) {
-        return "📌 Um resumo é uma versão curta com as ideias principais do conteúdo.";
-    }
-
-    return null;
-}
-
-// ================= INTERNET =================
-function searchInternet(query) {
+// ==================================================
+// INTERNET INTELIGENTE
+// ==================================================
+function internetAI(query) {
     const wiki = `https://pt.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
 
     fetch(wiki)
         .then(r => r.json())
-        .then(data => {
-            if (data.extract) {
-                botTyping("🌐 " + data.extract);
+        .then(d => {
+            if (d.extract) {
+                botType("🌐 " + d.extract);
             } else {
-                duckSearch(query);
+                duckAI(query);
             }
         })
-        .catch(() => duckSearch(query));
+        .catch(() => duckAI(query));
 }
 
-function duckSearch(query) {
+function duckAI(query) {
     const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1`;
 
     fetch(url)
         .then(r => r.json())
-        .then(data => {
-            let answer =
-                data.AbstractText ||
-                data.RelatedTopics?.[0]?.Text ||
-                "Não achei uma resposta clara, mas posso tentar explicar de outra forma 🙂";
+        .then(d => {
+            const ans =
+                d.AbstractText ||
+                d.RelatedTopics?.[0]?.Text ||
+                "Não achei algo claro, mas posso explicar com minhas próprias palavras 🙂";
 
-            botTyping(answer);
+            botType(ans);
         })
-        .catch(() => botTyping("Erro ao acessar a internet 😕"));
+        .catch(() => botType("Erro ao acessar a internet 😕"));
 }
 </script>
