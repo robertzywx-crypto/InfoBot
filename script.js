@@ -24,13 +24,11 @@ function removeMessage(id){
 
 // =============== NORMALIZAÇÃO =================
 function norm(text){
+    if(!text) return "";
     return text.toLowerCase()
-        .replace(/á|à|ã|â/g,"a")
-        .replace(/é|ê/g,"e")
-        .replace(/í/g,"i")
-        .replace(/ó|ô|õ/g,"o")
-        .replace(/ú/g,"u")
-        .replace(/[^a-z0-9\s+\-*/().?]/g,"");
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove acentos de forma global
+        .replace(/[^a-z0-9\s+\-*/().?]/g,"")
+        .trim();
 }
 
 // =============== RESPOSTAS FIXAS / DICIONÁRIO =================
@@ -67,8 +65,7 @@ function checkDictionary(text){
 // =============== MATEMÁTICA =================
 function matematica(text){
     try{
-        let tNorm = norm(text);
-        let expr = tNorm
+        let expr = norm(text)
             .replace("quanto e","")
             .replace("calcule","")
             .replace("resultado de","")
@@ -78,12 +75,13 @@ function matematica(text){
             .replace("x","*")
             .replace("dividido por","/")
             .replace(/[^0-9+\-*/().]/g,"");
-        
-        // Verifica se ainda restou algum número na expressão antes de calcular
+            
         if(expr && /[0-9]/.test(expr)){
-            return "🧮 Resultado: " + eval(expr);
+            // Segurança: eval apenas em números e operadores
+            const resultado = eval(expr);
+            return "🧮 Resultado: " + resultado;
         }
-    }catch{}
+    }catch(e){}
     return null;
 }
 
@@ -99,7 +97,7 @@ function conversa(text){
     if(t.includes("triste")) return "Poxa 😔 quer me contar o que aconteceu?";
     if(t.includes("feliz")) return "Que bom 😄 Me conta o que te deixou feliz!";
     if(t.includes("ajuda")) return "Claro! No que posso ajudar?";
-    if(t.includes("piada")) return "Tá, lá vai 😏 Por que o computador foi ao médico? Porque ele tinha um vírus! 😂";
+    if(t.includes("piada")) return randomJoke();
     if(t.includes("historia")) return "Ah, história é incrível! Qual parte você quer saber?";
     if(t.includes("geografia")) return "Geografia é super legal! Quer saber sobre países ou rios?";
     if(t.includes("matematica")) return "Matemática é minha favorita 🧮, pergunte algo!";
@@ -108,11 +106,11 @@ function conversa(text){
 
 // =============== PESQUISA INTERNET (WIKIPEDIA) =================
 async function searchInternet(query){
-    // Adicionado origin=* para evitar erro de CORS
-    const url = `https://pt.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query.trim())}?origin=*`;
+    const termo = encodeURIComponent(query.trim());
+    const url = `https://pt.wikipedia.org/api/rest_v1/page/summary/${termo}?origin=*`;
     try{
         const response = await fetch(url);
-        if(!response.ok) throw new Error();
+        if(!response.ok) return null;
         const data = await response.json();
         return data.extract || null;
     }catch{
@@ -122,7 +120,7 @@ async function searchInternet(query){
 
 // =============== FUNÇÃO ANTI-DICIONÁRIO =================
 function humanize(text){
-    if(text.length > 0){
+    if(text && text.length > 0){
         return "Então, deixa eu te explicar de um jeito simples 😊:\n\n" + text;
     }
     return "Não encontrei uma resposta clara 😕";
@@ -131,12 +129,8 @@ function humanize(text){
 // =============== MEMÓRIA SIMPLES =================
 let memory = [];
 function remember(text){
-    if(memory.length>100) memory.shift();
+    if(memory.length > 50) memory.shift();
     memory.push(text);
-}
-function recall(){
-    if(memory.length===0) return null;
-    return memory[memory.length-1];
 }
 
 // =============== FUNÇÕES DE RANDOMIZAÇÃO =================
@@ -162,55 +156,8 @@ const jokes = [
     "Por que o computador foi ao médico? Porque ele tinha um vírus!"
 ];
 
-// ================= FUNÇÃO RANDOM FACT =================
-function randomFact(){
-    return funFacts[Math.floor(Math.random()*funFacts.length)];
-}
-
-// ================= FUNÇÃO RANDOM JOKE =================
-function randomJoke(){
-    return jokes[Math.floor(Math.random()*jokes.length)];
-}
-
-// ================= FUNÇÃO PRINCIPAL =================
-async function botReply(text){
-    remember(text);
-
-    // 1️⃣ conversa
-    const talk = conversa(text);
-    if(talk){
-        addMessage(talk,"bot");
-        return;
-    }
-
-    // 2️⃣ matemática
-    const math = matematica(text);
-    if(math){
-        addMessage(math,"bot");
-        return;
-    }
-
-    // 3️⃣ dicionário
-    const dict = checkDictionary(text);
-    if(dict){
-        addMessage(dict,"bot");
-        return;
-    }
-
-    // 4️⃣ pesquisa na internet
-    addMessage("(pesquisando respostas...)","bot","loading");
-    const reply = await searchInternet(text);
-
-    setTimeout(()=>{
-        removeMessage("loading");
-        if(reply){
-            addMessage(humanize(reply),"bot");
-        }else{
-            const fallback = [randomFact(), randomJoke(), "Hmm… não achei isso agora 😕 tenta perguntar de outro jeito."];
-            addMessage(fallback[Math.floor(Math.random()*fallback.length)],"bot");
-        }
-    }, 800);
-}
+function randomFact(){ return funFacts[Math.floor(Math.random()*funFacts.length)]; }
+function randomJoke(){ return jokes[Math.floor(Math.random()*jokes.length)]; }
 
 // ================= SMALL TALK =================
 function smallTalk(text){
@@ -219,43 +166,59 @@ function smallTalk(text){
     if(t.includes("boa noite")) return "Boa noite 😴 Tenha sonhos incríveis!";
     if(t.includes("tchau")) return "Tchau! Até mais 😄";
     if(t.includes("legal")) return "Fico feliz que você ache legal! 😎";
-    if(t.includes("obrigado")) return "De nada! 😊";
     return null;
 }
 
-// ================= FUNÇÃO FINAL DE RESPOSTA =================
+// ================= FUNÇÃO PRINCIPAL DE RESPOSTA =================
 async function fullBotReply(text){
-    const talk2 = smallTalk(text);
-    if(talk2){
-        addMessage(talk2,"bot");
-        return;
-    }
+    remember(text);
 
-    await botReply(text);
+    // Prioridade 1: Small Talk
+    const st = smallTalk(text);
+    if(st) { addMessage(st, "bot"); return; }
+
+    // Prioridade 2: Conversa
+    const talk = conversa(text);
+    if(talk) { addMessage(talk, "bot"); return; }
+
+    // Prioridade 3: Matemática
+    const math = matematica(text);
+    if(math) { addMessage(math, "bot"); return; }
+
+    // Prioridade 4: Dicionário
+    const dict = checkDictionary(text);
+    if(dict) { addMessage(dict, "bot"); return; }
+
+    // Prioridade 5: Wikipedia
+    addMessage("(pesquisando respostas...)","bot","loading");
+    const reply = await searchInternet(text);
+    
+    removeMessage("loading");
+    if(reply){
+        addMessage(humanize(reply), "bot");
+    } else {
+        const fallback = [randomFact(), randomJoke(), "Hmm… não achei isso agora 😕 tenta perguntar de outro jeito."];
+        addMessage(fallback[Math.floor(Math.random()*fallback.length)], "bot");
+    }
 }
 
 // ================= EVENTOS =================
-button.onclick = ()=>{
+button.onclick = () => {
     const text = input.value.trim();
     if(!text) return;
-    addMessage(text,"user");
-    input.value="";
+    addMessage(text, "user");
+    input.value = "";
     fullBotReply(text);
 };
 
-input.addEventListener("keypress",(e)=>{
-    if(e.key==="Enter") button.click();
+input.addEventListener("keypress", (e) => {
+    if(e.key === "Enter") button.click();
 });
 
-// ================= MENSAGEM INICIAL =================
-addMessage("Olá! 👋 Pergunte qualquer coisa 🙂","bot");
+// Mensagem Inicial
+addMessage("Olá! 👋 Pergunte qualquer coisa 🙂", "bot");
 
-// ================= RANDOM FUN FACT AUTOMÁTICO =================
-setInterval(()=>{
-    if(Math.random()<0.01) addMessage(randomFact(),"bot");
-},5000);
-
-// ================= RANDOM JOKE AUTOMÁTICA =================
-setInterval(()=>{
-    if(Math.random()<0.01) addMessage(randomJoke(),"bot");
-},7000);
+// Mensagens Automáticas (Chance reduzida para não atrapalhar)
+setInterval(() => {
+    if(Math.random() < 0.01) addMessage(randomFact(), "bot");
+}, 10000);
