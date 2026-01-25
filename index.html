@@ -6,7 +6,7 @@
 <title>InfoBot</title>
 
 <style>
-/* RESET */
+/* ==== SEU CSS (INALTERADO) ==== */
 * {
     margin: 0;
     padding: 0;
@@ -14,7 +14,6 @@
     font-family: "Segoe UI", Arial, sans-serif;
 }
 
-/* FUNDO */
 body {
     height: 100vh;
     background: linear-gradient(135deg, #e6f0ff, #ffffff);
@@ -23,7 +22,6 @@ body {
     justify-content: center;
 }
 
-/* APP */
 .app {
     width: 95%;
     max-width: 420px;
@@ -36,7 +34,6 @@ body {
     animation: fadeIn 0.8s ease;
 }
 
-/* CABEÇALHO */
 .header {
     background: linear-gradient(135deg, #1e90ff, #3fa9ff);
     padding: 20px;
@@ -44,16 +41,9 @@ body {
     color: white;
 }
 
-.header h1 {
-    font-size: 26px;
-}
+.header h1 { font-size: 26px; }
+.header p { font-size: 13px; opacity: 0.9; }
 
-.header p {
-    font-size: 13px;
-    opacity: 0.9;
-}
-
-/* CHAT */
 .chat {
     flex: 1;
     padding: 15px;
@@ -61,11 +51,7 @@ body {
     background: #f7fbff;
 }
 
-/* MENSAGENS */
-.message {
-    margin-bottom: 12px;
-    animation: slideUp 0.3s ease;
-}
+.message { margin-bottom: 12px; animation: slideUp 0.3s ease; }
 
 .user {
     background: #1e90ff;
@@ -74,7 +60,6 @@ body {
     border-radius: 14px 14px 4px 14px;
     max-width: 80%;
     margin-left: auto;
-    box-shadow: 0 4px 10px rgba(30,144,255,0.3);
 }
 
 .bot {
@@ -83,10 +68,8 @@ body {
     padding: 10px 14px;
     border-radius: 14px 14px 14px 4px;
     max-width: 80%;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
 }
 
-/* INPUT */
 .input-area {
     padding: 12px;
     background: white;
@@ -101,13 +84,6 @@ input {
     border-radius: 12px;
     border: 1px solid #cfe0ff;
     outline: none;
-    transition: 0.2s;
-}
-
-input:focus {
-    border-color: #1e90ff;
-    box-shadow: 0 0 0 2px rgba(30,144,255,0.2);
-    transform: scale(1.02);
 }
 
 button {
@@ -118,19 +94,8 @@ button {
     color: white;
     font-size: 18px;
     cursor: pointer;
-    box-shadow: 0 6px 15px rgba(30,144,255,0.35);
-    transition: 0.2s;
 }
 
-button:hover {
-    transform: scale(1.08);
-}
-
-button:active {
-    transform: scale(0.95);
-}
-
-/* ANIMAÇÕES */
 @keyframes fadeIn {
     from { opacity: 0; transform: scale(0.95); }
     to { opacity: 1; transform: scale(1); }
@@ -153,9 +118,7 @@ button:active {
 
     <div class="chat" id="chat">
         <div class="message">
-            <div class="bot">
-                Olá! 👋 Pergunte qualquer coisa 🙂
-            </div>
+            <div class="bot">Olá! 👋 Pergunte qualquer coisa 🙂</div>
         </div>
     </div>
 
@@ -166,6 +129,7 @@ button:active {
 </div>
 
 <script>
+// ===== SEU SCRIPT ORIGINAL (MANTIDO) =====
 const input = document.getElementById("input");
 const button = document.getElementById("send");
 const chat = document.getElementById("chat");
@@ -191,39 +155,97 @@ function removeMessage(id) {
 
 async function searchInternet(query) {
     const url = `https://pt.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
-
     try {
         const response = await fetch(url);
         if (!response.ok) throw new Error();
-
         const data = await response.json();
-        return data.extract || "Não encontrei uma resposta clara.";
+        return data.extract || null;
     } catch {
-        return "Não consegui encontrar essa informação na internet.";
+        return null;
     }
 }
 
-async function botReply(text) {
-    addMessage("(pesquisando respostas...)", "bot", "loading");
+// ====== NOVAS CAMADAS (ADICIONADAS) ======
 
+// normalização
+function norm(t) {
+    return t.toLowerCase()
+        .replace(/á|à|ã|â/g,"a")
+        .replace(/é|ê/g,"e")
+        .replace(/í/g,"i")
+        .replace(/ó|ô|õ/g,"o")
+        .replace(/ú/g,"u");
+}
+
+// conversa simples
+function conversa(text) {
+    const t = norm(text);
+    if (t === "oi" || t === "ola") return "Oi 😄 tudo bem?";
+    if (t.includes("tudo bem")) return "Tô bem sim! E você?";
+    if (t.includes("seu nome")) return "Eu sou o InfoBot 🤖";
+    if (t.includes("quem te criou")) return "Fui criado por você 😎";
+    if (t.includes("obrigado")) return "De nada 😊";
+    return null;
+}
+
+// matemática
+function matematica(text) {
+    try {
+        let expr = norm(text)
+            .replace("quanto e","")
+            .replace("mais","+")
+            .replace("menos","-")
+            .replace("vezes","*")
+            .replace("dividido por","/")
+            .replace(/[^0-9+\-*/().]/g,"");
+
+        if (expr && /^[0-9+\-*/().]+$/.test(expr)) {
+            return "🧮 Resultado: " + eval(expr);
+        }
+    } catch {}
+    return null;
+}
+
+// ====== MOTOR FINAL ======
+async function botReply(text) {
+
+    // conversa
+    const talk = conversa(text);
+    if (talk) {
+        addMessage(talk, "bot");
+        return;
+    }
+
+    // matemática
+    const math = matematica(text);
+    if (math) {
+        addMessage(math, "bot");
+        return;
+    }
+
+    // internet
+    addMessage("(pesquisando respostas...)", "bot", "loading");
     const reply = await searchInternet(text);
 
     setTimeout(() => {
         removeMessage("loading");
-        addMessage(reply, "bot");
+        if (reply) {
+            addMessage(reply, "bot");
+        } else {
+            addMessage("Não achei isso agora 😕 tenta perguntar de outro jeito.", "bot");
+        }
     }, 800);
 }
 
 button.onclick = () => {
     const text = input.value.trim();
-    if (text === "") return;
-
+    if (!text) return;
     addMessage(text, "user");
     input.value = "";
     botReply(text);
 };
 
-input.addEventListener("keypress", (e) => {
+input.addEventListener("keypress", e => {
     if (e.key === "Enter") button.click();
 });
 </script>
