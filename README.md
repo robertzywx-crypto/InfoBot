@@ -1,2 +1,0 @@
-# InfoBot
-ia pessoal
