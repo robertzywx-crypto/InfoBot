@@ -1,14 +1,12 @@
 /**
  * ==========================================================
  * PROJETO: ISAQUE-IA (CORE ENGINE FINAL - 2026)
- * REVISÃO: 20x (ESTÁVEL / SEM ERROS)
+ * REVISÃO RÍGIDA: SEM ERROS DE SINTAXE
  * CONTEÚDO: 500+ LINHAS DE CONHECIMENTO
  * ==========================================================
  */
 
-// Garante que o código só execute após o HTML carregar completamente
 window.onload = () => {
-
     // =============== ELEMENTOS DO SISTEMA ===============
     const input = document.getElementById("input");
     const button = document.getElementById("send");
@@ -22,151 +20,170 @@ window.onload = () => {
     // =============== BANCO DE DADOS (CÉREBRO) ===============
     const BRAIN = {
         dicionario: {
-            "javascript": "Linguagem criada por Brendan Eich, essencial para interatividade na web.",
-            "html": "HyperText Markup Language, a linguagem de marcação que estrutura a internet.",
-            "css": "Cascading Style Sheets, usada para estilizar e dar layout às páginas web.",
-            "python": "Linguagem de alto nível, muito amada pela sintaxe simples e uso em IA.",
-            "php": "Linguagem server-side usada em 80% dos sites, incluindo o WordPress.",
-            "java": "Linguagem robusta e multiplataforma, base do Android e sistemas bancários.",
-            "c++": "Linguagem poderosa de baixo nível, usada em engines de jogos e sistemas.",
-            "typescript": "Uma evolução do JavaScript que adiciona tipos para evitar erros.",
-            "sql": "Linguagem de consulta estruturada para gerenciar bancos de dados.",
-            "node": "Ambiente que permite rodar o JavaScript no servidor, fora do navegador.",
-            "react": "Biblioteca do Facebook para criar interfaces de usuário incríveis.",
-            "angular": "Framework do Google para criar aplicações web de grande escala.",
-            "vue": "Framework moderno e leve para construir interfaces dinâmicas.",
-            "docker": "Ferramenta de containerização para rodar apps em qualquer lugar.",
-            "git": "Sistema de controle de versão para salvar o progresso do seu código.",
-            "github": "Plataforma de hospedagem para programadores colaborarem em projetos.",
-            "api": "Interface que permite que dois softwares conversem entre si.",
-            "json": "Formato de dados leve usado para enviar informações entre sistemas.",
-            "algoritmo": "Uma sequência de passos lógicos para realizar uma tarefa.",
-            "ia": "Inteligência Artificial: máquinas que tentam simular o pensamento humano.",
-            "machine learning": "Aprendizado de máquina, onde a IA aprende com dados passados.",
-            "deep learning": "Redes neurais profundas que imitam o funcionamento do cérebro.",
-            "blockchain": "Registro digital seguro e descentralizado, base das criptomoedas.",
-            "bitcoin": "A primeira e mais famosa criptomoeda do mundo.",
-            "internet": "A rede mundial que conecta bilhões de dispositivos pelo planeta.",
-            "wi-fi": "Tecnologia de rede sem fio para conexão local à internet.",
-            "nuvem": "Processamento e armazenamento de dados em servidores remotos.",
-            "servidor": "Computador de alta performance que fornece dados para outros.",
-            "cliente": "O dispositivo (seu PC ou celular) que acessa o servidor.",
-            "frontend": "Tudo o que você vê e clica em um site ou aplicativo.",
-            "backend": "A 'cozinha' do site, onde a lógica e os dados são processados.",
-            "fullstack": "O programador que sabe mexer tanto no front quanto no back.",
-            "ux": "Experiência do Usuário: como a pessoa se sente usando o produto.",
-            "ui": "Interface do Usuário: o visual, as cores e os botões do sistema.",
-            "cpu": "Unidade Central de Processamento, o cérebro físico do computador.",
-            "gpu": "Processador gráfico, focado em vídeos, jogos e cálculos de IA.",
-            "memoria ram": "Memória rápida usada para rodar os programas abertos agora.",
-            "ssd": "Disco super rápido que substituiu o antigo HD para salvar arquivos.",
-            "firewall": "Sistema de segurança que bloqueia acessos não autorizados.",
-            "hacker": "Alguém com conhecimento profundo em tecnologia e sistemas.",
-            "bug": "Um erro no código que faz o programa funcionar errado.",
-            "debug": "O ato de procurar e consertar os erros (bugs) no código.",
-            "linux": "Sistema operacional gratuito e potente, muito usado em servidores.",
-            "windows": "O sistema operacional mais popular do mundo, da Microsoft.",
-            "macos": "Sistema operacional da Apple para computadores Mac.",
-            "android": "Sistema operacional mobile do Google para celulares.",
-            "ios": "Sistema operacional da Apple para iPhone e iPad.",
-            "arduino": "Placa de eletrônica usada para criar robôs e automação.",
-            "raspberry pi": "Um computador inteiro do tamanho de um cartão de crédito.",
-            "vr": "Realidade Virtual: imersão total em um mundo digital.",
-            "ar": "Realidade Aumentada: elementos digitais sobre o mundo real (ex: Pokemon GO).",
-            "metaverso": "Espaço virtual coletivo onde as pessoas interagem via avatares.",
-            "big data": "Análise de volumes gigantescos de dados para achar padrões.",
-            "criptografia": "Embaralhamento de dados para que só quem tem a chave possa ler.",
-            "open source": "Código aberto que qualquer um pode ver, usar e melhorar.",
-            "agile": "Metodologia de trabalho rápido e focado em resultados.",
-            "scrum": "Um dos métodos ágeis mais usados para gerenciar projetos.",
-            "dom": "A estrutura de objetos que o navegador cria para o seu HTML.",
-            "http": "Protocolo base para a navegação na internet.",
-            "https": "A versão segura e criptografada do protocolo HTTP.",
-            "dns": "O sistema que transforma nomes (google.com) em IPs numéricos.",
-            "ip": "O endereço único do seu dispositivo na rede.",
-            "vpn": "Rede privada que esconde sua localização na internet.",
-            "cookie": "Pequeno arquivo que sites guardam para lembrar de você.",
-            "cache": "Memória temporária para fazer sites carregarem mais rápido.",
-            "malware": "Qualquer software criado para causar danos ao computador.",
-            "phishing": "Golpe que tenta roubar senhas fingindo ser um site real.",
-            "proxy": "Intermediário entre o seu computador e a internet.",
-            "framework": "Um conjunto de ferramentas prontas para facilitar o código.",
-            "library": "Uma biblioteca de funções que você pode importar no projeto.",
-            "ide": "Editor de código avançado, como o VS Code.",
-            "compiler": "Programa que traduz seu código para a linguagem da máquina.",
-            "saas": "Software como serviço, acessado via internet (ex: Netflix, Canva).",
-            "devops": "Cultura de unir desenvolvedores e o pessoal de infraestrutura.",
-            "sql injection": "Um tipo de ataque hacker a bancos de dados mal protegidos.",
-            "responsive": "Site que se adapta a qualquer tamanho de tela (celular ou PC).",
-            "pwa": "Site que se comporta como um aplicativo de celular.",
-            "stack overflow": "O maior site de perguntas e respostas para programadores.",
-            "clean code": "Práticas para escrever um código limpo e fácil de ler.",
-            "refatorar": "Melhorar a escrita do código sem mudar o que ele faz.",
-            "deploy": "O ato de colocar o seu site ou app 'no ar' para o mundo.",
-            "hosting": "Serviço de hospedagem onde os arquivos do site ficam salvos.",
-            "dominio": "O nome oficial do seu site na internet.",
-            "seo": "Técnicas para fazer seu site aparecer no topo do Google.",
-            "markup": "Linguagem de marcação, como HTML ou XML.",
-            "sass": "Uma versão 'turbinada' do CSS com mais funções.",
-            "bootstrap": "Framework de CSS para criar layouts rápidos e bonitos.",
-            "tailwind": "Framework de CSS focado em utilitários para design rápido.",
-            "jquery": "Biblioteca antiga de JS que facilitava mexer no HTML.",
-            "ajax": "Técnica para carregar dados sem precisar atualizar a página.",
-            "webhook": "Aviso automático enviado de um sistema para outro.",
-            "latency": "O atraso ou demora na resposta de uma conexão.",
-            "bandwidth": "A largura de banda, ou quanta informação cabe na conexão.",
-            "firebase": "Plataforma do Google para facilitar o backend de apps.",
-            "aws": "Amazon Web Services, a maior nuvem do mundo.",
-            "azure": "A plataforma de nuvem da Microsoft.",
-            "markdown": "Linguagem simples para formatar textos (como este chat).",
-            "terminal": "A tela preta onde você digita comandos para o sistema.",
-            "shell": "O programa que interpreta os comandos no terminal.",
-            "npm": "Gerenciador de pacotes para projetos Node.js.",
-            "yarn": "Uma alternativa rápida ao gerenciador npm.",
-            "rest": "Estilo de arquitetura para criar APIs organizadas.",
-            "graphql": "Linguagem de consulta para APIs criada pelo Facebook.",
-            "microservicos": "Arquitetura que divide um sistema em várias partes pequenas.",
-            "monolito": "Sistema onde tudo está em um único bloco de código.",
-            "bitrate": "Quantidade de dados transmitidos por segundo em vídeos ou áudios.",
-            "codec": "Tecnologia para comprimir e descomprimir arquivos de mídia.",
-            "pixel": "O menor ponto de cor em uma tela digital.",
-            "vector": "Imagem baseada em cálculos matemáticos, nunca perde a qualidade.",
-            "raster": "Imagem baseada em pixels, como fotos em JPG ou PNG.",
-            "svg": "Formato de imagem vetorial muito usado na web.",
-            "canva": "Elemento do HTML usado para desenhar gráficos e jogos via JS.",
-            "webgl": "Tecnologia para rodar gráficos 3D no navegador.",
-            "p2p": "Rede onde os computadores se conectam diretamente (ex: Torrent).",
-            "dark mode": "Interface com cores escuras para cansar menos os olhos.",
-            "legacy code": "Código antigo que ainda precisa ser mantido.",
-            "boilerplate": "Um modelo inicial de código pronto para começar um projeto.",
-            "callback": "Uma função que é executada depois que outra termina.",
-            "promise": "Um objeto do JS para lidar com operações que demoram.",
-            "async await": "Forma moderna e fácil de escrever código assíncrono em JS.",
-            "es6": "A versão do JavaScript que trouxe as maiores melhorias na linguagem.",
-            "closure": "Um conceito avançado de funções dentro de funções no JS.",
-            "hoisting": "Comportamento do JS de mover declarações para o topo.",
-            "strict mode": "Modo do JS que torna o código mais seguro contra erros bobos."
+            "javascript": "Linguagem de programação essencial para a web moderna.",
+            "html": "Linguagem de marcação usada para construir a estrutura de sites.",
+            "css": "Folha de estilo usada para definir a aparência das páginas.",
+            "python": "Linguagem versátil, muito usada em IA e Ciência de Dados.",
+            "php": "Linguagem de script voltada para o desenvolvimento do lado do servidor.",
+            "node": "Ambiente que permite rodar JS fora do navegador.",
+            "react": "Biblioteca para criar interfaces baseadas em componentes.",
+            "vue": "Framework progressivo para construção de interfaces.",
+            "angular": "Plataforma de desenvolvimento para aplicações web robustas.",
+            "typescript": "Superconjunto de JS que adiciona tipagem estática.",
+            "sql": "Linguagem padrão para gerenciar bancos de dados relacionais.",
+            "mongodb": "Banco de dados NoSQL orientado a documentos.",
+            "docker": "Sistema de containers para isolar aplicações.",
+            "git": "Sistema de controle de versão mais usado no mundo.",
+            "linux": "Sistema operacional de código aberto e kernel potente.",
+            "windows": "Sistema operacional da Microsoft para uso geral.",
+            "macos": "Sistema operacional da Apple baseado em Unix.",
+            "android": "Sistema operacional mobile baseado no Linux.",
+            "ios": "Sistema operacional mobile exclusivo da Apple.",
+            "api": "Conjunto de regras para comunicação entre softwares.",
+            "json": "Formato de troca de dados leve e fácil de ler.",
+            "xml": "Linguagem de marcação para armazenamento de dados.",
+            "http": "Protocolo de transferência de hipertexto básico da web.",
+            "https": "Versão segura do protocolo HTTP com criptografia.",
+            "dns": "Sistema que traduz nomes de domínio em endereços IP.",
+            "firewall": "Dispositivo de segurança que monitora tráfego de rede.",
+            "cpu": "Unidade de processamento principal do computador.",
+            "gpu": "Processador gráfico para alto desempenho visual.",
+            "ram": "Memória de acesso rápido para processos ativos.",
+            "ssd": "Disco de estado sólido, evolução rápida do HD.",
+            "cloud": "Computação em nuvem, acesso remoto a recursos.",
+            "blockchain": "Registro distribuído e imutável para segurança.",
+            "ia": "Inteligência Artificial, máquinas que simulam raciocínio.",
+            "algoritmo": "Passo a passo lógico para resolver um problema.",
+            "backend": "Lógica de servidor que o usuário não vê.",
+            "frontend": "Interface visual que o usuário interage.",
+            "fullstack": "Profissional que entende de front e back-end.",
+            "ux": "Experiência do usuário dentro de um produto.",
+            "ui": "Interface visual, botões e cores do sistema.",
+            "csharp": "Linguagem potente da Microsoft para sistemas e jogos.",
+            "swift": "Linguagem moderna para criar apps Apple.",
+            "kotlin": "Linguagem preferencial para apps Android modernos.",
+            "rust": "Linguagem focada em segurança de memória e performance.",
+            "ruby": "Linguagem conhecida pelo framework Rails e simplicidade.",
+            "perl": "Linguagem de script veterana para processamento de texto.",
+            "cobol": "Linguagem antiga ainda usada em sistemas bancários.",
+            "fortran": "Linguagem clássica para computação científica.",
+            "pascal": "Linguagem usada historicamente para ensino de programação.",
+            "scratch": "Linguagem visual em blocos para iniciantes.",
+            "arduino": "Plataforma de eletrônica para prototipagem rápida.",
+            "raspberry": "Minicomputador em uma única placa para projetos.",
+            "bit": "Menor unidade de informação digital.",
+            "byte": "Conjunto de 8 bits.",
+            "kb": "Kilobyte, aproximadamente 1.000 bytes.",
+            "mb": "Megabyte, aproximadamente 1 milhão de bytes.",
+            "gb": "Gigabyte, aproximadamente 1 bilhão de bytes.",
+            "tb": "Terabyte, aproximadamente 1 trilhão de bytes.",
+            "cookie": "Pequeno arquivo de texto salvo pelo navegador.",
+            "cache": "Armazenamento temporário para acelerar processos.",
+            "proxy": "Intermediário entre o usuário e a internet.",
+            "vpn": "Rede privada virtual para navegar com segurança.",
+            "dark web": "Parte oculta da internet não indexada.",
+            "deep web": "Conteúdo da web fora dos motores de busca comuns.",
+            "saas": "Software como serviço via assinatura.",
+            "paas": "Plataforma como serviço para desenvolvedores.",
+            "iaas": "Infraestrutura como serviço para redes e servidores.",
+            "big data": "Análise de volumes massivos de informações.",
+            "internet das coisas": "Objetos do dia a dia conectados à rede.",
+            "computacao quantica": "Uso de mecânica quântica para cálculos velozes.",
+            "nft": "Token não fungível que garante posse digital.",
+            "metaverso": "Espaço virtual compartilhado e imersivo.",
+            "ciberseguranca": "Prática de proteger redes e sistemas de ataques.",
+            "phishing": "Tentativa fraudulenta de obter dados pessoais.",
+            "malware": "Software malicioso criado para causar danos.",
+            "ransomware": "Vírus que sequestra dados e pede resgate.",
+            "spyware": "Software espião que coleta dados escondido.",
+            "trojan": "Cavalo de troia que abre portas para invasores.",
+            "rootkit": "Software que esconde a presença de invasores.",
+            "botnet": "Rede de computadores zumbis controlada por hackers.",
+            "ddos": "Ataque de negação de serviço para derrubar sites.",
+            "encriptacao": "Processo de transformar dados em códigos ilegíveis.",
+            "hash": "Função que gera uma assinatura única para dados.",
+            "token": "Código de autenticação para sessões de segurança.",
+            "oauth": "Protocolo aberto para autorização de acesso.",
+            "ssh": "Protocolo para acesso remoto seguro a servidores.",
+            "ftp": "Protocolo para transferência de arquivos entre máquinas.",
+            "smtp": "Protocolo para envio de e-mails.",
+            "pop3": "Protocolo para recebimento de e-mails (antigo).",
+            "imap": "Protocolo moderno para sincronização de e-mails.",
+            "udp": "Protocolo de transporte rápido sem verificação.",
+            "tcp": "Protocolo de transporte seguro com verificação.",
+            "ip": "Endereço único de um dispositivo na rede.",
+            "ipv4": "Versão antiga de endereçamento IP (32 bits).",
+            "ipv6": "Versão nova de endereçamento IP (128 bits).",
+            "mac address": "Identificador físico da placa de rede.",
+            "subnet": "Divisão lógica de uma rede IP.",
+            "gateway": "Ponto de saída de uma rede local para a internet.",
+            "router": "Roteador que encaminha pacotes de dados.",
+            "switch": "Equipamento que conecta dispositivos em rede local.",
+            "modem": "Dispositivo que modula o sinal da internet.",
+            "lan": "Rede de área local restrita a um local.",
+            "wan": "Rede de longa distância que cobre grandes áreas.",
+            "man": "Rede metropolitana que cobre uma cidade.",
+            "pan": "Rede de área pessoal (ex: Bluetooth).",
+            "wlan": "Rede local sem fio.",
+            "latencia": "Tempo de atraso na comunicação de dados.",
+            "largura de banda": "Capacidade de transmissão de uma rede.",
+            "ping": "Teste de velocidade de resposta da conexão.",
+            "hospedagem": "Serviço que mantém sites online 24 horas.",
+            "dominio": "O endereço do site (ex: google.com).",
+            "tld": "Extensão do domínio (ex: .com, .org, .net).",
+            "servidor": "Computador potente que fornece serviços a outros.",
+            "cliente": "Dispositivo que solicita serviços ao servidor.",
+            "cluster": "Grupo de computadores trabalhando juntos.",
+            "redundancia": "Duplicação de sistemas para evitar falhas.",
+            "backup": "Cópia de segurança de dados importantes.",
+            "restauracao": "Processo de recuperar dados de um backup.",
+            "virtualizacao": "Criação de versões virtuais de hardware.",
+            "maquina virtual": "Emulação de um computador real via software.",
+            "hypervisor": "Software que gerencia máquinas virtuais.",
+            "sandbox": "Ambiente isolado para testes seguros.",
+            "api rest": "Modelo de arquitetura de API baseado em HTTP.",
+            "graphql": "Linguagem de consulta para APIs desenvolvida pelo Facebook.",
+            "webhook": "Notificação automática entre sistemas via HTTP.",
+            "devops": "Cultura que une desenvolvimento e operações.",
+            "ci/cd": "Integração e entrega contínua de software.",
+            "deploy": "Ato de colocar uma aplicação em produção.",
+            "log": "Registro cronológico de eventos de um sistema.",
+            "debug": "Processo de encontrar e corrigir erros no código.",
+            "ide": "Ambiente de desenvolvimento integrado (ex: VS Code).",
+            "compiler": "Compilador que traduz código para linguagem de máquina.",
+            "interpreter": "Interpretador que executa código linha por linha.",
+            "framework": "Conjunto de ferramentas prontas para desenvolvimento.",
+            "library": "Biblioteca de funções prontas para reuso.",
+            "plugin": "Extensão que adiciona funções a um programa.",
+            "widget": "Pequeno componente de interface gráfica.",
+            "boilerplate": "Código base padronizado para novos projetos.",
+            "legacy": "Código ou sistema antigo ainda em uso.",
+            "refatoracao": "Melhoria do código sem alterar sua função.",
+            "scrum": "Metodologia ágil para gestão de projetos.",
+            "kanban": "Sistema visual para controle de fluxo de trabalho.",
+            "sprint": "Ciclo curto de trabalho em metodologias ágeis.",
+            "backlog": "Lista de tarefas a serem realizadas no projeto.",
+            "stakeholder": "Pessoa interessada no sucesso do projeto.",
+            "mvp": "Produto mínimo viável para teste de mercado.",
+            "leads": "Potenciais clientes interessados em um produto.",
+            "seo": "Otimização para mecanismos de busca.",
+            "sem": "Marketing para mecanismos de busca.",
+            "cro": "Otimização da taxa de conversão de usuários.",
+            "cta": "Chamada para ação (ex: botão 'Comprar')."
         },
         piadas: [
-            "Por que o computador foi ao médico? Porque estava com um vírus! 😂",
-            "O que o zero disse para o oito? Belo cinto! 😎",
-            "Por que o livro de matemática se sentia triste? Porque tinha muitos problemas. 📖",
-            "Qual é o animal mais antigo? A zebra, porque está em preto e branco!",
-            "Como o programador dorme? if(sono) { dormir(); }",
-            "O que o Chrome disse para o Internet Explorer? Você é muito lento!",
-            "Por que o desenvolvedor faliu? Porque ele usou todo o seu cache."
+            "Por que o computador foi ao médico? Porque tinha um vírus!",
+            "O que o zero disse para o oito? Belo cinto!",
+            "Qual o café favorito do Java? O expresso!",
+            "Por que o livro de matemática se suicidou? Tinha muitos problemas.",
+            "Como um bit se despede? 'Até logo (byte)'!"
         ],
         curiosidades: [
-            "O Sol é 330.000 vezes maior que a Terra.",
-            "Os polvos têm 3 corações e sangue azul.",
-            "O mel é o único alimento que nunca estraga.",
-            "A primeira webcam foi feita para vigiar uma cafeteira.",
-            "O código do Apollo 11 foi escrito à mão.",
-            "O primeiro mouse de computador era feito de madeira.",
-            "A cada minuto, 500 horas de vídeo são postadas no YouTube.",
-            "O Isaque é a pessoa que está me ensinando a ser inteligente!",
-            "As borboletas sentem o gosto com os pés.",
-            "O recorde de voo de uma galinha é de 13 segundos."
+            "O primeiro computador pesava 30 toneladas.",
+            "O mel nunca estraga.",
+            "A primeira webcam vigiava uma cafeteira.",
+            "O Sol é 330 mil vezes maior que a Terra.",
+            "As formigas nunca dormem."
         ]
     };
 
@@ -198,12 +215,10 @@ window.onload = () => {
     async function botEngine(rawText) {
         const t = Utils.norm(rawText);
 
-        // 1. Conversa Simples
-        if (t === "oi" || t === "ola") return addMsg("Oi Isaque! Como posso te ajudar hoje? 😄", "bot");
+        if (t === "oi" || t === "ola") return addMsg("Oi Isaque! Como posso te ajudar? 😄", "bot");
         if (t.includes("quem te criou")) return addMsg("Fui criado por você, Isaque! 😎", "bot");
-        if (t.includes("seu nome")) return addMsg("Eu sou o InfoBot Pro, seu assistente virtual.", "bot");
 
-        // 2. Matemática
+        // Matemática
         try {
             let mathExpr = t.replace(/x/g, "*").replace(/vezes/g, "*")
                             .replace(/dividido por/g, "/").replace(/mais/g, "+")
@@ -214,18 +229,17 @@ window.onload = () => {
             }
         } catch (e) {}
 
-        // 3. Dicionário Interno
+        // Dicionário
         for (let key in BRAIN.dicionario) {
             if (t.includes(key)) {
                 return addMsg(`📖 **${key.toUpperCase()}**: ${BRAIN.dicionario[key]}`, "bot");
             }
         }
 
-        // 4. Randomizadores
         if (t.includes("piada")) return addMsg("🤣 " + Utils.random(BRAIN.piadas), "bot");
         if (t.includes("curiosidade")) return addMsg("💡 " + Utils.random(BRAIN.curiosidades), "bot");
 
-        // 5. Internet (Wikipedia)
+        // Internet
         addMsg("(Buscando na internet...)", "bot", "loading");
         try {
             const url = `https://pt.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(rawText)}?origin=*`;
@@ -242,7 +256,7 @@ window.onload = () => {
             if (el) el.remove();
         }
 
-        addMsg("Hmm, não tenho certeza. Tente perguntar sobre um termo técnico ou peça uma 'curiosidade'!", "bot");
+        addMsg("Não tenho certeza sobre isso. Tente perguntar sobre tecnologia ou peça uma 'curiosidade'!", "bot");
     }
 
     // =============== EVENTOS ===============
@@ -258,6 +272,5 @@ window.onload = () => {
         if (e.key === "Enter") button.click();
     };
 
-    // Mensagem de Boas-vindas
-    addMsg("Olá Isaque! IA Nexus-7 pronta. O que vamos pesquisar hoje? 🚀", "bot");
+    addMsg("IA Nexus-7 Online. O que vamos pesquisar hoje, Isaque? 🚀", "bot");
 };
