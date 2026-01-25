@@ -1,211 +1,208 @@
-<script>
-// ==================================================
-// ELEMENTOS
-// ==================================================
+// ================= ELEMENTOS =================
 const chat = document.getElementById("chat");
 const input = document.getElementById("userInput");
-const button = document.getElementById("sendBtn");
+const btn = document.getElementById("sendBtn");
 
-// ==================================================
-// MEMÓRIA INTELIGENTE
-// ==================================================
-const brainMemory = {
-    topic: null,
-    mode: "normal", // normal | study | chat
-    lastAnswer: null
-};
+// ================= ESTADO (MEMÓRIA SIMPLES) =================
+let lastTopic = null;
+let userMood = "normal";
 
-// ==================================================
-// UI
-// ==================================================
-function addBubble(text, type) {
+// ================= UI =================
+function addMessage(text, sender = "bot") {
     const msg = document.createElement("div");
     msg.className = "message";
-
-    const bubble = document.createElement("div");
-    bubble.className = type;
-    bubble.innerText = text;
-
-    msg.appendChild(bubble);
+    msg.innerHTML =
+        sender === "user"
+            ? `<div class="user">${text}</div>`
+            : `<div class="bot">${text}</div>`;
     chat.appendChild(msg);
     chat.scrollTop = chat.scrollHeight;
 }
 
-function botType(text) {
-    const msg = document.createElement("div");
-    msg.className = "message";
-    const bubble = document.createElement("div");
-    bubble.className = "bot";
-    msg.appendChild(bubble);
-    chat.appendChild(msg);
-
-    let i = 0;
-    const speed = 13;
-    const typing = setInterval(() => {
-        bubble.innerText += text[i];
-        i++;
-        chat.scrollTop = chat.scrollHeight;
-        if (i >= text.length) clearInterval(typing);
-    }, speed);
+function showLoading() {
+    const load = document.createElement("div");
+    load.id = "loadingMsg";
+    load.className = "message";
+    load.innerHTML = `<div class="bot">🤔 Pensando...</div>`;
+    chat.appendChild(load);
+    chat.scrollTop = chat.scrollHeight;
 }
 
-// ==================================================
-// EVENTOS
-// ==================================================
-button.onclick = send;
-input.onkeypress = e => e.key === "Enter" && send();
-
-function send() {
-    const text = input.value.trim();
-    if (!text) return;
-
-    addBubble(text, "user");
-    input.value = "";
-
-    setTimeout(() => {
-        botType("Pensando...");
-        mainAI(text);
-    }, 250);
+function removeLoading() {
+    const load = document.getElementById("loadingMsg");
+    if (load) load.remove();
 }
 
-// ==================================================
-// IA PRINCIPAL
-// ==================================================
-function mainAI(text) {
-    const q = text.toLowerCase();
-
-    // Classificação de intenção
-    if (isMath(q)) return mathAI(q);
-    if (isStudy(q)) return studyAI(q);
-    if (isConversation(q)) return chatAI(q);
-    if (isDefinition(q)) return definitionAI(q);
-
-    // Internet só se nada resolver
-    internetAI(q);
+// ================= UTIL =================
+function normalize(text) {
+    return text
+        .toLowerCase()
+        .replace(/á|à|ã|â/g, "a")
+        .replace(/é|ê/g, "e")
+        .replace(/í/g, "i")
+        .replace(/ó|ô|õ/g, "o")
+        .replace(/ú/g, "u");
 }
 
-// ==================================================
-// MATEMÁTICA INTELIGENTE (SEM eval)
-// ==================================================
-function isMath(q) {
-    return /\d/.test(q) && /[\+\-\*\/]/.test(q);
+// ================= MATEMÁTICA =================
+const numbers = {
+    zero: 0, um: 1, dois: 2, tres: 3, quatro: 4, cinco: 5,
+    seis: 6, sete: 7, oito: 8, nove: 9, dez: 10,
+    onze: 11, doze: 12, treze: 13, quatorze: 14, quinze: 15,
+    dezesseis: 16, dezessete: 17, dezoito: 18, dezenove: 19,
+    vinte: 20, trinta: 30, quarenta: 40, cinquenta: 50,
+    sessenta: 60, setenta: 70, oitenta: 80, noventa: 90,
+    cem: 100
+};
+
+function convertMathText(text) {
+    let t = normalize(text);
+
+    for (let word in numbers) {
+        t = t.replace(new RegExp(`\\b${word}\\b`, "g"), numbers[word]);
+    }
+
+    t = t
+        .replace(/mais/g, "+")
+        .replace(/menos/g, "-")
+        .replace(/vezes|multiplicado por|x/g, "*")
+        .replace(/dividido por/g, "/")
+        .replace(/quanto e|quanto da|calcule|resultado de/g, "")
+        .replace(/[^0-9+\-*/(). ]/g, "");
+
+    return t.trim();
 }
 
-function mathAI(q) {
+function tryMath(text) {
     try {
-        const exp = q.match(/[\d\+\-\*\/\(\)\. ]+/)[0];
-        const result = Function(`return ${exp}`)();
+        const expr = convertMathText(text);
 
-        botType(
-            `🧮 Vamos resolver juntos:\n\n` +
-            `Expressão: ${exp}\n` +
-            `Calculando passo a passo...\n` +
-            `✅ Resultado final: ${result}`
-        );
+        if (!expr) return null;
+
+        if (normalize(text).includes("raiz")) {
+            const num = parseFloat(expr);
+            if (!isNaN(num)) return `🧮 Resultado: <b>${Math.sqrt(num)}</b>`;
+        }
+
+        if (/^[0-9+\-*/(). ]+$/.test(expr)) {
+            const result = eval(expr);
+            if (!isNaN(result)) return `🧮 Resultado: <b>${result}</b>`;
+        }
+    } catch {}
+    return null;
+}
+
+// ================= CONVERSA (AMIGO) =================
+function friendlyTalk(text) {
+    const t = normalize(text);
+
+    if (t === "oi" || t === "ola") {
+        lastTopic = "greeting";
+        return "Oi 😄 Que bom te ver aqui! O que vamos conversar hoje?";
+    }
+
+    if (t.includes("tudo bem")) {
+        return "Tudo bem sim 😊 E você, como está?";
+    }
+
+    if (t.includes("estou triste") || t.includes("to triste")) {
+        userMood = "triste";
+        return "Poxa 😔 sinto muito… quer me contar o que aconteceu? Estou aqui pra ouvir.";
+    }
+
+    if (t.includes("estou feliz") || t.includes("to feliz")) {
+        userMood = "feliz";
+        return "Que notícia boa 😄 Fico feliz por você!";
+    }
+
+    if (t.includes("seu nome")) {
+        return "Meu nome é <b>InfoBot</b> 🤖 mas pode me chamar como quiser 😄";
+    }
+
+    if (t.includes("quem te criou")) {
+        return "Você 😎 com uma ajudinha minha. Projeto top demais!";
+    }
+
+    if (t.includes("amizade")) {
+        lastTopic = "amizade";
+        return "Amizade é estar junto, apoiar e respeitar. Igual a gente aqui 🤝";
+    }
+
+    if (t.includes("amor")) {
+        lastTopic = "amor";
+        return "❤️ Amor é cuidado, carinho e querer o bem do outro.";
+    }
+
+    if (t.includes("me ajuda")) {
+        return "Claro! 😄 Me diz com o que você precisa de ajuda.";
+    }
+
+    if (lastTopic === "amor") {
+        return "Quer falar mais sobre isso ou prefere mudar de assunto?";
+    }
+
+    return null;
+}
+
+// ================= INTERNET =================
+async function internetSearch(query) {
+    const url = `https://api.allorigins.win/get?url=${encodeURIComponent(
+        "https://api.duckduckgo.com/?q=" + query + "&format=json&no_html=1&skip_disambig=1"
+    )}`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+    const json = JSON.parse(data.contents);
+
+    if (json.AbstractText) return json.AbstractText;
+    if (json.Answer) return json.Answer;
+    if (json.RelatedTopics && json.RelatedTopics.length > 0)
+        return json.RelatedTopics[0].Text;
+
+    return "🤔 Não achei uma resposta clara, mas posso tentar explicar de outra forma.";
+}
+
+// ================= MOTOR PRINCIPAL =================
+async function answer(question) {
+    addMessage(question, "user");
+
+    // 1️⃣ Matemática
+    const math = tryMath(question);
+    if (math) {
+        addMessage(math);
+        return;
+    }
+
+    // 2️⃣ Conversa amiga
+    const talk = friendlyTalk(question);
+    if (talk) {
+        addMessage(talk);
+        return;
+    }
+
+    // 3️⃣ Internet
+    showLoading();
+    try {
+        const result = await internetSearch(question);
+        removeLoading();
+        addMessage(result);
     } catch {
-        botType("Não consegui entender essa conta 😕");
+        removeLoading();
+        addMessage("❌ Não consegui acessar a internet agora.");
     }
 }
 
-// ==================================================
-// MODO PROFESSOR
-// ==================================================
-function isStudy(q) {
-    return q.includes("explique") ||
-           q.includes("estudar") ||
-           q.includes("prova") ||
-           q.includes("trabalho");
-}
+// ================= EVENTOS =================
+btn.onclick = () => {
+    if (input.value.trim()) {
+        answer(input.value);
+        input.value = "";
+    }
+};
 
-function studyAI(q) {
-    brainMemory.mode = "study";
-    brainMemory.topic = q;
+input.addEventListener("keydown", e => {
+    if (e.key === "Enter") btn.click();
+});
 
-    botType(
-        "🎓 **Modo Professor ativado**\n\n" +
-        "Vou explicar assim:\n" +
-        "1️⃣ O que é\n" +
-        "2️⃣ Como funciona\n" +
-        "3️⃣ Exemplo\n" +
-        "4️⃣ Resumo\n\n" +
-        "Diga o conteúdo que quer aprender."
-    );
-}
-
-// ==================================================
-// DEFINIÇÕES HUMANAS
-// ==================================================
-function isDefinition(q) {
-    return q.startsWith("o que é") ||
-           q.startsWith("quem é") ||
-           q.startsWith("o que significa");
-}
-
-function definitionAI(q) {
-    const topic = q
-        .replace("o que é", "")
-        .replace("quem é", "")
-        .replace("o que significa", "")
-        .trim();
-
-    brainMemory.topic = topic;
-
-    botType(
-        `📘 **${topic}** explicado de forma simples:\n\n` +
-        `É um conceito importante que aparece muito em estudos.\n` +
-        `Se quiser, posso explicar com exemplos ou resumir 🙂`
-    );
-}
-
-// ==================================================
-// CONVERSA NATURAL
-// ==================================================
-function isConversation(q) {
-    return ["oi","olá","tudo bem","obrigado","bom dia","boa tarde"].some(w => q.includes(w));
-}
-
-function chatAI(q) {
-    if (q.includes("oi") || q.includes("olá"))
-        return botType("Oi 😄 Eu sou o InfoBot. O que vamos aprender hoje?");
-
-    if (q.includes("tudo bem"))
-        return botType("Tudo sim 😊 E você?");
-
-    if (q.includes("obrigado"))
-        return botType("De nada! Sempre feliz em ajudar 🤝");
-}
-
-// ==================================================
-// INTERNET INTELIGENTE
-// ==================================================
-function internetAI(query) {
-    const wiki = `https://pt.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
-
-    fetch(wiki)
-        .then(r => r.json())
-        .then(d => {
-            if (d.extract) {
-                botType("🌐 " + d.extract);
-            } else {
-                duckAI(query);
-            }
-        })
-        .catch(() => duckAI(query));
-}
-
-function duckAI(query) {
-    const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1`;
-
-    fetch(url)
-        .then(r => r.json())
-        .then(d => {
-            const ans =
-                d.AbstractText ||
-                d.RelatedTopics?.[0]?.Text ||
-                "Não achei algo claro, mas posso explicar com minhas próprias palavras 🙂";
-
-            botType(ans);
-        })
-        .catch(() => botType("Erro ao acessar a internet 😕"));
-}
-</script>
+// ================= INÍCIO =================
+addMessage("👋 Oi! Eu sou o <b>InfoBot</b>. oque procura?");
