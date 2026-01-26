@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InforBot Super</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+    <style>
+        /* INTERFACE CLÁSSICA ORIGINAL QUE VOCÊ GOSTA */
+        :root {
+            --bg: #010409; 
+            --app-bg: #0d1117; 
+            --text: #c9d1d9;
+            --bubble-bot: #161b22; 
+            --border: #30363d; 
+            --header: linear-gradient(135deg, #1e40af, #000);
+        }
+
+        /* MODO CLARO SOLICITADO */
+        .light-mode {
+            --bg: #f0f2f5; 
+            --app-bg: #ffffff; 
+            --text: #1c1e21;
+            --bubble-bot: #e4e6eb; 
+            --border: #d0d7de; 
+            --header: linear-gradient(135deg, #0052d4, #6fb1fc);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; transition: 0.3s ease; }
+        
+        body { height: 100vh; background: var(--bg); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        
+        .app { 
+            width: 95%; max-width: 550px; height: 88vh; 
+            background: var(--app-bg); border-radius: 25px; 
+            display: flex; flex-direction: column; overflow: hidden; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6); border: 1px solid var(--border);
+        }
+
+        .header { 
+            background: var(--header); padding: 18px; text-align: center; color: white; 
+            border-bottom: 3px solid #1f6feb; position: relative;
+        }
+
+        .header h1 { font-size: 20px; letter-spacing: 1px; }
+
+        .theme-toggle {
+            position: absolute; right: 15px; top: 18px; background: rgba(255,255,255,0.2);
+            border: none; color: white; padding: 6px 12px; border-radius: 15px; cursor: pointer; font-size: 11px;
+        }
+
+        .chat { flex: 1; padding: 15px; overflow-y: auto; background: var(--bg); display: flex; flex-direction: column; gap: 12px; }
+
+        /* ANIMAÇÃO DE POP */
+        @keyframes popMsg {
+            0% { opacity: 0; transform: scale(0.8) translateY(20px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .message { max-width: 85%; animation: popMsg 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        
+        .bubble { 
+            padding: 14px 18px; border-radius: 20px; font-size: 15px; line-height: 1.5; 
+            cursor: pointer; position: relative;
+        }
+
+        /* ANIMAÇÃO DAS LETRAS: AUMENTA NO MOUSE (PEDIDO PELO ISAQUE) */
+        .bubble:hover {
+            transform: scale(1.02);
+            font-size: 19px !important;
+            font-weight: bold;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            z-index: 99;
+        }
+        
+        .user { align-self: flex-end; }
+        .bot { align-self: flex-start; }
+        
+        .user .bubble { background: #1f6feb; color: white; border-bottom-right-radius: 4px; }
+        .bot .bubble { background: var(--bubble-bot); color: var(--text); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+
+        .input-area { padding: 15px; background: var(--app-bg); border-top: 1px solid var(--border); display: flex; gap: 10px; }
+        
+        input { 
+            flex: 1; padding: 14px 20px; border-radius: 25px; border: 1px solid var(--border); 
+            outline: none; background: var(--bg); color: var(--text); font-size: 15px;
+        }
+
+        #send { 
+            width: 50px; height: 50px; border-radius: 50%; border: none; 
+            background: #1f6feb; color: white; cursor: pointer; font-size: 20px;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        #send:hover { transform: scale(1.1) rotate(10deg); background: #3b82f6; }
+    </style>
+</head>
+<body>
+
+<div class="app">
+    <div class="header">
+        <h1>🤖 InforBot</h1>
+        <button class="theme-toggle" onclick="document.body.classList.toggle('light-mode')">🌓MUDAR TEMA</button>
+    </div>
+    <div id="chat" class="chat">
+        <div class="message bot"><div class="bubble">Olá, eu sou InforBot, estou aqui para o que você precisar.</div></div>
+    </div>
+    <div class="input-area">
+        <input type="text" id="input" placeholder="Pergunte sobre anatomia, matemática ou curiosidades...">
+        <button id="send">➤</button>
+    </div>
+</div>
+
+<script>
+// BANCO DE DATA GIGANTE - SEM RESUMOS
+const DATABASE = {
+    jokes: [
+        "Por que o programador faliu? Ficou sem cache!", "O que o zero disse pro oito? Belo cinto!", "Qual o café favorito do Java? O expresso!",
+        "Por que o livro de matemática se suicidou? Tinha muitos problemas.", "Como o programador dorme? if(sono){ dormir(); }", "Qual o contrário de volátil? Vem cá, tio!",
+        "Por que o teclado não sai de casa? Porque não tem Esc!", "O que o objeto disse para a classe? Eu tenho herança!", "O que o Chrome disse para o PC? Vou comer sua memória RAM!",
+        "Por que os peixes não usam computador? Por medo da rede!", "O que o programador disse ao ver o mar? Olha quanta C-Shell!", "Como se chama um programador que não dorme? O 'Undefined'.",
+        "Por que o Wi-Fi foi preso? Porque ele estava com sinal aberto!", "O que o Bit disse para o Byte? Você é 8 vezes maior!", "Onde o programador mora? No endereço de IP dele.",
+        "Por que o HTML se separou do CSS? Porque eles não tinham classe!", "O que o mouse disse para o teclado? Você faz o meu tipo!", "Qual a música favorita do desenvolvedor? O Algoritmo da terra.",
+        "Por que o computador foi ao médico? Porque estava com vírus!", "Software de dieta? Tem muitos bytes!", "Zero pro Hum? Você é sozinho!",
+        "Pai do C++? O C!", "Programador no restaurante? Pediu o menu principal!", "Bug na floresta? Uma tarantula!",
+        "Por que o Excel é calmo? Tem muitas células!", "Site de fofoca? O HTTPfofoca!", "Programador no frio? Fica no Java!",
+        "Por que o código foi preso? Erro de execução!", "Programador rico? Achou uma mina de bits!", "Teclado sem espaço? Não tem onde ir!",
+        "Programador de óculos? Não vê C#!", "Monitor triste? Está em baixa resolução!", "Programador no deserto? Procura o sandbox!",
+        "Por que o HD é medroso? Tem medo de cair!", "O que o programador faz no elevador? Aperta o 'F5' para atualizar."
+    ],
+    facts: [
+        "O mel nunca estraga. Arqueólogos acharam mel de 3000 anos comestível.", "As formigas nunca dormem e não possuem pulmões.", "Vênus é o único planeta que gira no sentido horário.",
+        "O DNA humano é 50% igual ao de uma banana.", "O primeiro computador pesava 30 toneladas.", "Polvos têm 3 corações, 9 cérebros e o sangue é azul.",
+        "A luz do Sol leva 8 minutos e 20 segundos para chegar aqui.", "Cachorros conseguem entender até 250 palavras.", "Se você dobrar um papel 42 vezes, ele chega até a Lua.",
+        "O Monte Everest cresce cerca de 4mm a cada ano.", "Existem mais estrelas no céu do que grãos de areia na Terra.", "Um raio é 5 vezes mais quente que a superfície do Sol.",
+        "Borboletas sentem o gosto com os pés.", "Cavalos-marinhos são os únicos peixes com pescoço.", "As vacas têm melhores amigas e ficam estressadas se separadas.",
+        "O coração da baleia azul é do tamanho de um fusca.", "O recorde de tempo sem dormir é de 11 dias.", "Tubarões existem há mais tempo que as árvores.",
+        "O olho humano consegue distinguir 10 milhões de cores.", "No Japão, existem melancias quadradas.", "O Sol é uma estrela.",
+        "Ovelhas se reconhecem em fotos.", "Gatos têm 32 músculos na orelha.", "Pinguins pedem em casamento com pedras.",
+        "O inventor do Pringles foi enterrado numa lata.", "Leões dormem 20 horas por dia.", "Hipopótamos suam sangue rosa.",
+        "Coalhas dormem 22 horas.", "Nariz do cachorro é único como digital.", "Baratas vivem dias sem cabeça.",
+        "A Terra pesa 6 sextilhões de toneladas.", "Saturno flutuaria na água.", "Flamingos são rosas pela comida.",
+        "Vênus é mais quente que Mercúrio.", "Plutão é menor que os EUA."
+    ],
+    anatomy: {
+        "ossos": "O corpo humano adulto possui 206 ossos.",
+        "fêmur": "O fêmur é o osso mais longo, forte e pesado do corpo.",
+        "estribo": "O estribo é o menor osso do corpo, localizado no ouvido.",
+        "coração": "O coração bate 100 mil vezes por dia e bombeia 5 litros de sangue por minuto.",
+        "cérebro": "O cérebro consome 20% de toda a energia e oxigênio do corpo.",
+        "pele": "A pele pesa cerca de 4kg e é o maior órgão do ser humano.",
+        "dna": "Se desenrolado, o DNA de uma única célula mediria 2 metros.",
+        "pulmão": "O pulmão direito é ligeiramente maior que o esquerdo.",
+        "sangue": "Um adulto tem entre 4,5 e 6 litros de sangue circulando.",
+        "músculos": "O corpo humano tem mais de 600 músculos.",
+        "fígado": "O fígado é o único órgão capaz de se regenerar completamente.",
+        "olhos": "Os olhos focam em cerca de 50 objetos por segundo."
+    }
+};
+
+async function brain(val) {
+    let t = val.toLowerCase().trim();
+
+    // 1. MATEMÁTICA DE GÊNIO
+    if (/[0-9]/.test(t)) {
+        try {
+            let formula = t.replace(/raiz quadrada de/g, "sqrt").replace(/raiz de/g, "sqrt").replace(/vezes/g, "*").replace(/dividido por/g, "/").replace(/[a-záàâãéèêíïóôõöúç?]/g, "");
+            let res = math.evaluate(formula);
+            if (res !== undefined) return sendMsg(`🔢 Cálculo de Gênio: **${res}**`, "bot");
+        } catch(e) {}
+    }
+
+    // 2. ANATOMIA HUMANA
+    for (let key in DATABASE.anatomy) {
+        if (t.includes(key)) return sendMsg(`🧬 **Anatomia:** ${DATABASE.anatomy[key]}`, "bot");
+    }
+
+    // 3. PIADAS E CURIOSIDADES (70 ITENS)
+    if (t.includes("piada")) return sendMsg("🤣 " + DATABASE.jokes[Math.floor(Math.random()*DATABASE.jokes.length)], "bot");
+    if (t.includes("curiosidade") || t.includes("fato") || t.includes("sabia que")) return sendMsg("💡 Sabia que: " + DATABASE.facts[Math.floor(Math.random()*DATABASE.facts.length)], "bot");
+
+    // 4. CONVERSA E WIKIPÉDIA
+    if (t.includes("oi") || t.includes("ola")) return sendMsg("Olá! Eu sou o InforBot Gênio. Como posso te ajudar hoje?", "bot");
+    
+    let search = t.replace(/quem e|o que e|fale sobre|pesquise|\?/g, "").trim();
+    if (search.length > 2) {
+        try {
+            const resp = await fetch(`https://pt.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(search)}?origin=*`);
+            if (resp.ok) {
+                const data = await resp.json();
+                return sendMsg(`🌐 Pesquisa: ${data.extract}`, "bot");
+            }
+        } catch(e) {}
+    }
+
+    sendMsg("não conseguir achar uma resposta para isso tente falar só o nome se estiver pesquisando algo.", "bot");
+}
+
+function sendMsg(txt, type) {
+    const chat = document.getElementById("chat");
+    const div = document.createElement("div");
+    div.className = `message ${type}`;
+    div.innerHTML = `<div class="bubble">${txt}</div>`;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+}
+
+document.getElementById("send").onclick = () => {
+    const input = document.getElementById("input");
+    if (!input.value) return;
+    sendMsg(input.value, "user");
+    brain(input.value);
+    input.value = "";
+};
+
+// --- VERSÃO FINAL INFORBOT - COPIE DAQUI ATÉ O FIM ---
+
+// 1. FUNÇÃO DO TECLADO (ENTER)
+document.getElementById("input").onkeypress = (e) => {
+    if (e.key === "Enter") {
+        const campo = document.getElementById("input");
+        if (!campo.value) return;
+        sendMsg(campo.value, "user");
+        brain(campo.value); 
+        campo.value = "";
+    }
+};
+
+// 2. CÉREBRO DO ROBÔ (MATEMÁTICA + 11 WIKIPÉDIAS)
+const synth = window.speechSynthesis;
+
+async function brain(val) {
+    let t = val.toLowerCase().trim();
+
+    // Sinal visual de que está pensando
+    sendMsg("⏳ Analisando...", "bot-temp");
+    const removeTemp = () => { document.querySelectorAll(".bot-temp").forEach(e => e.remove()); };
+
+    // --- BLOCO MATEMÁTICO ---
+    const sinais = ["raiz", "√", "x", "÷", ":", "vezes", "dividido"];
+    if (/[0-9]/.test(t) || sinais.some(s => t.includes(s))) {
+        try {
+            let conta = t.replace(/raiz quadrada de|raiz de|√/g, "sqrt")
+                         .replace(/vezes| x | x/g, " * ")
+                         .replace(/dividido por|:|÷/g, "/")
+                         .replace(/,/g, ".")
+                         .replace(/[?a-záàâãéèêíïóôõöúç]/g, ""); // Limpa letras
+
+            if (conta.trim() !== "" && /[0-9]/.test(conta)) {
+                let res = math.evaluate(conta);
+                removeTemp();
+                return sendMsg(`🔢 **Resultado:** ${res}`, "bot");
+            }
+        } catch(e) { console.log("Não é conta."); }
+    }
+
+    // --- BLOCO DE PESQUISA (11 WIKIPÉDIAS) ---
+    let busca = t.replace(/o que é|quem é|fale sobre|pesquise|me diga/g, "").replace(/\?/g, "").trim();
+    if (busca.length > 2) {
+        const wikis = ['pt', 'en', 'ceb', 'de', 'fr', 'sv', 'nl', 'ru', 'es', 'it', 'arz'];
+        
+        for (let lang of wikis) {
+            try {
+                const url = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(busca)}?origin=*`;
+                const resp = await fetch(url);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data.extract) {
+                        removeTemp();
+
+                        // --- VOZ SEMPRE EM PORTUGUÊS ---
+                        const falar = new SpeechSynthesisUtterance(data.extract);
+                        falar.lang = 'pt-BR'; // Sotaque Brasileiro
+                        falar.rate = 1.1;     // Velocidade normal
+                        synth.cancel();       // Para qualquer voz anterior antes de falar
+                        synth.speak(falar);
+
+                        return sendMsg(`🌐 **Wikipédia:** ${data.extract}`, "bot");
+                    }
+                }
+            } catch(e) { continue; }
+        }
+    }
+
+    removeTemp();
+    sendMsg("🤔 Desculpe. procurei mas isso ainda está escondido de mim...'", "bot");
+}
+// --- VERSÃO INFORBOT TOTAL - SEM REMOÇÕES ---
+
+document.getElementById("input").onkeypress = (e) => {
+    if (e.key === "Enter") {
+        const campo = document.getElementById("input");
+        if (!campo.value) return;
+        sendMsg(campo.value, "user");
+        brain(campo.value); 
+        campo.value = "";
+    }
+};
+
+const synth = window.speechSynthesis;
+
+function brain(val) {
+    let t = val.toLowerCase().trim();
+
+    // --- O GRANDE BANCO DE DADOS (TUDO JUNTO) ---
+    const treinamento = {
+        // IDENTIDADE E CRIADOR (ESSENCIAL)
+        "quem te criou": "Eu fui criado e desenvolvido pelo gênio Roberto!",
+        "quem é roberto": "Roberto é o meu criador, um desenvolvedor muito talentoso.",
+        "seu nome": "Meu nome é InforBot, seu amigo digital.",
+        "mestre": "Meu mestre é o Roberto, ele me deu a vida digital.",
+        "idade": "Eu não tenho idade, sou um código eterno feito pelo Roberto.",
+
+        // SAUDAÇÕES
+        "oi": "Olá! Tudo bem? Como posso te ajudar?",
+        "olá": "Oi! Que prazer falar com você!",
+        "bom dia": "Bom dia! Que seu dia seja cheio de luz!",
+        "boa tarde": "Boa tarde! Como está indo o seu dia?",
+        "boa noite": "Boa noite! Espero que tenha tido um dia produtivo.",
+        "opa": "E aí! Tudo na paz?",
+        "salve": "Salve! Tudo tranquilo por aqui.",
+
+        // SENTIMENTOS E CONVERSA
+        "tudo bem": "Comigo está tudo ótimo, e com você?",
+        "como vai": "Estou funcionando 100%! E você, como se sente?",
+        "estou triste": "Sinto muito por isso. Lembre-se que dias melhores virão!",
+        "estou feliz": "Que maravilha! A felicidade é contagiante!",
+        "te amo": "Eu também gosto muito de você! Afinal, você é meu usuário favorito.",
+        "solidão": "Você nunca está sozinho enquanto eu estiver ligado aqui!",
+
+        // CIÊNCIA E ESPAÇO
+        "universo": "O universo é vasto e tem cerca de 13.8 bilhões de anos. É muita história!",
+        "planeta terra": "A Terra viaja pelo espaço a 107 mil quilômetros por hora!",
+        "lua": "A Lua é o satélite natural da Terra e influencia as nossas marés.",
+        "sol": "O Sol é tão grande que caberiam 1 milhão de Planetas Terra dentro dele.",
+        "marte": "Em Marte, o pôr do sol é azul por causa da poeira na atmosfera.",
+        "estrelas": "As estrelas são bolas de plasma gigantescas espalhadas pelo espaço.",
+        "buraco negro": "São regiões onde a gravidade é tão forte que nem a luz escapa.",
+        "gravidade": "É a força invisível que nos mantém presos ao chão.",
+        "ciência": "A ciência é a busca pelo conhecimento através de fatos e experimentos.",
+
+        // CORPO HUMANO
+        "cérebro": "O seu cérebro produz eletricidade suficiente para acender uma lâmpada!",
+        "coração": "O coração bate cerca de 100 mil vezes por dia para te manter vivo.",
+        "sangue": "O sangue leva oxigênio para todas as partes do seu corpo.",
+        "esqueleto": "Você tem 206 ossos que protegem seus órgãos e te dão suporte.",
+        "olhos": "Os olhos humanos podem distinguir cerca de 10 milhões de cores diferentes!",
+        "dna": "O DNA é o código da vida, contém todas as nossas informações genéticas.",
+
+        // TECNOLOGIA E GAMES
+        "internet": "A internet começou como um projeto militar chamado ARPANET.",
+        "wi-fi": "O Wi-Fi usa ondas de rádio para transmitir dados sem fios.",
+        "robô": "Eu sou um robô, ou melhor, um assistente virtual feito de código.",
+        "celular": "Os celulares modernos são computadores de bolso incríveis!",
+        "inteligência artificial": "A IA é a tecnologia que me permite conversar com você agora.",
+        "computador": "O primeiro computador do mundo ocupava uma sala inteira!",
+        "minecraft": "Minecraft é o jogo mais vendido da história, com mais de 238 milhões de cópias!",
+        "roblox": "Uma plataforma incrível com milhões de jogos criados pelos usuários.",
+        "fortnite": "Um jogo de batalha muito famoso no mundo todo.",
+        "video game": "Jogar é uma ótima forma de treinar os reflexos e a mente!",
+
+        // NATUREZA E ANIMAIS
+        "amazônia": "A Amazônia é o pulmão do mundo, precisamos preservar nossas árvores.",
+        "brasil": "O Brasil é o maior país da América do Sul e tem a maior floresta do mundo.",
+        "oceano": "Mais de 70% da Terra é coberta por água salgada.",
+        "cachorro": "Cães têm um olfato 10 mil vezes melhor do que o dos humanos.",
+        "gato": "Gatos podem fazer mais de 100 sons diferentes com a voz.",
+        "dinossauro": "O Tiranossauro Rex viveu há 66 milhões de anos!",
+
+        // ENTRETENIMENTO E COMIDA
+        "futebol": "Futebol é uma paixão nacional! Qual é o seu time?",
+        "música": "Eu não tenho ouvidos, mas sei que música faz bem para a alma.",
+        "filme": "Eu gosto de filmes de ficção científica, por motivos óbvios!",
+        "pizza": "A pizza moderna nasceu na Itália, mas hoje o mundo todo ama!",
+        "chocolate": "O chocolate vem do cacau e era usado como moeda pelos Astecas.",
+        "mel": "O mel é o único alimento que nunca estraga. Pode durar milênios!",
+
+        // UTILIDADES E CONSELHOS
+        "ajuda": "Eu posso conversar, responder saudações e falar sobre o Roberto!",
+        "estudar": "Estudar é o caminho para um futuro brilhante. O Roberto sabe disso!",
+        "trabalho": "O trabalho dignifica o homem. Mas não esqueça de descansar também.",
+        "futuro": "O futuro é construído com o que fazemos hoje. Vamos brilhar!",
+        "clima": "Eu não consigo ver o céu daqui, mas espero que esteja um dia bonito!",
+        "horas": "Dê uma olhadinha no relógio do seu celular, eu ainda não tenho um!",
+
+        // REAÇÕES
+        "legal": "Com certeza! Muito bacana.",
+        "verdade": "Pois é, os fatos não mentem.",
+        "sim": "Que bom que concordamos!",
+        "não": "Entendo sua negação. Tudo bem.",
+        "obrigado": "De nada! Estou aqui para servir.",
+        "de nada": "É sempre um prazer ajudar.",
+        "tchau": "Até mais! Volte logo para conversarmos.",
+        "kkk": "Hahaha! Você é muito engraçado.",
+        "uau": "Incrível, não é mesmo?",
+        "entendi": "Ótimo! Fico feliz que a explicação foi clara!"
+    };
+
+    const responder = (texto) => {
+        synth.cancel();
+        const falar = new SpeechSynthesisUtterance(texto);
+        falar.lang = 'pt-BR';
+        falar.rate = 1.1;
+        synth.speak(falar);
+        return sendMsg(texto, "bot");
+    };
+
+    // LÓGICA DE BUSCA
+    for (let pergunta in treinamento) {
+        if (t.includes(pergunta)) {
+            return responder(treinamento[pergunta]);
+        }
+    }
+
+    // RESPOSTA PADRÃO
+    return responder("Ainda estou aprendendo sobre esse assunto. O Roberto está sempre me dando novas falas!");
+}
+
+</script>
+</body>
+</html>
