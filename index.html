@@ -442,15 +442,14 @@ const responder = (texto) => {
 };
 
 async function brain(val) {
-    // 0. LIMPEZA E MEMÓRIA
     let t = val.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[?!.]/g, "");
 
-    // LÓGICA DE MEMÓRIA
-    if (memoriaAnterior !== "" && (t === "por que" || t === "como assim" || t === "explica melhor")) {
-        return responder("Como falamos antes sobre '" + memoriaAnterior + "', isso acontece porque os dados se conectam, Roberto.");
+    // 1. Lógica de Memória (Faz o bot falar a conexão)
+    if (memoriaAnterior !== "" && (t === "por que" || t === "como assim")) {
+        return responder("Como falamos antes sobre '" + memoriaAnterior + "', isso acontece porque os dados se conectam.");
     }
 
-    // --- PRIORIDADE 1: PIADAS E CURIOSIDADES ---
+    // 2. PRIORIDADE 1: PIADAS E FATOS (Faz o bot falar a piada)
     if (t.includes("piada")) {
         return responder("🤣 " + DATABASE.jokes[Math.floor(Math.random() * DATABASE.jokes.length)]);
     }
@@ -458,23 +457,24 @@ async function brain(val) {
         return responder("💡 " + DATABASE.facts[Math.floor(Math.random() * DATABASE.facts.length)]);
     }
 
-    // --- PRIORIDADE 2: ANATOMIA ---
+    // 3. PRIORIDADE 2: ANATOMIA (Faz o bot falar o dado técnico)
     for (let key in DATABASE.anatomy) {
         if (t.includes(key.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""))) {
-            return responder("🧬 Anatomia: " + DATABASE.anatomy[key]);
+            return responder("🧬 " + DATABASE.anatomy[key]);
         }
     }
 
-    // --- PRIORIDADE 3: MATEMÁTICA SUPER AVANÇADA ---
+    // 4. PRIORIDADE 3: MATEMÁTICA (Faz o bot falar o resultado)
     if (/[0-9]/.test(t) || t.includes("raiz") || t.includes("vezes")) {
         try {
-            let conta = t.replace(/raiz quadrada de|raiz de|√/g, "sqrt").replace(/vezes|x/g, "*").replace(/dividido por|÷/g, "/");
-            let res = math.evaluate(conta);
-            if (res !== undefined) return responder(`🔢 Cálculo: Roberto, o resultado é ${res}`);
+            let res = math.evaluate(t.replace(/raiz quadrada de|raiz de|√/g, "sqrt").replace(/vezes|x/g, "*").replace(/dividido por|÷/g, "/"));
+            if (res !== undefined) {
+                return responder("Roberto, o resultado é " + res);
+            }
         } catch(e) { }
     }
 
-    // --- PRIORIDADE 4: CONVERSA HUMANA (BANCO DE 800+ PALAVRAS) ---
+    // 5. PRIORIDADE 4: CONVERSA HUMANA (Faz o bot falar o seu banco de palavras)
     for (let key in DATABASE.conversa) {
         let chaveLimpa = key.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         if (t === chaveLimpa) {
@@ -483,15 +483,15 @@ async function brain(val) {
         }
     }
 
-    // --- PRIORIDADE 5: 11 WIKIPÉDIAS COM SÍMBOLO ANALISANDO ---
+    // 6. PRIORIDADE 5: WIKIPÉDIA (Símbolo analisando e depois o bot fala)
     const chat = document.getElementById("chat");
     const analise = document.createElement("div");
     analise.className = "analyzing";
-    analise.innerHTML = `<div class="spinner"></div> Analisando em 11 línguas...`;
+    analise.innerHTML = `<div class="spinner"></div> Analisando...`;
     chat.appendChild(analise);
     chat.scrollTop = chat.scrollHeight;
 
-    let busca = t.replace(/o que e|quem e|pesquise|fale sobre/g, "").trim();
+    let busca = t.replace(/o que e|quem e|pesquise/g, "").trim();
     if (busca.length > 2) {
         const wikis = ['pt', 'en', 'es', 'fr', 'de', 'it', 'ru', 'ja', 'zh', 'nl', 'pl'];
         for (let lang of wikis) {
@@ -500,14 +500,15 @@ async function brain(val) {
                 if (r.ok) {
                     const d = await r.json();
                     analise.remove();
-                    return responder(`🌐 Wiki (${lang}): ${d.extract}`);
+                    return responder(d.extract);
                 }
             } catch(e) {}
         }
     }
 
+    // 7. SE TUDO FALHAR (A frase que você pediu)
     analise.remove();
-    return responder("Roberto, não encontrei isso nos registros nem na internet. Pode repetir?");
+    return responder("procurei, mas ainda está escondido de mim...");
 }
 
 const inputArea = document.getElementById("input");
