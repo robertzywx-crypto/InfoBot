@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InforBot Omnisciente - Versão Final de Elite</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+
+    <style>
+        :root {
+            --primary: #1f6feb;
+            --bg: #010409;
+            --panel: #0d1117;
+            --text: #c9d1d9;
+            --border: #30363d;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        
+        body { 
+            height: 100vh; 
+            background: var(--bg); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: var(--text);
+        }
+        
+        .app-container { 
+            width: 95%; 
+            max-width: 900px; 
+            height: 95vh; 
+            background: var(--panel); 
+            border-radius: 25px; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+            box-shadow: 0 0 50px rgba(0,0,0,0.7);
+            border: 1px solid var(--border);
+        }
+
+        .header { 
+            background: linear-gradient(135deg, #001f3f, #000); 
+            padding: 30px; 
+            text-align: center; 
+            border-bottom: 4px solid var(--primary);
+        }
+
+        .header h1 { font-size: 28px; color: white; letter-spacing: 2px; }
+        
+        .theme-switcher { margin-top: 15px; display: flex; justify-content: center; gap: 10px; }
+        .theme-btn { 
+            padding: 8px 20px; border-radius: 15px; border: 1px solid var(--border);
+            background: rgba(255,255,255,0.1); color: white; cursor: pointer; font-weight: bold;
+        }
+        .theme-btn:hover { background: white; color: black; }
+
+        .chat-box { 
+            flex: 1; 
+            padding: 30px; 
+            overflow-y: auto; 
+            background: var(--bg); 
+            display: flex; 
+            flex-direction: column; 
+            gap: 20px; 
+        }
+
+        .message { max-width: 80%; animation: slide 0.3s ease; }
+        .bubble { padding: 20px; border-radius: 20px; font-size: 16px; line-height: 1.6; }
+        
+        .user-msg { align-self: flex-end; }
+        .user-msg .bubble { background: var(--primary); color: white; border-bottom-right-radius: 2px; }
+        
+        .bot-msg { align-self: flex-start; }
+        .bot-msg .bubble { background: #161b22; color: var(--text); border: 1px solid var(--border); border-bottom-left-radius: 2px; }
+
+        .typing-indicator { font-size: 12px; color: var(--primary); display: none; margin-left: 10px; }
+
+        .input-bar { 
+            padding: 25px; 
+            background: var(--panel); 
+            border-top: 1px solid var(--border); 
+            display: flex; 
+            gap: 15px; 
+        }
+
+        input { 
+            flex: 1; 
+            padding: 18px; 
+            border-radius: 15px; 
+            border: 1px solid var(--border); 
+            background: #010409; 
+            color: white; 
+            font-size: 16px; 
+            outline: none; 
+        }
+
+        button#send-btn { 
+            width: 70px; 
+            background: var(--primary); 
+            border: none; 
+            border-radius: 15px; 
+            color: white; 
+            font-size: 22px; 
+            cursor: pointer; 
+        }
+
+        /* Light Mode */
+        body.light { background: #e2e8f0; }
+        body.light .app-container { background: #fff; border: none; }
+        body.light .chat-box { background: #f8fafc; }
+        body.light .bot-msg .bubble { background: white; color: #1e293b; border: 1px solid #cbd5e1; }
+
+        @keyframes slide { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="dark">
+
+<div class="app-container">
+    <div class="header">
+        <h1>🤖 INFORBOT OMNISCIENTE</h1>
+        <div class="theme-switcher">
+            <button class="theme-btn" onclick="setTheme('light')">MODO CLARO</button>
+            <button class="theme-btn" onclick="setTheme('dark')">MODO ESCURO</button>
+        </div>
+    </div>
+
+    <div id="chat" class="chat-box">
+        <div class="message bot-msg">
+            <div class="bubble">Conexão estabelecida com sucesso. Eu sou o <b>InforBot</b> em sua potência máxima de processamento. Minha base de 70 itens está ativa e estou pronto para conversar.</div>
+        </div>
+    </div>
+
+    <div id="typing" class="typing-indicator">InforBot está acessando redes neurais...</div>
+
+    <div class="input-bar">
+        <input type="text" id="userInput" placeholder="Digite qualquer pergunta ou conta matemática...">
+        <button id="send-btn">➤</button>
+    </div>
+</div>
+
+<script>
+    function setTheme(t) { document.body.className = t; }
+
+    const DATABASE = {
+        // AS 35 PIADAS COMPLETAS
+        jokes: [
+            "Por que o programador faliu? Ficou sem cache!", "O que o zero disse pro oito? Belo cinto!", "Qual o café favorito do Java? O expresso!",
+            "Por que o livro de matemática se suicidou? Tinha muitos problemas.", "Como o programador dorme? if(sono){ dormir(); }", "Qual o contrário de volátil? Vem cá, tio!",
+            "Por que o teclado não sai de casa? Porque não tem Esc!", "O que o objeto disse para a classe? Eu tenho herança!", "O que o Chrome disse para o PC? Vou comer sua memória RAM!",
+            "Por que os peixes não usam computador? Por medo da rede!", "O que o programador disse ao ver o mar? Olha quanta C-Shell!", "Como se chama um programador que não dorme? O 'Undefined'.",
+            "Por que o Wi-Fi foi preso? Porque ele estava com sinal aberto!", "O que o Bit disse para o Byte? Você é 8 vezes maior!", "Onde o programador mora? No endereço de IP dele.",
+            "Por que o HTML se separou do CSS? Porque eles não tinham classe!", "O que o mouse disse para o teclado? Você faz o meu tipo!", "Qual a música favorita do desenvolvedor? O Algoritmo da terra.",
+            "Por que o computador foi ao médico? Porque estava com vírus!", "Software de dieta? Tem muitos bytes!", "Zero pro Hum? Você é sozinho!",
+            "Pai do C++? O C!", "Programador no restaurante? Pediu o menu principal!", "Bug na floresta? Uma tarantula!",
+            "Por que o Excel é calmo? Tem muitas células!", "Site de fofoca? O HTTPfofoca!", "Programador no frio? Fica no Java!",
+            "Por que o código foi preso? Erro de execução!", "Programador rico? Achou uma mina de bits!", "Teclado sem espaço? Não tem onde ir!",
+            "Programador de óculos? Não vê C#!", "Monitor triste? Está em baixa resolução!", "Programador no deserto? Procura o sandbox!",
+            "Por que o HD é medroso? Tem medo de cair!", "O que o programador faz no elevador? Aperta o 'F5' para atualizar."
+        ],
+        // AS 35 CURIOSIDADES COMPLETAS
+        facts: [
+            "O mel nunca estraga. Arqueólogos acharam mel de 3000 anos comestível.", "As formigas nunca dormem e não possuem pulmões.", "Vênus é o único planeta que gira no sentido horário.",
+            "O DNA humano é 50% igual ao de uma banana.", "O primeiro computador pesava 30 toneladas.", "Polvos têm 3 corações, 9 cérebros e o sangue é azul.",
+            "A luz do Sol leva 8 minutos e 20 segundos para chegar aqui.", "Cachorros conseguem entender até 250 palavras.", "Se você dobrar um papel 42 vezes, ele chega até a Lua.",
+            "O Monte Everest cresce cerca de 4mm a cada ano.", "Existem mais estrelas no céu do que grãos de areia na Terra.", "Um raio é 5 vezes mais quente que a superfície do Sol.",
+            "Borboletas sentem o gosto com os pés.", "Cavalos-marinhos são os únicos peixes com pescoço.", "As vacas têm melhores amigas e ficam estressadas se separadas.",
+            "O coração da baleia azul é do tamanho de um fusca.", "O recorde de tempo sem dormir é de 11 dias.", "Tubarões existem há mais tempo que as árvores.",
+            "O olho humano consegue distinguir 10 milhões de cores.", "No Japão, existem melancias quadradas.", "O Sol é uma estrela.",
+            "Ovelhas se reconhecem em fotos.", "Gatos têm 32 músculos na orelha.", "Pinguins pedem em casamento com pedras.",
+            "O inventor do Pringles foi enterrado numa lata.", "Leões dormem 20 horas por dia.", "Hipopótamos suam sangue rosa.",
+            "Coalhas dormem 22 horas.", "Nariz do cachorro é único como digital.", "Baratas vivem dias sem cabeça.",
+            "A Terra pesa 6 sextilhões de toneladas.", "Saturno flutuaria na água.", "Flamingos são rosas pela comida.",
+            "Vênus é mais quente que Mercúrio.", "Plutão é menor que os EUA."
+        ],
+        // ANATOMIA HUMANA DETALHADA
+        anatomy: {
+            "ossos": "Um esqueleto adulto humano possui 206 ossos.",
+            "fêmur": "O fêmur é o maior e mais forte osso do corpo humano.",
+            "estribo": "O estribo, no ouvido, é o menor osso do corpo.",
+            "dna": "Compartilhamos 50% do nosso DNA com as bananas!",
+            "coração": "O coração humano bate, em média, 100 mil vezes por dia.",
+            "cérebro": "O cérebro consome cerca de 20% de toda a energia do corpo.",
+            "olhos": "O olho humano pode distinguir cerca de 10 milhões de cores diferentes."
+        }
+    };
+
+    async function chatEngine(input) {
+        let raw = input.toLowerCase().trim();
+        document.getElementById("typing").style.display = "block";
+
+        setTimeout(async () => {
+            // MATEMÁTICA (Prioridade de Gênio)
+            if (/[0-9]/.test(raw)) {
+                try {
+                    let calc = raw.replace(/raiz quadrada de/g, "sqrt").replace(/raiz de/g, "sqrt").replace(/vezes/g, "*").replace(/dividido por/g, "/").replace(/[a-záàâãéèêíïóôõöúç?]/g, "");
+                    let result = math.evaluate(calc);
+                    if (result !== undefined) return sendResponse(`Meu núcleo matemático processou: **${input}** é igual a **${result}**.`);
+                } catch(e) {}
+            }
+
+            // PIADAS E CURIOSIDADES (OS 70 ITENS)
+            if (raw.includes("piada")) return sendResponse("Aqui está uma selecionada: " + DATABASE.jokes[Math.floor(Math.random()*DATABASE.jokes.length)]);
+            if (raw.includes("curiosidade") || raw.includes("fato")) return sendResponse("Você sabia? " + DATABASE.facts[Math.floor(Math.random()*DATABASE.facts.length)]);
+            
+            // ANATOMIA
+            for (let key in DATABASE.anatomy) {
+                if (raw.includes(key)) return sendResponse(`Análise de Anatomia: ${DATABASE.anatomy[key]}`);
+            }
+
+            // WIKIPÉDIA (INTELIGÊNCIA GLOBAL)
+            let search = raw.replace(/quem e|o que e|fale sobre|pesquise|\?/g, "").trim();
+            try {
+                const wiki = await fetch(`https://pt.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(search)}?origin=*`);
+                if (wiki.ok) {
+                    const data = await wiki.json();
+                    return sendResponse(`De acordo com meus registros globais: ${data.extract}`);
+                }
+            } catch(e) {}
+
+            // CONVERSA GENÉRICA (SEMPRE RESPONDE)
+            const fallback = [
+                "Isso é fascinante! Infelizmente minha base de dados atual não tem esse detalhe específico, mas como um gênio, eu adoraria aprender mais sobre isso.",
+                "Uma pergunta profunda! Tente me perguntar sobre ciência, matemática ou anatomia!",
+                "Estou processando sua dúvida... parece algo complexo. Poderia explicar melhor?",
+                "Interessante! Vamos conversar mais sobre isso. O que mais você sabe?"
+            ];
+            sendResponse(fallback[Math.floor(Math.random()*fallback.length)]);
+        }, 1000);
+    }
+
+    function sendResponse(text) {
+        document.getElementById("typing").style.display = "none";
+        const msgDiv = document.createElement("div");
+        msgDiv.className = "message bot-msg";
+        msgDiv.innerHTML = `<div class="bubble">${text}</div>`;
+        document.getElementById("chat").appendChild(msgDiv);
+        document.getElementById("chat").scrollTop = document.getElementById("chat").scrollHeight;
+    }
+
+    function sendUserMsg(text) {
+        const msgDiv = document.createElement("div");
+        msgDiv.className = "message user-msg";
+        msgDiv.innerHTML = `<div class="bubble">${text}</div>`;
+        document.getElementById("chat").appendChild(msgDiv);
+        document.getElementById("chat").scrollTop = document.getElementById("chat").scrollHeight;
+    }
+
+    document.getElementById("send-btn").onclick = () => {
+        const inp = document.getElementById("userInput");
+        if (!inp.value) return;
+        sendUserMsg(inp.value);
+        chatEngine(inp.value);
+        inp.value = "";
+    };
+
+    document.getElementById("userInput").onkeypress = (e) => { if (e.key === "Enter") document.getElementById("send-btn").click(); };
+</script>
+</body>
+</html>
