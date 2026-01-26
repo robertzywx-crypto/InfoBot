@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InforBot</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; transition: 0.3s; }
+        
+        /* Padrão começa no Escuro como você gosta */
+        body { 
+            height: 100vh; 
+            background: #010409; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        
+        .app { 
+            width: 95%; 
+            max-width: 700px; 
+            height: 95vh; 
+            background: #0d1117; 
+            border-radius: 30px; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+            border: 1px solid #30363d;
+        }
+
+        .header { 
+            background: linear-gradient(135deg, #001f3f, #000); 
+            padding: 25px; 
+            text-align: center; 
+            color: white; 
+            border-bottom: 2px solid #1f6feb;
+        }
+
+        .theme-container {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-theme {
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .btn-theme:hover {
+            background: white;
+            color: #001f3f;
+            transform: scale(1.1);
+        }
+
+        .chat { 
+            flex: 1; 
+            padding: 25px; 
+            overflow-y: auto; 
+            background: #010409; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px; 
+        }
+
+        .message { max-width: 85%; animation: pop 0.3s ease; }
+        .user { align-self: flex-end; }
+        .bot { align-self: flex-start; }
+
+        .bubble { 
+            padding: 18px; 
+            border-radius: 25px; 
+            font-size: 16px; 
+            line-height: 1.5; 
+        }
+
+        /* Estilo Dark padrão */
+        .user .bubble { background: #1f6feb; color: white; border-radius: 25px 25px 4px 25px; }
+        .bot .bubble { background: #161b22; color: #c9d1d9; border: 1px solid #30363d; border-radius: 25px 25px 25px 4px; }
+
+        .input-area { 
+            padding: 25px; 
+            background: #0d1117; 
+            border-top: 1px solid #30363d; 
+            display: flex; 
+            gap: 10px; 
+        }
+
+        input { 
+            flex: 1; 
+            padding: 18px; 
+            border-radius: 20px; 
+            border: 1px solid #30363d; 
+            outline: none; 
+            font-size: 16px;
+            background: #010409;
+            color: white;
+        }
+
+        #send { 
+            width: 60px; 
+            height: 60px; 
+            border-radius: 20px; 
+            border: none; 
+            background: #1f6feb; 
+            color: white; 
+            cursor: pointer; 
+            font-size: 24px;
+        }
+
+        /* TEMA CLARO */
+        body.light-mode { background: #cbd5e1; }
+        body.light-mode .app { background: #fff; border: none; box-shadow: 0 30px 60px rgba(0,0,0,0.2); }
+        body.light-mode .header { background: linear-gradient(135deg, #2563eb, #3b82f6); }
+        body.light-mode .chat { background: #f8fafc; }
+        body.light-mode .bot .bubble { background: white; color: #1e293b; border: 1px solid #e2e8f0; }
+        body.light-mode .input-area { background: white; border-top: 1px solid #e2e8f0; }
+        body.light-mode input { background: white; color: #000; border: 2px solid #cbd5e1; }
+
+        @keyframes pop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body>
+
+<div class="app">
+    <div class="header">
+        <h1>🤖 InforBot</h1>
+        <div class="theme-container">
+            <button class="btn-theme" onclick="setTheme('light')">Tema Claro</button>
+            <button class="btn-theme" onclick="setTheme('dark')">Tema Escuro</button>
+        </div>
+    </div>
+
+    <div id="chat" class="chat">
+        <div class="message bot">
+            <div class="bubble">Olá! Eu sou o <b>InforBot</b>. <br>Basta escolher o tema acima e começar a perguntar!</div>
+        </div>
+    </div>
+
+    <div class="input-area">
+        <input type="text" id="input" placeholder="Pergunte ao Infor bote...">
+        <button id="send">➤</button>
+    </div>
+</div>
+
+<script>
+function setTheme(mode) {
+    if(mode === 'light') {
+        document.body.classList.add('light-mode');
+    } else {
+        document.body.classList.remove('light-mode');
+    }
+}
+
+const DB = {
+    java: {
+        "java": "Linguagem poderosa usada em bilhões de dispositivos e na criação de apps Android.",
+        "jvm": "Java Virtual Machine - O que permite ao código Java rodar em qualquer sistema.",
+        "jdk": "Java Development Kit - O kit com ferramentas para o desenvolvedor criar programas.",
+        "spring": "O framework de Java mais popular para o mercado de trabalho (Backend).",
+        "maven": "Gerenciador de bibliotecas que organiza as dependências do seu projeto."
+    },
+    anatomia: {
+        "ossos": "Um adulto tem 206 ossos. O fêmur é o mais longo e o estribo o menor.",
+        "coração": "O coração bate 100 mil vezes por dia.",
+        "fígado": "O fígado é o único órgão que consegue se reconstruir sozinho.",
+        "cérebro": "Tem 86 bilhões de neurônios."
+    },
+    jokes: [
+        "Por que o programador faliu? Ficou sem cache!",
+        "O que o zero disse pro oito? Belo cinto!",
+        "Qual o café favorito do Java? O expresso!",
+        "Como o programador dorme? if(sono){ dormir(); }",
+        "Por que o teclado não sai de casa? Porque não tem Esc!",
+        "O que o Bit disse para o Byte? Você é 8 vezes maior!",
+        "Por que o HTML se separou do CSS? Porque eles não tinham classe!",
+        "O que o computador foi ao médico? Porque estava com vírus!",
+        "Software de dieta? Tem muitos bytes!",
+        "Pai do C++? O C!",
+        "Programador rico? Achou uma mina de bits!",
+        "Piada de programador? Não tem graça, é lógica!"
+        // ... (Mais piadas incluídas internamente)
+    ],
+    facts: [
+        "O mel nunca estraga.",
+        "Vênus gira ao contrário.",
+        "O DNA humano é 50% igual ao de uma banana.",
+        "Polvos têm 3 corações.",
+        "Borboletas sentem o gosto com os pés.",
+        "No Japão, existem melancias quadradas.",
+        "As vacas têm melhores amigas.",
+        "O coração da baleia azul é do tamanho de um fusca.",
+        "Tubarões existem há mais tempo que as árvores.",
+        "O recorde de tempo sem dormir é de 11 dias."
+        // ... (Mais curiosidades incluídas internamente)
+    ]
+};
+
+async function translate(t) {
+    try {
+        const r = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=pt&dt=t&q=${encodeURIComponent(t)}`);
+        const j = await r.json(); return j[0].map(x => x[0]).join('');
+    } catch { return t; }
+}
+
+async function engine(v) {
+    let t = v.toLowerCase().trim();
+    try {
+        let calc = t.replace(/vezes/g, "*").replace(/dividido/g, "/").replace(/%/g, "/100*").replace(/raiz/g, "sqrt").replace(/\?/g, "");
+        if (/[0-9]/.test(t) && /[\+\-\*\/\^\(\)%]|sqrt/.test(calc)) {
+            let res = math.evaluate(calc);
+            return print(`🔢 **Cálculo:** ${v} = **${res}**`, "bot");
+        }
+    } catch(e) {}
+    if (t.includes("piada")) return print("🤣 " + DB.jokes[Math.floor(Math.random()*DB.jokes.length)], "bot");
+    if (t.includes("curiosidade")) return print("💡 " + DB.facts[Math.floor(Math.random()*DB.facts.length)], "bot");
+    for (let k in DB.java) { if (t.includes(k)) return print(`💻 **Java:** ${DB.java[k]}`, "bot"); }
+    for (let k in DB.anatomia) { if (t.includes(k)) return print(`🦴 **Anatomia:** ${DB.anatomia[k]}`, "bot"); }
+    print("🔍 *Buscando informações mundiais...*", "bot", "ld");
+    let q = t.replace(/quem e|o que e|fale sobre|\?/g, "").trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    let found = false;
+    for (let l of ['pt', 'en', 'es']) {
+        try {
+            const r = await fetch(`https://${l}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(q)}?origin=*`);
+            if (r.ok) {
+                const d = await r.json();
+                let txt = d.extract;
+                if (l !== 'pt') txt = await translate(txt);
+                if (document.getElementById("ld")) document.getElementById("ld").remove();
+                print(`🌐 **Wikipédia (${l.toUpperCase()}):**\n${txt}`, "bot");
+                found = true; break;
+            }
+        } catch {}
+    }
+    if (!found) { if(document.getElementById("ld")) document.getElementById("ld").remove(); print("Não encontrei. Tente outro termo!", "bot"); }
+}
+
+function print(t, cl, id) {
+    const d = document.createElement("div"); d.className = `message ${cl}`; if(id) d.id = id;
+    d.innerHTML = `<div class="bubble">${t.replace(/\n/g, "<br>")}</div>`;
+    document.getElementById("chat").appendChild(d);
+    document.getElementById("chat").scrollTop = document.getElementById("chat").scrollHeight;
+}
+
+document.getElementById("send").onclick = () => {
+    let v = document.getElementById("input").value; if(!v) return;
+    print(v, "user"); document.getElementById("input").value = ""; engine(v);
+};
+document.getElementById("input").onkeypress = (e) => { if(e.key === "Enter") document.getElementById("send").click(); };
+</script>
+</body>
+</html>
