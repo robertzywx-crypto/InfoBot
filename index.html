@@ -97,10 +97,10 @@
         </div>
     </div>
     <div id="chat" class="chat">
-        <div class="message bot"><div class="bubble">Inforbot pronto, Roberto. Tudo configurado conforme seu comando.</div></div>
+        <div class="message bot"><div class="bubble">o que voce precisa ?.</div></div>
     </div>
     <div class="input-area">
-        <input type="text" id="input" placeholder="O que deseja saber, Roberto?">
+        <input type="text" id="input" placeholder="pergunte uma piada uma conta ou uma curiosidade">
         <button id="send">➤</button>
     </div>
 </div>
@@ -254,7 +254,7 @@ async function brain(val) {
     }
 
     analise.remove();
-    return responder("Ainda não tenho essa informação, mas o Roberto está me ensinando!");
+    return responder("Procurei, mas ainda está escondido de mim...");
 }
 
 const inputArea = document.getElementById("input");
