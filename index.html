@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InfoBot</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+
+<style>
+/* ==== SISTEMA DE ESTILO COMPLETO ==== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    transition: background 0.5s ease, color 0.5s ease, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+}
+
+body {
+    height: 100vh;
+    background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+/* ==== TEMA DARK PERSONALIZADO (PRETO E AZUL) ==== */
+body.dark-mode {
+    background: #010409;
+}
+
+body.dark-mode .app {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.9);
+}
+
+body.dark-mode .header {
+    background: linear-gradient(135deg, #001f3f, #000000);
+    border-bottom: 2px solid #1f6feb;
+}
+
+body.dark-mode .chat {
+    background: #010409;
+}
+
+body.dark-mode .bot .bubble {
+    background: #161b22;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
+}
+
+body.dark-mode .input-area {
+    background: #0d1117;
+    border-top: 1px solid #30363d;
+}
+
+body.dark-mode input {
+    background: #010409;
+    color: #ffffff;
+    border: 1px solid #30363d;
+}
+
+/* ==== ESTRUTURA DA INTERFACE ==== */
+.app {
+    width: 95%;
+    max-width: 480px;
+    height: 90vh;
+    background: #ffffff;
+    border-radius: 28px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+.header {
+    background: linear-gradient(135deg, #0061ff, #60efff);
+    padding: 25px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.header h1 {
+    font-size: 26px;
+    letter-spacing: 1px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+}
+
+.theme-selector {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+/* BOTÕES COM EFEITO DE ZOOM AO PASSAR O MOUSE */
+.btn-ui {
+    padding: 10px 20px;
+    border-radius: 50px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: bold;
+    backdrop-filter: blur(5px);
+}
+
+.btn-ui:hover {
+    transform: scale(1.18);
+    background: #ffffff;
+    color: #0061ff;
+    box-shadow: 0 5px 15px rgba(255,255,255,0.4);
+}
+
+.chat {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background: #fcfcfc;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    scroll-behavior: smooth;
+}
+
+.message {
+    max-width: 85%;
+    animation: slideIn 0.4s ease-out;
+}
+
+.user { align-self: flex-end; }
+.bot { align-self: flex-start; }
+
+.bubble {
+    padding: 14px 18px;
+    border-radius: 20px;
+    font-size: 15px;
+    line-height: 1.6;
+    position: relative;
+}
+
+.user .bubble {
+    background: #0061ff;
+    color: white;
+    border-radius: 20px 20px 4px 20px;
+}
+
+.bot .bubble {
+    background: #f0f4f8;
+    color: #102a43;
+    border: 1px solid #d9e2ec;
+    border-radius: 20px 20px 20px 4px;
+}
+
+.input-area {
+    padding: 20px;
+    background: white;
+    border-top: 1px solid #f0f4f8;
+    display: flex;
+    gap: 12px;
+}
+
+input {
+    flex: 1;
+    padding: 15px;
+    border-radius: 15px;
+    border: 2px solid #e4e7eb;
+    outline: none;
+    font-size: 16px;
+}
+
+input:focus {
+    border-color: #0061ff;
+}
+
+#send {
+    width: 55px;
+    height: 55px;
+    border-radius: 15px;
+    border: none;
+    background: #0061ff;
+    color: white;
+    font-size: 22px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#send:hover {
+    transform: scale(1.15);
+    background: #004ecc;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Custom Scrollbar */
+.chat::-webkit-scrollbar { width: 6px; }
+.chat::-webkit-scrollbar-thumb { background: #bcccdc; border-radius: 10px; }
+</style>
+</head>
+
+<body>
+
+<div class="app">
+    <div class="header">
+        <h1>🤖 InfoBot</h1>
+        <div class="theme-selector">
+            <button class="btn-ui" onclick="toggleTheme('light')">MODO CLARO</button>
+            <button class="btn-ui" onclick="toggleTheme('dark')">MODO ESCURO</button>
+        </div>
+    </div>
+
+    <div class="chat" id="chat-window">
+        <div class="message bot">
+            <div class="bubble">
+                Olá! Eu sou o InfoBot . 🚀<br><br>
+                Meu banco de dados sobre <b>Java</b>, <b>Piadas</b> e <b>Curiosidades</b> está gigante! Como posso te ajudar?
+            </div>
+        </div>
+    </div>
+
+    <div class="input-area">
+        <input type="text" id="user-input" placeholder="Pergunte algo ou peça uma piada...">
+        <button id="send">➤</button>
+    </div>
+</div>
+
+<script>
+/**
+ * ============================================================
+ * MOTOR LÓGICO TITAN - CÓDIGO EXPANDIDO
+ * ============================================================
+ */
+const inputField = document.getElementById("user-input");
+const sendBtn = document.getElementById("send");
+const chatWindow = document.getElementById("chat-window");
+
+// SISTEMA DE TEMAS
+function toggleTheme(mode) {
+    if(mode === 'dark') {
+        document.body.classList.add('dark-mode');
+    } else {
+        document.body.classList.remove('dark-mode');
+    }
+}
+
+// ============================================================
+// BANCO DE DADOS MASSIVO (LOCAL)
+// ============================================================
+const LARGE_DATABASE = {
+    // CONTEÚDO JAVA COMPLETO
+    java: {
+        "java": "Java é uma linguagem de alto nível, robusta, orientada a objetos e segura. Desenvolvida pela Sun Microsystems (hoje Oracle), é famosa pelo lema 'escreva uma vez, rode em qualquer lugar' (WORA).",
+        "jvm": "Java Virtual Machine (JVM) é o coração do ecossistema Java. Ela carrega, verifica e executa o bytecode, permitindo independência de plataforma.",
+        "jdk": "Java Development Kit (JDK) é o pacote completo para desenvolvedores. Contém a JRE, o compilador (javac), arquivadores (jar) e outras ferramentas.",
+        "jre": "Java Runtime Environment (JRE) fornece as bibliotecas e a JVM necessárias para EXECUTAR programas Java, mas não para criá-los.",
+        "spring": "Spring Boot é um framework que facilita a criação de aplicações Java stand-alone de nível de produção com configuração mínima.",
+        "maven": "Maven é uma ferramenta de automação de compilação usada principalmente para projetos Java, gerenciando dependências de forma incrível.",
+        "garbage collector": "O Garbage Collector do Java gerencia a memória automaticamente, destruindo objetos que não estão mais sendo usados.",
+        "herança": "Em Java, permite que uma classe herde atributos e métodos de outra classe (superclasse), promovendo o reuso de código.",
+        "polimorfismo": "Capacidade de um objeto ser tratado de várias formas. Em Java, ocorre principalmente através de sobrecarga e sobreposição de métodos."
+    },
+    
+    // LISTA EXPANDIDA DE PIADAS
+    jokes: [
+        "Por que o programador faliu? Porque ele usou todo o seu cache!",
+        "O que o zero disse para o oito? Belo cinto!",
+        "Qual o café favorito do Java? O expresso!",
+        "Por que o livro de matemática se suicidou? Tinha muitos problemas.",
+        "O que o Chrome disse para o computador? Vou comer sua RAM!",
+        "Quantos programadores são necessários para trocar uma lâmpada? Nenhum, é problema de hardware.",
+        "O que o objeto disse para a classe? Eu tenho herança!",
+        "O que o programador disse ao ver o mar? Olha quanta C-Shell!",
+        "Como o programador dorme? if(sono) { dormir(); } else { cafe(); }",
+        "Qual a diferença entre o hardware e o software? O hardware você chuta, o software você xinga.",
+        "Por que o teclado não sai para jantar? Porque ele não tem Esc (escape).",
+        "Onde os programadores gostam de sair? No bar-code.",
+        "Qual o contrário de volátil? Vem cá, tio!",
+        "Por que a função foi ao médico? Porque ela tinha muitos parâmetros.",
+        "Qual o animal que mais entende de redes? O Peixe, porque ele vive na rede."
+    ],
+
+    // LISTA EXPANDIDA DE CURIOSIDADES
+    facts: [
+        "O mel nunca estraga. Arqueólogos acharam mel de 3000 anos em tumbas egípcias ainda comestível.",
+        "As formigas nunca dormem e não possuem pulmões.",
+        "O DNA humano é 50% idêntico ao de uma banana.",
+        "Vênus é o único planeta que gira no sentido horário no sistema solar.",
+        "O coração de uma baleia azul é tão grande que um humano poderia nadar em suas artérias.",
+        "Os polvos têm três corações e o sangue é azul.",
+        "A luz do Sol demora exatos 8 minutos e 20 segundos para chegar na Terra.",
+        "Existem mais estrelas no universo do que grãos de areia em todas as praias da Terra.",
+        "A primeira webcam foi criada para vigiar uma cafeteira na Universidade de Cambridge.",
+        "O primeiro computador, o ENIAC, pesava 30 toneladas e ocupava 167 metros quadrados.",
+        "Cachorros podem entender cerca de 250 palavras e gestos.",
+        "Um raio pode atingir a temperatura de 30.000 graus Celsius, 5 vezes mais quente que o Sol.",
+        "O Monte Everest cresce cerca de 4 milímetros todos os anos.",
+        "A Lua está se afastando da Terra cerca de 3,8 centímetros por ano.",
+        "Se você dobrar uma folha de papel 42 vezes, ela chegaria até a Lua."
+    ]
+};
+
+// FUNÇÃO PARA IMPRIMIR NO CHAT
+function display(text, sender, id = null) {
+    const msgDiv = document.createElement("div");
+    msgDiv.classList.add("message", sender);
+    if(id) msgDiv.id = id;
+    
+    const bubble = document.createElement("div");
+    bubble.classList.add("bubble");
+    bubble.innerHTML = text.replace(/\n/g, "<br>");
+    
+    msgDiv.appendChild(bubble);
+    chatWindow.appendChild(msgDiv);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+// PROCESSAMENTO PRINCIPAL
+async function processBot(userInput) {
+    const raw = userInput.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+
+    // 1. Saudação
+    if (raw === "oi" || raw === "ola") {
+        return display("Olá! Eu sou o InfoBot Pro. Como posso ajudar você hoje?", "bot");
+    }
+
+    // 2. Piadas (Lógica de Seleção Aleatória)
+    if (raw.includes("piada")) {
+        const joke = LARGE_DATABASE.jokes[Math.floor(Math.random() * LARGE_DATABASE.jokes.length)];
+        return display("🤣 " + joke, "bot");
+    }
+
+    // 3. Curiosidades (Lógica de Seleção Aleatória)
+    if (raw.includes("curiosidade")) {
+        const fact = LARGE_DATABASE.facts[Math.floor(Math.random() * LARGE_DATABASE.facts.length)];
+        return display("💡 **Você sabia?**\n" + fact, "bot");
+    }
+
+    // 4. Busca Local de Tecnologia e Java
+    for (let key in LARGE_DATABASE.java) {
+        if (raw.includes(key)) {
+            return display(`💻 **Conhecimento Local:**\n${LARGE_DATABASE.java[key]}`, "bot");
+        }
+    }
+
+    // 5. Motor de Matemática (Usa Math.js)
+    try {
+        let mathExp = userInput.toLowerCase().replace(/vezes/g, "*").replace(/dividido/g, "/").replace(/[a-z?]/gi, "").trim();
+        if (mathExp && /[0-9]/.test(mathExp)) {
+            const result = math.evaluate(mathExp);
+            return display(`🧮 **Resultado:** ${result}`, "bot");
+        }
+    } catch(e) { /* Segue para busca global se falhar math */ }
+
+    // 6. Busca Externa (Wikipedia e Finanças)
+    display("🔍 *Acessando servidores globais...*", "bot", "loading-status");
+    
+    try {
+        // Câmbio de Moedas
+        if (raw.includes("dolar") || raw.includes("euro") || raw.includes("bitcoin") || raw.includes("btc")) {
+            const res = await fetch("https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,BTC-BRL");
+            const data = await res.json();
+            if(document.getElementById("loading-status")) document.getElementById("loading-status").remove();
+            
+            if (raw.includes("dolar")) return display(`💵 **Dólar:** R$ ${parseFloat(data.USDBRL.bid).toFixed(2)}`, "bot");
+            if (raw.includes("euro")) return display(`💶 **Euro:** R$ ${parseFloat(data.EURBRL.bid).toFixed(2)}`, "bot");
+            if (raw.includes("bitcoin") || raw.includes("btc")) return display(`💰 **Bitcoin:** R$ ${parseFloat(data.BTCBRL.bid).toLocaleString('pt-BR')}`, "bot");
+        }
+
+        // Wikipedia API
+        const wikiUrl = `https://pt.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(userInput)}?origin=*`;
+        const wikiRes = await fetch(wikiUrl);
+        const wikiData = await wikiRes.json();
+        
+        if(document.getElementById("loading-status")) document.getElementById("loading-status").remove();
+        
+        if (wikiData.extract) {
+            return display(`🌐 **Wikipedia:**\n${wikiData.extract}`, "bot");
+        }
+    } catch(err) {
+        if(document.getElementById("loading-status")) document.getElementById("loading-status").remove();
+    }
+
+    display("Não encontrei uma resposta exata nos meus registros. Tente perguntar sobre **Java**, peça uma **piada** ou o valor do **Dólar**!", "bot");
+}
+
+// ACIONADORES
+sendBtn.onclick = () => {
+    const val = inputField.value.trim();
+    if(!val) return;
+    display(val, "user");
+    inputField.value = "";
+    processBot(val);
+};
+
+inputField.onkeypress = (e) => { if(e.key === "Enter") sendBtn.click(); };
+</script>
+
+</body>
+</html>
