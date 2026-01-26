@@ -287,15 +287,6 @@ async function brain(val) {
 }
 // --- VERSÃO INFORBOT TOTAL - SEM REMOÇÕES ---
 
-document.getElementById("input").onkeypress = (e) => {
-    if (e.key === "Enter") {
-        const campo = document.getElementById("input");
-        if (!campo.value) return;
-        sendMsg(campo.value, "user");
-        brain(campo.value); 
-        campo.value = "";
-    }
-};
 
 const synth = window.speechSynthesis;
 
