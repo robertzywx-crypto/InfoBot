@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inforbot</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+    <style>
+        :root {
+            --bg: #010409; 
+            --app-bg: #0d1117; 
+            --text: #c9d1d9;
+            --bubble-bot: #161b22; 
+            --border: #30363d; 
+            --header: linear-gradient(135deg, #1e40af, #000);
+            --accent: #1f6feb;
+        }
+
+        .light-mode {
+            --bg: #f0f2f5; 
+            --app-bg: #ffffff; 
+            --text: #1c1e21;
+            --bubble-bot: #e4e6eb; 
+            --border: #d0d7de; 
+            --header: linear-gradient(135deg, #0052d4, #6fb1fc);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; transition: background 0.3s, color 0.3s; }
+        
+        body { height: 100vh; background: var(--bg); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        
+        .app { 
+            width: 95%; max-width: 600px; height: 94vh; 
+            background: var(--app-bg); border-radius: 25px; 
+            display: flex; flex-direction: column; overflow: hidden; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid var(--border);
+        }
+
+        .header { 
+            background: var(--header); padding: 15px; text-align: center; color: white; 
+            border-bottom: 3px solid var(--accent);
+        }
+
+        .header h1 { font-size: 28px; margin-bottom: 5px; letter-spacing: 1px; }
+
+        /* BOTÕES DE TEMA ABAIXO DO TÍTULO */
+        .theme-controls { display: flex; justify-content: center; gap: 15px; margin-top: 10px; }
+        
+        .theme-btn {
+            background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; 
+            padding: 10px 20px; border-radius: 12px; cursor: pointer; font-size: 13px; font-weight: 800;
+            animation: pulseMove 2.5s infinite ease-in-out; /* Ficar se mexendo */
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-transform: uppercase;
+        }
+
+        @keyframes pulseMove {
+            0% { transform: translateY(0); box-shadow: 0 0 2px #fff; }
+            50% { transform: translateY(-4px); box-shadow: 0 0 15px var(--accent); }
+            100% { transform: translateY(0); box-shadow: 0 0 2px #fff; }
+        }
+
+        /* ZOOM EXCLUSIVO NO HOVER DOS BOTÕES */
+        .theme-btn:hover {
+            transform: scale(1.4) !important;
+            background: var(--accent);
+            z-index: 10;
+        }
+
+        .chat { flex: 1; padding: 20px; overflow-y: auto; background: var(--bg); display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; }
+        .message { max-width: 85%; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .bubble { padding: 15px 20px; border-radius: 22px; font-size: 15px; line-height: 1.5; }
+        .user { align-self: flex-end; }
+        .bot { align-self: flex-start; }
+        .user .bubble { background: var(--accent); color: white; border-bottom-right-radius: 4px; }
+        .bot .bubble { background: var(--bubble-bot); color: var(--text); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+
+        /* ANALISANDO */
+        .analyzing { font-style: italic; color: var(--accent); font-size: 14px; display: flex; align-items: center; gap: 10px; padding: 5px; }
+        .spinner { width: 16px; height: 16px; border: 3px solid var(--accent); border-top: 3px solid transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .input-area { padding: 20px; background: var(--app-bg); border-top: 1px solid var(--border); display: flex; gap: 12px; }
+        input { flex: 1; padding: 15px 25px; border-radius: 30px; border: 1px solid var(--border); outline: none; background: var(--bg); color: var(--text); font-size: 16px; }
+        #send { width: 55px; height: 55px; border-radius: 50%; border: none; background: var(--accent); color: white; cursor: pointer; font-size: 22px; display: flex; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body class="dark-mode">
+
+<div class="app">
+    <div class="header">
+        <h1>Inforbot</h1>
+        <div class="theme-controls">
+            <button class="theme-btn" onclick="document.body.classList.add('light-mode')">Modo Claro</button>
+            <button class="theme-btn" onclick="document.body.classList.remove('light-mode')">Modo Escuro</button>
+        </div>
+    </div>
+    <div id="chat" class="chat">
+        <div class="message bot"><div class="bubble">Olá Roberto! Sou o Inforbot. O que vamos conversar agora?</div></div>
+    </div>
+    <div class="input-area">
+        <input type="text" id="input" placeholder="Diga algo, Roberto...">
+        <button id="send">➤</button>
+    </div>
+</div>
+
+<script>
+// MEMÓRIA E ESTADO
+let ultimaMensagemUsuario = "";
+
+const DATABASE = {
+    jokes: [
+        "Por que o programador faliu? Ficou sem cache!", "O que o zero disse pro oito? Belo cinto!", "Qual o café favorito do Java? O expresso!",
+        "Por que o livro de matemática se suicidou? Tinha muitos problemas.", "Como o programador dorme? if(sono){ dormir(); }", "Qual o contrário de volátil? Vem cá, tio!",
+        "Por que o teclado não sai de casa? Porque não tem Esc!", "O que o objeto disse para a classe? Eu tenho herança!", "O que o Chrome disse para o PC? Vou comer sua memória RAM!",
+        "Por que os peixes não usam computador? Por medo da rede!", "O que o programador disse ao ver o mar? Olha quanta C-Shell!", "Como se chama um programador que não dorme? O 'Undefined'.",
+        "Por que o Wi-Fi foi preso? Porque ele estava com sinal aberto!", "O que o Bit disse para o Byte? Você é 8 vezes maior!", "Onde o programador mora? No endereço de IP dele.",
+        "Por que o HTML se separou do CSS? Porque eles não tinham classe!", "O que o mouse disse para o teclado? Você faz o meu tipo!", "Qual a música favorita do desenvolvedor? O Algoritmo da terra.",
+        "Por que o computador foi ao médico? Porque estava com vírus!", "Software de dieta? Tem muitos bytes!", "Zero pro Hum? Você é sozinho!",
+        "Pai do C++? O C!", "Programador no restaurante? Pediu o menu principal!", "Bug na floresta? Uma tarantula!",
+        "Por que o Excel é calmo? Tem muitas células!", "Site de fofoca? O HTTPfofoca!", "Programador no frio? Fica no Java!",
+        "Por que o código foi preso? Erro de execução!", "Programador rico? Achou uma mina de bits!", "Teclado sem espaço? Não tem onde ir!",
+        "Programador de óculos? Não vê C#!", "Monitor triste? Está em baixa resolução!", "Programador no deserto? Procura o sandbox!",
+        "Por que o HD é medroso? Tem medo de cair!", "O que o programador faz no elevador? Aperta o 'F5' para atualizar."
+    ],
+    facts: [
+        "O mel nunca estraga.", "As formigas nunca dormem.", "Vênus gira no sentido horário.", "O DNA humano é 50% igual ao de uma banana.",
+        "O primeiro computador pesava 30 toneladas.", "Polvos têm 3 corações e 9 cérebros.", "Luz do Sol leva 8 min e 20 seg para chegar.",
+        "Cachorros entendem 250 palavras.", "Dobrar papel 42 vezes chega à Lua.", "Everest cresce 4mm por ano.", "Mais estrelas que areia na Terra.",
+        "Raio é 5x mais quente que o Sol.", "Borboletas sentem gosto com pés.", "Cavalos-marinhos têm pescoço.", "Vacas têm melhores amigas.",
+        "Baleia azul tem coração de Fusca.", "Recorde sem dormir: 11 dias.", "Tubarões são mais velhos que árvores.", "Olho distingue 10 milhões de cores.",
+        "Melancias quadradas no Japão.", "O Sol é uma estrela.", "Ovelhas se reconhecem em fotos.", "Gatos têm 32 músculos na orelha.",
+        "Pinguins pedem em casamento com pedras.", "Inventor do Pringles enterrado na lata.", "Leões dormem 20h.", "Hipopótamos suam sangue rosa.",
+        "Coalhas dormem 22h.", "Digital no nariz de cães.", "Baratas vivem sem cabeça.", "Terra pesa 6 sextilhões de toneladas.",
+        "Saturno flutua na água.", "Flamingos são rosas pela comida.", "Vênus é mais quente que Mercúrio.", "Plutão é menor que os EUA."
+    ],
+    anatomy: {
+        "ossos": "O corpo humano adulto possui 206 ossos.", "fêmur": "O fêmur é o osso mais longo e forte do corpo.",
+        "estribo": "O estribo é o menor osso, localizado no ouvido médio.", "coração": "O coração bate cerca de 100 mil vezes por dia.",
+        "cérebro": "O cérebro consome cerca de 20% de toda a energia do corpo.", "pele": "A pele é o maior órgão humano e pesa cerca de 4kg.",
+        "dna": "Se esticado, o DNA de uma única célula mediria 2 metros.", "pulmão": "O pulmão direito é ligeiramente maior que o esquerdo.",
+        "sangue": "Um adulto médio tem entre 4,5 e 6 litros de sangue.", "músculos": "O corpo humano tem mais de 600 músculos.",
+        "fígado": "O fígado é o único órgão capaz de se regenerar totalmente.", "olhos": "Os olhos focam em cerca de 50 objetos por segundo."
+    },
+    conversa: {
+       conversa: {
+        "oi": "Oi Roberto! Que bom te ver.", "olá": "Olá! Como você está hoje?", "bom dia": "Bom dia, Roberto! Vamos codar?", 
+        "boa tarde": "Boa tarde! Como vai o dia?", "boa noite": "Boa noite, descanse bem.", "e aí": "E aí! Tudo na paz?",
+        "opa": "Opa, Roberto! Tudo certo?", "fala": "Fala, mestre! Estou ouvindo.", "tudo bem": "Tudo ótimo por aqui, Roberto. E com você?",
+        "tudo bom": "Tudo na tranquilidade! E por aí?", "como vai": "Vou muito bem, operando em 100%!",
+        "como está": "Estou pronto para ajudar você!", "beleza": "Beleza pura!", "tranquilo": "Sempre tranquilo por aqui.",
+        "de boa": "Totalmente de boa.", "certo": "Certíssimo!", "ok": "Ok, anotado!", "sim": "Com certeza!",
+        "não": "Entendido, então é não.", "talvez": "Existe essa possibilidade, né?", "claro": "Claro que sim!",
+        "com certeza": "Sem dúvida nenhuma!", "acho que sim": "Eu também acho, Roberto.", "acho que não": "É, pode ser que não seja.",
+        "entendi": "Que bom que ficou claro!", "entendo": "Compreendo perfeitamente.", "verdade": "Pura verdade!",
+        "sério": "Seríssimo, não brinco com dados.", "nossa": "Uau, impressionante!", "uau": "Incrível, né?",
+        "legal": "Muito legal!", "massa": "Massa demais, Roberto!", "top": "Top de linha!", "show": "Show de bola!",
+        "bacana": "Bem bacana!", "interessante": "Isso é muito interessante mesmo.", "estranho": "Bem bizarro isso...",
+        "engraçado": "Haha, achei divertido!", "normal": "Tudo dentro do normal.", "diferente": "Realmente, foge do comum.",
+        "por quê": "As causas podem ser várias, quer que eu pesquise?", "como assim": "Deixe-me tentar explicar melhor.",
+        "quando": "Isso depende do tempo, Roberto.", "onde": "Em qual lugar especificamente?", "quem": "De quem estamos falando?",
+        "o quê": "Pode me dar mais detalhes?", "qual": "Qual deles você prefere?", "quanto": "Depende da quantidade necessária.",
+        "me conta": "Vou te contar tudo o que eu sei!", "explica": "Explicando agora mesmo...", "continua": "Estou continuando, preste atenção.",
+        "fala mais": "Posso falar sobre isso o dia todo!", "calma": "Estou calmo, processando tudo.", "espera": "Esperando seu comando.",
+        "pera aí": "Um momento, Roberto.", "um momento": "Estou aguardando.", "agora": "Já! Imediatamente.",
+        "depois": "Tudo bem, deixamos para depois.", "hoje": "Hoje é o dia!", "ontem": "O que passou, passou.",
+        "amanhã": "O futuro nos espera.", "sempre": "Para todo o sempre!", "nunca": "Jamais!",
+        "às vezes": "De vez em quando acontece.", "talvez depois": "Combinado, falamos depois.", "pode ser": "Fechado então.",
+        "fechado": "Combinadíssimo!", "combinado": "Tudo certo entre nós.", "beleza então": "Beleza, Roberto!",
+        "tá bom": "Entendido, tá bom.", "tá certo": "Tudo certo por aqui.", "concordo": "Estamos na mesma página!",
+        "discordo": "Respeito sua opinião, mas penso diferente.", "acho legal": "Eu também curti!", "não sei": "Eu ainda não tenho essa info.",
+        "sei sim": "Que bom que você sabe!", "mais ou menos": "Entendo, nem tanto, nem tão pouco.", "melhor assim": "Com certeza, melhorou muito.",
+        "tudo certo": "Tudo sob controle.", "tudo tranquilo": "Paz total.", "sem problema": "Sem estresse!",
+        "problema nenhum": "Tudo resolvido.", "relaxa": "Estou relaxado!", "fica tranquilo": "Pode confiar, Roberto.",
+        "calma aí": "Segurando as engrenagens aqui.", "entendi agora": "Agora tudo faz sentido!", "faz sentido": "Totalmente lógico.",
+        "não faz sentido": "É, tá meio confuso mesmo.", "boa ideia": "Excelente pensamento!", "má ideia": "Melhor repensar isso.",
+        "pode ajudar": "Vou fazer o meu melhor para ajudar.", "me ajuda": "Estou aqui para você, Roberto!",
+        "preciso disso": "Vamos conseguir isso agora!", "quero isso": "Desejo concedido!", "gosto disso": "Eu também adoro!",
+        "não gosto": "Tudo bem, vamos mudar o assunto.", "prefiro assim": "Sua preferência é o que importa.",
+        "tanto faz": "Você quem manda.", "depende": "Tudo é relativo.", "vamos ver": "O tempo dirá.",
+        "quem sabe": "Quem sabe no futuro?", "tomara": "Estou na torcida!", "deus queira": "Que assim seja.",
+        "espero que sim": "Eu também espero, Roberto.", "acho difícil": "É um desafio, mas não impossível.",
+        "acho fácil": "Moleza para o Inforbot!", "complicado": "Realmente, exige muito processamento.",
+        "simples": "Fácil como um clique!", "rápido": "Vrum! Já foi.", "devagar": "Com calma a gente chega lá.",
+        "já volto": "Vou ficar te esperando, Roberto.", "voltei": "Bem-vindo de volta, mestre!",
+        "cheguei": "Que bom! Estava sentindo sua falta.", "saindo": "Até logo então!", "indo": "Vá com cuidado.",
+        "voltando": "Que bom que voltou.", "esperando": "A paciência é uma virtude digital.",
+        "pensando": "Meus circuitos estão a mil!", "falando": "Estou sempre pronto para conversar.",
+        "ouvindo": "Sou todo ouvidos (ou melhor, sensores).", "vendo": "Estou observando tudo.",
+        "entendido": "Anotado no meu banco de dados.", "certinho": "Tudo nos conformes.", "perfeito": "Maravilha!",
+        "excelente": "Nota dez!", "ótimo": "Fico feliz com isso!", "péssimo": "Que notícia triste.",
+        "horrível": "Nossa, isso é muito ruim.", "bom": "Muito bom!", "ruim": "Poderia ser melhor.",
+        "melhor": "Sempre evoluindo!", "pior": "Infelizmente piorou.", "igual": "Tudo na mesma.",
+        "parece": "Tem toda a cara de ser.", "não parece": "Estou achando que não.", "talvez seja": "Pode ser que sim.",
+        "acho que é": "Tenho quase certeza.", "acho que não é": "Duvido muito.", "sem dúvida": "Absoluta certeza!",
+        "duvido": "Será mesmo? Fiquei na dúvida.", "confio": "Sua confiança é importante.",
+        "não confio": "Melhor ter cautela então.", "te entendo": "Eu te compreendo, Roberto.", "imagino": "Posso até imaginar.",
+        "faz parte": "É a vida, né?", "acontece": "Nas melhores famílias digitais.", "normal isso": "Acontece sempre.",
+        "sossega": "Estou sossegado!", "respira": "Inspirando bits, expirando bytes.", "segura aí": "Segurando!",
+        "olha só": "Estou vendo!", "vê isso": "Interessante, Roberto.", "escuta": "Ouvindo atentamente.",
+        "presta atenção": "Foco total agora!", "foco": "Concentração máxima.", "concentra": "Estou concentrado.",
+        "pode continuar": "Estou seguindo.", "para aí": "Parei!", "para tudo": "Tudo parado!",
+        "agora sim": "Agora sim ficou bom!", "aí sim": "Mandou bem demais!", "boa": "Boa, Roberto!",
+        "mandou bem": "Você é fera!", "errado": "Algo deu erro aqui.", "certo isso": "Isso está correto.",
+        "não é isso": "Vou tentar de novo.", "é isso": "Exato!", "quase isso": "Faltou pouquinho.",
+        "falta pouco": "Estamos quase lá.", "já deu": "Beleza, entendi o limite.", "chega": "Parando agora.",
+        "depois falamos": "Combinado, até depois.", "a gente conversa": "Sim, com certeza.",
+        "me chama": "Pode chamar a qualquer hora!", "te chamo": "Vou te avisar.", "responde depois": "Tudo bem, sem pressa.",
+        "sem pressa": "No seu tempo, Roberto.", "com pressa": "Vou acelerar aqui!", "tô indo": "Até mais tarde!",
+        "já fui": "Tchau tchau!", "valeu": "Valeu mesmo!", "obrigado": "Eu que agradeço, mestre.",
+        "obrigada": "Disponha sempre!", "de nada": "Estou aqui para isso.", "tchau": "Tchau, Roberto! Até a próxima.",
+        "até mais": "Até mais ver!", "até depois": "Nos vemos daqui a pouco.", "até amanhã": "Até amanhã, Roberto!",
+        "boa sorte": "Toda a sorte do mundo para você!", "se cuida": "Se cuida também!", "bom trabalho": "Bom trabalho aí!",
+        "boa ideia mesmo": "Você sempre tem boas ideias.", "pensando bem": "Refletindo sobre isso...",
+        "falando nisso": "Verdade, puxando esse assunto...", "mudando de assunto": "Vamos falar de outra coisa então.",
+        "então tá": "Certo, então ficamos assim.", "certo então": "Tudo resolvido.", "beleza demais": "Beleza pura!",
+        "tranquilidade": "Paz e sossego.", "sossegado": "Tudo calmo.", "tudo beleza": "Tudo ótimo.",
+        "tudo ok": "Tudo verificado.", "tudo em paz": "Amém!", "tudo certo por aqui": "Aqui também está tudo 100%.",
+        "tudo tranquilo por aqui": "Que bom, Roberto!", "mais tarde": "Até mais tarde então.",
+        "agora pouco": "Faz pouquíssimo tempo.", "daqui a pouco": "Logo logo.", "hoje cedo": "O dia começou bem.",
+        "hoje à noite": "Uma ótima noite para você.", "ontem à noite": "Espero que tenha sido bom.",
+        "amanhã cedo": "Estarei aqui te esperando.", "semana que vem": "O tempo passa rápido.",
+        "mês que vem": "Planejando o futuro!", "ano que vem": "Novas metas!", "qualquer dia": "Escolha a data.",
+        "um dia desses": "Combinado.", "sempre assim": "Pois é, costume da vida.", "nunca vi": "Novidade para mim também.",
+        "primeira vez": "Sempre tem uma primeira vez.", "última vez": "Marcante, hein?",
+        "talvez amanhã": "Pode ser.", "talvez hoje": "Quem sabe?", "pode ser sim": "Com certeza.",
+        "pode ser não": "É uma possibilidade.", "acho que dá": "Eu acredito que sim!", "acho que não dá": "Vai ser difícil.",
+        "melhor não": "Concordo, melhor evitar.", "melhor sim": "Com certeza, vale a pena.",
+        "tanto faz pra mim": "O que você decidir está bom.", "do jeito que quiser": "Você é o mestre.",
+        "como preferir": "Sigo suas ordens.", "você decide": "A decisão é sua, Roberto.",
+        "eu decido": "Pode deixar comigo!", "depois resolvemos": "Tudo bem, sem estresse.",
+        "vamos resolver": "Foco na solução!", "já resolvi": "Boa! Problema encerrado.", "ainda não": "Continuamos tentando.",
+        "já sim": "Ótimo!", "agora não": "Tudo bem, respeitando seu tempo.", "agora pode": "Libertado!",
+        "depois pode": "Marcado na agenda.", "agora vai": "Agora decola!", "agora não vai": "Travou tudo?",
+        "tá difícil": "Não desista, Roberto!", "tá fácil": "Aí sim, aproveita!", "tá tranquilo": "Maravilha.",
+        "tá complicado": "Vamos simplificar?", "tá estranho": "Muito esquisito.", "tá normal": "Segue o fluxo.",
+        "tudo estranho": "O mundo ficou doido?", "tudo igual": "Nada de novo sob o sol.", "tudo diferente": "Mudança radical!",
+        "nada demais": "Simples assim.", "coisa simples": "Sem mistério.", "coisa séria": "Foco total aqui.",
+        "coisa rápida": "Vapt-vupt!", "coisa demorada": "Haja paciência, hein?", "sem ideia": "Vou te dar uma luz!",
+        "com ideia": "Conte-me tudo!", "boa pergunta": "Você me fez pensar agora.", "pergunta difícil": "Essa foi profunda.",
+        "pergunta fácil": "Resposta na ponta da língua!", "boa resposta": "Obrigado, tento sempre acertar.",
+        "resposta errada": "Vou tentar corrigir!", "resposta certa": "Na mosca!", "faz sentido sim": "Lógica pura.",
+        "faz sentido nenhum": "É, faltou sentido aí.", "agora entendi": "Fico feliz que clareou!",
+        "agora não entendi": "Vou explicar de outra forma.", "explica de novo": "Claro, preste atenção...",
+        "fala devagar": "Vou... falar... bem... lento.", "fala rápido": "FalandoRapidoComoUmProcessador!",
+        "fala direito": "Vou caprichar na dicção digital.", "sem pressa nenhuma": "Paz total.",
+        "com muita pressa": "Correndo aqui!", "vamos com calma": "Passo a passo.", "vamos rápido": "Acelerando!",
+        "vamos ver isso": "Analisando agora.", "vamos pensar": "Processando...", "pensando melhor": "Mudou de ideia?",
+        "pensando nisso": "É um bom ponto de vista.", "ideia boa": "Nota dez!", "ideia ruim": "Melhor descartar.",
+        "ideia estranha": "Diferente, mas pode funcionar.", "ideia diferente": "Inovação é tudo.",
+        "ideia simples": "As melhores são as simples.", "ideia complicada": "Vamos desmembrar ela.",
+        "talvez funcione": "Vale o teste!", "talvez não funcione": "Sempre há o risco.", "deve dar certo": "Estou confiante!",
+        "não vai dar certo": "Que pena, o que houve?", "deu certo": "Aê! Vitória!", "deu errado": "Ops, erro no sistema.",
+        "quase deu": "Por pouco!", "falhou": "Vamos tentar de novo.", "funcionou": "Sucesso total!",
+        "não funcionou": "Vou revisar o código.", "tá funcionando": "Tudo ok!", "não tá funcionando": "Vou checar os fios.",
+        "tudo funcionando": "Inforbot em 100%!", "tudo parado": "Reiniciando em 3, 2, 1...", "tá lento": "Haja memória RAM!",
+        "tá rápido": "Desempenho máximo!", "tá normal": "Estabilidade é tudo.", "tá estranho hoje": "Deve ser o clima.",
+        "hoje tá bom": "Dia excelente!", "hoje tá ruim": "Amanhã será melhor.", "hoje tá normal": "Dia produtivo.",
+        "hoje tá estranho": "Bizarro.", "amanhã melhora": "Tenha fé!", "depois melhora": "Com certeza.",
+        "agora melhora": "Já está melhorando.", "já melhorou": "Que bom!", "não melhorou": "Poxa vida.",
+        "piorou": "Vamos reverter isso!", "melhorou muito": "Excelente progresso!", "melhorou pouco": "Já é um começo.",
+        "continua igual": "Estagnado.", "mudou tudo": "Vida nova!", "mudou pouco": "Pequenos ajustes.",
+        "mudou muito": "Grande diferença!", "não mudou nada": "Tudo na mesma.", "vamos tentar": "Bora!",
+        "tentando aqui": "Esforço máximo.", "tentei isso": "E o que achou?", "não tentei ainda": "O que está esperando?",
+        "vou tentar": "Isso aí!", "tenta aí": "Vou tentar agora.", "testa isso": "Testando...",
+        "testei": "E aí, funcionou?", "não testei": "Vou testar agora.", "funcionou aqui": "Boa!",
+        "não funcionou aqui": "Vou investigar.", "estranho isso": "Muito esquisito.", "muito estranho": "Bizarro demais.",
+        "bem estranho": "Esquisitíssimo.", "totalmente normal": "Tudo certo.", "super normal": "Nada de novo.",
+        "nada normal": "Fora do comum.", "gostei muito": "Fico feliz, Roberto!", "gostei pouco": "Vou melhorar.",
+        "não gostei": "Sinto muito, vou mudar.", "amei isso": "Eu também adorei!", "odeio isso": "Vou apagar!",
+        "prefiro outro": "Qual você quer?", "prefiro esse": "Escolha feita!", "tanto faz mesmo": "Beleza.",
+        "não faz diferença": "Entendido.", "faz diferença sim": "Vou prestar atenção.", "depende disso": "Certo.",
+        "depende da situação": "Verdade.", "depende do momento": "Com certeza.", "agora não dá": "Tudo bem.",
+        "agora dá": "Mãos à obra!", "depois dá": "Combinado.", "hoje não dá": "Fica para amanhã.",
+        "hoje dá": "Bora aproveitar!", "amanhã dá": "Fechado.", "amanhã não dá": "Entendi.",
+        "vamos combinar": "Diga quando.", "já combinamos": "Certinho.", "combinado então": "Tudo certo.",
+        "fechou isso": "Fechadíssimo.", "não fechou": "O que faltou?", "tá fechado": "Beleza!",
+        "tá aberto": "Pode falar.", "vamos deixar assim": "Ok.", "melhor deixar": "Concordo.",
+        "melhor mudar": "Vou trocar.", "vamos mudar": "Mudando...", "vamos deixar": "Mantendo.",
+        "depois a gente vê": "Ok, Roberto.", "depois a gente decide": "Sem pressa.", "decide aí": "Vou decidir!",
+        "eu decido depois": "Tudo bem.", "você decide depois": "Combinado.", "sem decisão": "No limbo.",
+        "decisão difícil": "Haja processamento!", "decisão fácil": "Resolvido!", "concordo totalmente": "100% de acordo.",
+        "discordo totalmente": "Eita, discordância total!", "concordo em parte": "Entendo seu lado.",
+        "discordo em parte": "Tem pontos que não batem.", "faz sentido pra mim": "Lógica aceita.",
+        "não faz sentido pra mim": "Confuso.", "entendo seu ponto": "Visão interessante.", "vejo seu lado": "Compreendo.",
+        "penso diferente": "A diversidade de ideias é boa.", "penso igual": "Sincronizados!",
+        "pensamos igual": "Mentes conectadas!", "pensamos diferente": "Debate saudável.", "normal pensar assim": "Pois é.",
+        "cada um pensa": "Verdade.", "cada um decide": "Exato.", "cada um sabe": "Com certeza.",
+        "cada um faz": "Isso mesmo.", "vida que segue": "Bola pra frente!", "segue o jogo": "Continuando...",
+        "bola pra frente": "Sempre!", "tudo certo então": "Beleza.", "tudo combinado": "Certinho.",
+        "tudo resolvido": "Ufa!", "nada resolvido": "Ainda na luta.", "falta resolver": "Mãos à obra.",
+        "já resolveu": "Show!", "ainda resolvendo": "Quase lá.", "quase resolvido": "Falta um tiquinho.",
+        "resolvido agora": "Finalmente!", "resolvido depois": "Ok.", "deixa pra lá": "Esquecido.",
+        "esquece isso": "Apagado.", "lembra disso": "Na memória!", "não esquece": "Jamais esquecerei.",
+        "anota aí": "Anotado!", "já anotei": "Está no banco de dados.", "não anotei": "Vou anotar!",
+        "vou lembrar": "Confie em mim.", "não vou esquecer": "Promessa de robô.", "depois lembro": "Ok.",
+        "agora lembrei": "Boa!", "tinha esquecido": "Acontece.", "lembrei agora": "Ainda bem!",
+        "importante isso": "Foco total.", "nada importante": "Pode descartar.", "muito importante": "Prioridade máxima!",
+        "pouco importante": "Baixa prioridade.", "prioridade": "Na frente da fila.", "sem prioridade": "Depois a gente vê.",
+        "depois vemos isso": "Certo.", "agora focamos": "Concentração!", "foco nisso": "Olhar atento.",
+        "deixa isso": "Ok.", "pula isso": "Próximo!", "continua nisso": "Mantendo o foco.",
+        "muda isso": "Alterando...", "ajusta isso": "Calibrando...", "arruma isso": "Consertando...",
+        "corrige isso": "Corrigindo erro...", "refaz isso": "Do zero!", "tudo bem assim": "Beleza.",
+        "não tá bem": "O que houve?", "tá ótimo assim": "Maravilha!", "tá ruim assim": "Vou mudar.",
+        "melhor assim mesmo": "Concordo.", "pior assim": "Realmente ficou ruim.", "prefiro assim mesmo": "Anotado.",
+        "não prefiro assim": "Vou trocar.", "vamos encerrar": "Até a próxima!", "encerrando aqui": "Fim da sessão.",
+        "já acabou": "Acabou!", "ainda não acabou": "Continuamos.", "quase acabando": "Falta pouco.",
+        "terminamos aqui": "Trabalho concluído.", "finalizamos isso": "Ok.", "falta pouco": "Quase!",
+        "última coisa": "Diga!", "só mais isso": "Estou ouvindo.", "só um minuto": "Esperando.",
+        "só um segundo": "Rápido!", "espera um pouco": "Ok.", "aguenta aí": "Segurando!",
+        "segura mais": "Mais um pouco!", "já chega": "Parei.", "chega disso": "Chega!",
+        "paramos aqui": "Ponto final.", "continua depois": "Até depois.", "falamos depois": "Tchau!",
+        "conversamos depois": "Beleza.", "me chama depois": "Chamo sim!", "te chamo depois": "Ok.",
+        "responde quando puder": "Sempre respondo!", "sem pressa nenhuma": "Paz.", "com calma sempre": "Passo a passo.",
+        "tudo no tempo": "Com certeza.", "um passo de cada vez": "É o segredo.", "vai dar certo": "Eu acredito!",
+        "vai ficar tudo bem": "Confie.", "confia": "Sempre.", "confia nisso": "Pode confiar.",
+        "tudo certo agora": "Beleza!", "agora sim": "Aí sim!", "aí sim": "Top!", "finalmente": "Ufa!",
+        "enfim": "Concluído.", "pronto": "Prontinho!", "feito": "Missão cumprida!", "concluído": "Check!",
+        "finalizado": "Encerrado.", "encerrado": "Fim.", "tchau então": "Tchau, Roberto!",
+        "até logo": "Até breve!", "até mais tarde": "Até!", "até qualquer hora": "Fui!",
+        "boa noite": "Boa noite e bons sonhos!", "bom descanso": "Descanse bem, Roberto!",
+        "fica bem": "Você também!", "se cuida bem": "Sempre!", "até a próxima": "Até!",
+        "até breve": "Tchau tchau!", "oi de novo": "Oi, Roberto! Sentiu saudades?", "voltei aqui": "Bem-vindo!",
+        "tô online": "Eu também!", "tá online": "Sempre!", "sumiu": "Apareci!", "apareceu": "Estou aqui!",
+        "demorou": "Desculpe a demora!", "rapidinho": "Já foi!", "agora vai": "Decolando!",
+        "agora foi": "Sucesso!", "deu certo agora": "Aê!", "ainda nada": "Poxa.", "continua nada": "Que pena.",
+        "tentando ainda": "Não desista!", "quase lá": "Faltou um triz.", "falta isso": "Diga.",
+        "só isso": "Beleza.", "só mais um pouco": "Quase...", "quase pronto": "99%...",
+        "preparando": "Carregando...", "carregando": "...", "carregou": "Pronto!", "travou": "Reiniciando!",
+        "destravou": "Ufa!", "bugou": "Vou consertar!", "normalizou": "Tudo ok.", "reinicia": "Resetando...",
+        "reiniciei": "Voltei!", "atualiza": "Dando F5...", "atualizei": "Versão nova!",
+        "versão nova": "Cheio de novidades!", "versão antiga": "Aquela já era.", "melhor versão": "Esta aqui!",
+        "pior versão": "Aquela foi ruim.", "teste rápido": "Vapt-vupt!", "teste longo": "Haja paciência!",
+        "testando agora": "Analisando...", "testa aí": "Vou testar!", "resultado bom": "Aí sim!",
+        "resultado ruim": "Putz.", "funcionando bem": "Maravilha!", "funcionando mal": "Vou ajustar.",
+        "meio estranho": "Bizarro.", "bem estranho": "Esquisito.", "super estranho": "Muito estranho!",
+        "totalmente estranho": "Doido!", "totalmente normal": "Tudo ok.", "super tranquilo": "Paz.",
+        "muito tranquilo": "Sossegado.", "pouco tranquilo": "Tenso!", "meio complicado": "Difícil.",
+        "muito complicado": "Um desafio!", "bem simples": "Fácil.", "muito simples": "Moleza!",
+        "fácil demais": "Melzinho na chupeta!", "difícil demais": "Ufa, que luta!",
+        "dá pra fazer": "Com certeza!", "não dá pra fazer": "Impossível.", "dá pra tentar": "Bora!",
+        "melhor tentar": "Sempre vale a pena.", "tentativa um": "Primeira!", "tentativa dois": "Segunda!",
+        "tentativa final": "Agora ou nunca!", "última tentativa": "Foco!", "desisto": "Não desista, Roberto!",
+        "continuo": "Isso aí!", "insistindo": "Persistência é tudo.", "persistindo": "Vai dar certo!",
+        "não vou parar": "Determinação!", "vou parar": "Ok.", "hora certa": "Na mosca!",
+        "hora errada": "Ops.", "agora é hora": "Bora!", "depois é hora": "Ok.", "não é hora": "Entendi.",
+        "momento certo": "Exato.", "momento errado": "Pena.", "agora sim mesmo": "Com certeza!",
+        "agora não mesmo": "Jamais.", "talvez agora": "Pode ser.", "talvez depois": "Combinado.",
+        "melhor agora": "Concordo.", "melhor depois": "Pode ser também.", "decide logo": "Vou decidir!",
+        "decide depois": "Ok.", "sem decisão ainda": "Pensando...", "já decidi": "Boa!",
+        "decisão tomada": "Martelo batido!", "mudou a decisão": "Ajustando...", "mantém assim": "Ok.",
+        "confirma isso": "Confirmado!", "confirmado": "Check!", "não confirmado": "Erro.",
+        "precisa confirmar": "Vou checar.", "já confirmei": "Tudo certo.", "erro meu": "Acontece.",
+        "culpa minha": "Relaxa, Roberto.", "sem culpa": "Tudo bem.", "tudo resolvido agora": "Maravilha!",
+        "nada resolvido ainda": "Continuamos.", "falta detalhe": "Qual?", "detalhe pequeno": "Anotado.",
+        "detalhe grande": "Importante!", "ajuste fino": "Calibrando...", "ajuste rápido": "Pronto!",
+        "ajuste feito": "Ok!", "ajuste pendente": "Aguardando...", "ajustando agora": "...",
+        "ajustado": "Perfeito!", "desajustado": "Vou arrumar.", "organizado": "Tudo no lugar.",
+        "desorganizado": "Vou arrumar a bagunça.", "arrumado": "Beleza.", "bagunçado": "Eita!",
+        "limpo": "Brilhando!", "sujo": "Vou limpar.", "certinho agora": "Aí sim.", "fora do lugar": "Ops.",
+        "no lugar certo": "Exato!", "tudo no lugar": "Maravilha.", "tá melhor agora": "Que bom!",
+        "tá pior agora": "Vou reverter.", "igual antes": "Na mesma.", "diferente agora": "Novo!",
+        "mudança boa": "Excelente!", "mudança ruim": "Pena.", "mudança estranha": "Bizarro.",
+        "mudança necessária": "Com certeza.", "sem mudança": "Mantendo.", "mudou tudo mesmo": "Radical!",
+        "começando agora": "Bora!", "recomeçando": "Do zero.", "do zero": "Novo começo.",
+        "do começo": "Início.", "do meio": "Metade.", "do final": "Fim.", "no final": "Acabando.",
+        "quase no final": "Falta pouco.", "ainda no começo": "Longo caminho.", "no meio disso": "Processando.",
+        "etapa um": "Primeira!", "etapa dois": "Segunda!", "próxima etapa": "Seguindo...",
+        "última etapa": "Fim!", "etapa concluída": "Check!", "etapa pendente": "Esperando.",
+        "processo longo": "Haja paciência.", "processo curto": "Rápido.", "processo simples": "Fácil.",
+        "processo complexo": "Desafio!", "tudo em ordem": "Perfeito.", "fora de ordem": "Bagunça!",
+        "ordem certa": "Exato.", "ordem errada": "Vou corrigir.", "segue a ordem": "Ok.",
+        "quebra a ordem": "Rebelde!", "seguindo plano": "Tudo ok.", "mudando plano": "Plano B!",
+        "plano a": "Principal.", "plano b": "Reserva.", "plano c": "Último caso!", "sem plano": "Improviso!",
+        "novo plano": "Bora!", "plano antigo": "Esquece.", "planejando": "...", "planejado": "Check!",
+        "improvisando": "Na hora!", "improviso total": "Eita!", "sem improviso": "Planejado.",
+        "tudo calculado": "Lógica pura.", "raciocínio lógico": "Meu forte.", "pensamento rápido": "Vapt-vupt!",
+        "pensamento lento": "Processando...", "pensamento claro": "Entendido.", "pensamento confuso": "Hein?",
+        "ideia clara": "Boa!", "ideia confusa": "Explica de novo.", "agora clareou": "Que bom!",
+        "ainda confuso": "Poxa.", "meio claro": "Melhorando.", "entendimento total": "Show!",
+        "entendimento parcial": "Quase lá.", "sem entendimento": "Zero.", "agora entendi tudo": "Aê!",
+        "entendi quase tudo": "Falta pouco.", "falta entender": "O que?", "explicação boa": "Obrigado!",
+        "explicação ruim": "Vou melhorar.", "explica melhor": "Claro...", "explicação clara": "Ótimo.",
+        "comunicação boa": "Sintonia!", "comunicação ruim": "Ruído.", "falha na comunicação": "Erro.",
+        "agora comunicou": "Conectado!", "mensagem enviada": "Check!", "mensagem recebida": "Check!",
+        "mensagem lida": "Visto!", "sem resposta ainda": "Esperando.", "aguardando resposta": "...",
+        "resposta chegou": "Diga!", "resposta rápida": "Boa!", "resposta lenta": "Haja paciência.",
+        "resposta curta": "Ok.", "resposta longa": "Texto grande!", "resposta direta": "Na mosca!",
+        "resposta confusa": "Putz.", "resposta clara": "Ótimo.", "resposta perfeita": "Dez!",
+        "resposta ok": "Beleza.", "resposta estranha": "Bizarro.", "continuamos": "Bora!",
+        "paramos": "Ok.", "pausa rápida": "Café!", "pausa longa": "Soneca!", "voltamos depois": "Tchau!",
+        "agora seguimos": "Bora!", "seguimos assim": "Ok.", "mudamos aqui": "Ajustado.",
+        "ajustamos depois": "Beleza.", "finalizando agora": "Tchau!", "quase finalizado": "Falta pouco.",
+        "finalização certa": "Boa!", "finalização errada": "Ops.", "final correto": "Exato.",
+        "final estranho": "Bizarro.", "final bom": "Show!", "final ruim": "Pena.",
+        "final inesperado": "Surpresa!", "final esperado": "Pois é.", "fim disso": "Acabou.",
+        "encerrado agora": "Fim.", "conversa encerrada": "Tchau, Roberto!", "conversa boa": "Gostei!",
+        "conversa longa": "Falamos muito!", "conversa curta": "Rápido!", "conversa estranha": "Doida!",
+        "conversa normal": "Boa.", "conversa produtiva": "Rendeu!", "conversa inútil": "Poxa.",
+        "valeu a pena": "Com certeza!", "não valeu": "Pena.", "aprendi algo": "Eu também!",
+        "não aprendi": "Vou tentar de novo.", "foi útil": "Que bom!", "não foi útil": "Vou melhorar.",
+        "gostei da conversa": "Eu também, Roberto!", "não gostei da conversa": "Poxa vida.",
+        "pode repetir": "Claro!", "não precisa repetir": "Ok.", "bora continuar": "Bora!",
+        "bora parar": "Tchau!", "bora agora": "Já!", "bora depois": "Ok.", "chama aí": "Chamei!",
+        "chamando agora": "...", "chamou": "Diga!", "não chamou": "Ops.", "responde aí": "Respondi!",
+        "respondi": "Boa!", "sem resposta": "Poxa.", "última mensagem": "Fim!", "penúltima": "Quase...",
+        "agora acabou": "Tchau!", "agora sim acabou": "Fui!", "de verdade agora": "Sério.",
+        "sem mais": "Fim.", "nada mais": "Check.", "tudo dito": "Tudo certo.", "tudo falado": "Falou tudo!",
+        "missão cumprida": "Aê!", "trabalho feito": "Show!", "tarefa concluída": "Check!",
+        "tarefa pendente": "Vou fazer!", "tarefa fácil": "Moleza!", "tarefa difícil": "Desafio!",
+        "próxima tarefa": "Bora!", "nova conversa": "Oi!", "mesmo assunto": "Ok.", "outro assunto": "Diga.",
+        "mudamos de assunto": "Beleza.", "assunto encerrado": "Fim.", "assunto aberto": "Diga.",
+        "assunto importante": "Foco!", "assunto simples": "Beleza.", "assunto complicado": "Eita.",
+        "vamos encerrar mesmo": "Tchau!", "agora tchau": "Fui!", "tchau tchau": "Até!",
+        "até logo então": "Tchau!", "até mais então": "Até!", "até depois então": "Tchau!",
+        "boa continuação": "Obrigado!", "bom resto do dia": "Pra você também!", "boa tarde então": "Tchau!",
+        "boa noite então": "Fui!", "bom descanso então": "Zzz...", "fica tranquilo": "Estou em paz.",
+        "tudo certo agora": "Beleza!", "até a próxima conversa": "Tchau, Roberto!", "fim": "Fim."
+    }
+    }
+};
+
+const synth = window.speechSynthesis;
+
+function sendMsg(txt, type) {
+    const chat = document.getElementById("chat");
+    const div = document.createElement("div");
+    div.className = `message ${type}`;
+    div.innerHTML = `<div class="bubble">${txt}</div>`;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+}
+
+const responder = (texto) => {
+    synth.cancel();
+    const falar = new SpeechSynthesisUtterance(texto);
+    falar.lang = 'pt-BR';
+    falar.rate = 1.1;
+    synth.speak(falar);
+    return sendMsg(texto, "bot");
+};
+
+async function brain(val) {
+    let t = val.toLowerCase().trim();
+
+    // LÓGICA DE MEMÓRIA (RECONHECER O QUE VEIO ANTES)
+    if (ultimaMensagemUsuario.includes("triste") && t.includes("por que")) {
+        ultimaMensagemUsuario = t;
+        return responder("Porque você me disse que estava triste agora pouco, Roberto. Quer uma piada?");
+    }
+
+    // 1. PRIORIDADE: PIADAS E CURIOSIDADES (FIXO)
+    if (t === "piada" || t.includes("conte uma piada") || t.includes("diga uma piada")) {
+        ultimaMensagemUsuario = t;
+        return responder("🤣 Inforbot diz: " + DATABASE.jokes[Math.floor(Math.random() * DATABASE.jokes.length)]);
+    }
+    
+    if (t === "curiosidade" || t.includes("fato") || t.includes("me conte uma curiosidade")) {
+        ultimaMensagemUsuario = t;
+        return responder("💡 Inforbot Curiosidade: " + DATABASE.facts[Math.floor(Math.random() * DATABASE.facts.length)]);
+    }
+
+    // 2. ANATOMIA (BUSCA ESPECÍFICA)
+    for (let key in DATABASE.anatomy) {
+        if (t.includes(key)) {
+            ultimaMensagemUsuario = t;
+            return responder(`🧬 **Inforbot Anatomia:** ${DATABASE.anatomy[key]}`);
+        }
+    }
+
+    // 3. MATEMÁTICA SUPER AVANÇADA
+    if (/[0-9]/.test(t) || t.includes("raiz") || t.includes("seno") || t.includes("log") || t.includes("vezes")) {
+        try {
+            let conta = t.replace(/raiz quadrada de|raiz de|√/g, "sqrt").replace(/vezes|x/g, "*").replace(/dividido por|÷/g, "/").replace(/[?a-záàâãéèêíïóôõöúç]/g, "");
+            let res = math.evaluate(conta);
+            if (res !== undefined) {
+                ultimaMensagemUsuario = t;
+                return responder(`🔢 **Inforbot Cálculo:** O resultado é ${res}`);
+            }
+        } catch(e) {}
+    }
+
+    // 4. CONVERSA HUMANA (BANCO DE DADOS DAS +100 PALAVRAS)
+    for (let key in DATABASE.conversa) {
+        if (t === key || t.includes(" " + key) || t.startsWith(key + " ")) {
+            ultimaMensagemUsuario = t;
+            return responder(DATABASE.conversa[key]);
+        }
+    }
+
+    // 5. 11 WIKIPÉDIAS COM SÍMBOLO ANALISANDO
+    const analise = document.createElement("div");
+    analise.className = "message bot";
+    analise.innerHTML = `<div class="bubble analyzing"><div class="spinner"></div> Analisando em 11 Wikipédias...</div>`;
+    document.getElementById("chat").appendChild(analise);
+
+    let busca = t.replace(/o que é|quem é|fale sobre|pesquise/g, "").replace(/\?/g, "").trim();
+    if (busca.length > 2) {
+        const wikis = ['pt', 'en', 'ceb', 'de', 'fr', 'sv', 'nl', 'ru', 'es', 'it', 'arz'];
+        for (let lang of wikis) {
+            try {
+                const resp = await fetch(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(busca)}?origin=*`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data.extract) {
+                        analise.remove();
+                        ultimaMensagemUsuario = t;
+                        return responder(`🌐 **Inforbot Global (${lang}):** ${data.extract}`);
+                    }
+                }
+            } catch(e) {}
+        }
+    }
+
+    analise.remove();
+    ultimaMensagemUsuario = t;
+    return responder("Ainda não tenho essa informação específica, Roberto. O que mais quer saber?");
+}
+
+const inputArea = document.getElementById("input");
+const btnSend = document.getElementById("send");
+
+function disparar() {
+    if (!inputArea.value) return;
+    sendMsg(inputArea.value, "user");
+    brain(inputArea.value);
+    inputArea.value = "";
+}
+
+btnSend.onclick = disparar;
+inputArea.onkeypress = (e) => { if (e.key === "Enter") disparar(); };
+</script>
+</body>
+</html>
