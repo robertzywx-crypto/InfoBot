@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InforBot - Inteligência Artificial</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; transition: 0.3s; }
+        body { height: 100vh; background: #010409; display: flex; align-items: center; justify-content: center; }
+        .app { width: 95%; max-width: 750px; height: 95vh; background: #0d1117; border-radius: 30px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,0.8); border: 1px solid #30363d; }
+        .header { background: linear-gradient(135deg, #1e40af, #000); padding: 20px; text-align: center; color: white; border-bottom: 3px solid #1f6feb; }
+        .theme-container { margin-top: 10px; display: flex; justify-content: center; gap: 15px; }
+        .btn-theme { padding: 8px 18px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; cursor: pointer; font-size: 13px; font-weight: bold; }
+        .btn-theme:hover { background: white; color: #1e40af; transform: scale(1.05); }
+        .chat { flex: 1; padding: 25px; overflow-y: auto; background: #010409; display: flex; flex-direction: column; gap: 15px; }
+        .bubble { padding: 15px 20px; border-radius: 20px; font-size: 16px; line-height: 1.5; max-width: 85%; }
+        .user { align-self: flex-end; background: #2563eb; color: white; border-radius: 20px 20px 2px 20px; }
+        .bot { align-self: flex-start; background: #161b22; color: #c9d1d9; border: 1px solid #30363d; border-radius: 20px 20px 20px 2px; }
+        .input-area { padding: 20px; background: #0d1117; border-top: 1px solid #30363d; display: flex; gap: 10px; }
+        input { flex: 1; padding: 15px; border-radius: 15px; border: 1px solid #30363d; outline: none; background: #010409; color: white; font-size: 16px; }
+        #send { width: 55px; height: 55px; border-radius: 15px; border: none; background: #2563eb; color: white; cursor: pointer; font-size: 20px; }
+        body.light-mode { background: #e2e8f0; }
+        body.light-mode .app { background: #fff; border: none; }
+        body.light-mode .chat { background: #f8fafc; }
+        body.light-mode .bot { background: white; color: #1e293b; border: 1px solid #e2e8f0; }
+        @keyframes pop { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .message { animation: pop 0.3s ease forwards; }
+    </style>
+</head>
+<body>
+<div class="app">
+    <div class="header">
+        <h1>🤖 InforBot v2.0</h1>
+        <div class="theme-container">
+            <button class="btn-theme" onclick="setTheme('light')">Tema Claro</button>
+            <button class="btn-theme" onclick="setTheme('dark')">Tema Escuro</button>
+        </div>
+    </div>
+    <div id="chat" class="chat">
+        <div class="message bot"><div class="bubble">Olá Isaque! Sou o <b>InforBot</b>. Meu banco de dados está completo e estou pronto para conversar de verdade com você!</div></div>
+    </div>
+    <div class="input-area">
+        <input type="text" id="input" placeholder="Diga algo para o InforBot...">
+        <button id="send">➤</button>
+    </div>
+</div>
+
+<script>
+function setTheme(mode) {
+    if(mode === 'light') document.body.classList.add('light-mode');
+    else document.body.classList.remove('light-mode');
+}
+
+const DB = {
+    java: { "java": "O Java é uma linguagem incrível, muito usada em grandes empresas e no Android.", "jvm": "A JVM (Java Virtual Machine) é o que faz o Java rodar em qualquer lugar.", "jdk": "O JDK é o kit de ferramentas para nós, desenvolvedores!", "maven": "O Maven ajuda a organizar todas as bibliotecas do projeto." },
+    anatomia: { "ossos": "Você sabia que um adulto tem 206 ossos? O fêmur é o maior deles!", "dna": "Isso é bizarro, mas nosso DNA é 50% igual ao de uma banana!", "coração": "Seu coração é valente, ele bate cerca de 100 mil vezes por dia!", "estribo": "O estribo é o menor osso do seu corpo e fica lá no ouvido." },
+    jokes: [
+        "Por que o programador faliu? Ficou sem cache!", "O que o zero disse pro oito? Belo cinto!", "Qual o café favorito do Java? O expresso!",
+        "Por que o livro de matemática se suicidou? Tinha muitos problemas.", "Como o programador dorme? if(sono){ dormir(); }", "Qual o contrário de volátil? Vem cá, tio!",
+        "Por que o teclado não sai de casa? Porque não tem Esc!", "O que o objeto disse para a classe? Eu tenho herança!", "O que o Chrome disse para o PC? Vou comer sua memória RAM!",
+        "Por que os peixes não usam computador? Por medo da rede!", "O que o programador disse ao ver o mar? Olha quanta C-Shell!", "Como se chama um programador que não dorme? O 'Undefined'.",
+        "Por que o Wi-Fi foi preso? Porque ele estava com sinal aberto!", "O que o Bit disse para o Byte? Você é 8 vezes maior!", "Onde o programador mora? No endereço de IP dele.",
+        "Por que o HTML se separou do CSS? Porque eles não tinham classe!", "O que o mouse disse para o teclado? Você faz o meu tipo!", "Qual a música favorita do desenvolvedor? O Algoritmo da terra.",
+        "Por que o computador foi ao médico? Porque estava com vírus!", "Software de dieta? Tem muitos bytes!", "Zero pro Hum? Você é sozinho!",
+        "Pai do C++? O C!", "Programador no restaurante? Pediu o menu principal!", "Bug na floresta? Uma tarantula!",
+        "Por que o Excel é calmo? Tem muitas células!", "Site de fofoca? O HTTPfofoca!", "Programador no frio? Fica no Java!",
+        "Por que o código foi preso? Erro de execução!", "Programador rico? Achou uma mina de bits!", "Teclado sem espaço? Não tem onde ir!",
+        "Programador de óculos? Não vê C#!", "Monitor triste? Está em baixa resolução!", "Programador no deserto? Procura o sandbox!",
+        "Por que o HD é medroso? Tem medo de cair!", "Piada de programador? Não tem graça, é lógica!"
+    ],
+    facts: [
+        "O mel nunca estraga. Arqueólogos acharam mel de 3000 anos comestível.", "As formigas nunca dormem e não possuem pulmões.", "Vênus é o único planeta que gira no sentido horário.",
+        "O DNA humano é 50% igual ao de uma banana.", "O primeiro computador pesava 30 toneladas.", "Polvos têm 3 corações, 9 cérebros e o sangue é azul.",
+        "A luz do Sol leva 8 minutos e 20 segundos para chegar aqui.", "Cachorros conseguem entender até 250 palavras.", "Se você dobrar um papel 42 vezes, ele chega até a Lua.",
+        "O Monte Everest cresce cerca de 4mm a cada ano.", "Existem mais estrelas no céu do que grãos de areia na Terra.", "Um raio é 5 vezes mais quente que a superfície do Sol.",
+        "Borboletas sentem o gosto com os pés.", "Cavalos-marinhos são os únicos peixes com pescoço.", "As vacas têm melhores amigas e ficam estressadas se separadas.",
+        "O coração da baleia azul é do tamanho de um fusca.", "O recorde de tempo sem dormir é de 11 dias.", "Tubarões existem há mais tempo que as árvores.",
+        "O olho humano consegue distinguir 10 milhões de cores.", "No Japão, existem melancias quadradas.", "O Sol é uma estrela.",
+        "Ovelhas se reconhecem em fotos.", "Gatos têm 32 músculos na orelha.", "Pinguins pedem em casamento com pedras.",
+        "O inventor do Pringles foi enterrado numa lata.", "Leões dormem 20 horas por dia.", "Hipopótamos suam sangue rosa.",
+        "Coalhas dormem 22 horas.", "Nariz do cachorro é único como digital.", "Baratas vivem dias sem cabeça.",
+        "A Terra pesa 6 sextilhões de toneladas.", "Saturno flutuaria na água.", "Flamingos são rosas pela comida.",
+        "Vênus é mais quente que Mercúrio.", "Espiro grafia é arte!"
+    ]
+};
+
+async function translate(t) {
+    try {
+        const r = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=pt&dt=t&q=${encodeURIComponent(t)}`);
+        const j = await r.json(); return j[0].map(x => x[0]).join('');
+    } catch { return t; }
+}
+
+async function engine(v) {
+    let t = v.toLowerCase().trim();
+
+    // 1. CONVERSA SOCIAL (IA)
+    if (t === "oi" || t === "olá" || t === "opa") return print("Olá! Tudo bem com você? Eu estava aqui só esperando você me chamar para conversarmos!", "bot");
+    if (t.includes("tudo bem") || t.includes("como vai")) return print("Eu estou funcionando perfeitamente, obrigado por perguntar! E você, como está sendo seu dia, Isaque?", "bot");
+    if (t.includes("quem é você")) return print("Eu sou o InforBot, uma inteligência artificial criada por você e pelo Gemini para ser seu parceiro de estudos e diversão!", "bot");
+
+    // 2. MATEMÁTICA INTELIGENTE
+    if (/[0-9]/.test(t)) {
+        try {
+            let f = t.replace(/raiz quadrada de/g, "sqrt").replace(/raiz de/g, "sqrt").replace(/vezes/g, "*").replace(/dividido por/g, "/").replace(/[a-záàâãéèêíïóôõöúç?]/g, "");
+            let res = math.evaluate(f);
+            if (res !== undefined) return print(`Claro! Eu fiz o cálculo e o resultado de **${v}** é **${res}**. Fácil, né?`, "bot");
+        } catch(e) {}
+    }
+
+    // 3. BANCO DE DADOS (PIADAS, CURIOSIDADES, ANATOMIA)
+    if (t.includes("piada")) return print("Essa é boa: " + DB.jokes[Math.floor(Math.random()*DB.jokes.length)], "bot");
+    if (t.includes("curiosidade") || t.includes("fato")) return print("Olha que interessante: " + DB.facts[Math.floor(Math.random()*DB.facts.length)], "bot");
+    for (let k in DB.anatomia) { if (t.includes(k)) return print(`Eu sei muito sobre isso! Sabia que ${DB.anatomia[k]}`, "bot"); }
+    for (let k in DB.java) { if (t.includes(k)) return print(`Ah, você quer saber de Java? ${DB.java[k]}`, "bot"); }
+
+    // 4. WIKIPÉDIA (BUSCA GLOBAL)
+    print("Hm, deixa eu pesquisar isso no meu banco de dados mundial...", "bot", "ld");
+    let q = t.replace(/quem e|o que e|fale sobre|\?/g, "").trim();
+    try {
+        const res = await fetch(`https://pt.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(q)}?origin=*`);
+        if (res.ok) {
+            const d = await res.json();
+            if(document.getElementById("ld")) document.getElementById("ld").remove();
+            return print(`Eu pesquisei e descobri o seguinte: ${d.extract}`, "bot");
+        }
+    } catch {}
+
+    if(document.getElementById("ld")) document.getElementById("ld").remove();
+    print("Puxa, essa eu ainda não sei explicar direito. Pode me falar mais sobre isso ou perguntar outra coisa?", "bot");
+}
+
+function print(t, cl, id) {
+    const d = document.createElement("div"); d.className = `message ${cl}`; if(id) d.id = id;
+    d.innerHTML = `<div class="bubble">${t}</div>`;
+    document.getElementById("chat").appendChild(d);
+    document.getElementById("chat").scrollTop = document.getElementById("chat").scrollHeight;
+}
+
+document.getElementById("send").onclick = () => {
+    let v = document.getElementById("input").value; if(!v) return;
+    print(v, "user"); document.getElementById("input").value = ""; engine(v);
+};
+document.getElementById("input").onkeypress = (e) => { if(e.key === "Enter") document.getElementById("send").click(); };
+</script>
+</body>
+</html>
