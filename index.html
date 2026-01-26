@@ -213,57 +213,49 @@ document.getElementById("send").onclick = () => {
     input.value = "";
 };
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+// --- VERSÃO FINAL INFORBOT - COPIE DAQUI ATÉ O FIM ---
 
-<script>
-// Variáveis de memória e voz
+// 1. FUNÇÃO DO TECLADO (ENTER)
+document.getElementById("input").onkeypress = (e) => {
+    if (e.key === "Enter") {
+        const campo = document.getElementById("input");
+        if (!campo.value) return;
+        sendMsg(campo.value, "user");
+        brain(campo.value); 
+        campo.value = "";
+    }
+};
+
+// 2. CÉREBRO DO ROBÔ (MATEMÁTICA + 11 WIKIPÉDIAS)
 const synth = window.speechSynthesis;
 
 async function brain(val) {
     let t = val.toLowerCase().trim();
 
-    // 1. EFEITO VISUAL (PESQUISANDO)
+    // Sinal visual de que está pensando
     sendMsg("⏳ Analisando...", "bot-temp");
-    const removeTemp = () => { 
-        document.querySelectorAll(".bot-temp").forEach(e => e.remove()); 
-    };
+    const removeTemp = () => { document.querySelectorAll(".bot-temp").forEach(e => e.remove()); };
 
-    // 2. SUPER MATEMÁTICA (REFORÇADA)
-    // Detecta números ou palavras/sinais matemáticos
-    const sinais = ["raiz", "√", "x", "÷", ":", "vezes", "dividido", "+", "-"];
-    const temMatematica = /[0-9]/.test(t) || sinais.some(s => t.includes(s));
-
-    if (temMatematica) {
+    // --- BLOCO MATEMÁTICO ---
+    const sinais = ["raiz", "√", "x", "÷", ":", "vezes", "dividido"];
+    if (/[0-9]/.test(t) || sinais.some(s => t.includes(s))) {
         try {
-            // Tradução para linguagem de máquina
-            let expressao = t
-                .replace(/raiz quadrada de|raiz de|√/g, "sqrt")
-                .replace(/vezes| x | x/g, " * ") // O espaço evita bugar palavras com x
-                .replace(/dividido por|:|÷/g, "/")
-                .replace(/,/g, ".") 
-                .replace(/[?a-záàâãéèêíïóôõöúç]/g, ""); // Remove letras
+            let conta = t.replace(/raiz quadrada de|raiz de|√/g, "sqrt")
+                         .replace(/vezes| x | x/g, " * ")
+                         .replace(/dividido por|:|÷/g, "/")
+                         .replace(/,/g, ".")
+                         .replace(/[?a-záàâãéèêíïóôõöúç]/g, ""); // Limpa letras
 
-            if (expressao.trim() !== "" && /[0-9]/.test(expressao)) {
-                let res = math.evaluate(expressao);
+            if (conta.trim() !== "" && /[0-9]/.test(conta)) {
+                let res = math.evaluate(conta);
                 removeTemp();
                 return sendMsg(`🔢 **Resultado:** ${res}`, "bot");
             }
-        } catch(e) {
-            console.log("Não é conta, tentando outra coisa...");
-        }
+        } catch(e) { console.log("Não é conta."); }
     }
 
-    // 3. BANCO DE DADOS LOCAL (PIADAS / ANATOMIA)
-    if (t.includes("piada")) {
-        removeTemp();
-        const piadas = ["O que o pato disse para a pata? Vem Quá!", "Por que o livro de matemática se suicidou? Porque tinha muitos problemas."];
-        return sendMsg("🤣 " + piadas[Math.floor(Math.random() * piadas.length)], "bot");
-    }
-
-    // 4. BUSCA NAS 11 WIKIPÉDIAS (O GÊNIO)
-    // Limpa a pergunta para pesquisar apenas o termo
+    // --- BLOCO DE PESQUISA (11 WIKIPÉDIAS) ---
     let busca = t.replace(/o que é|quem é|fale sobre|pesquise|me diga/g, "").replace(/\?/g, "").trim();
-
     if (busca.length > 2) {
         const wikis = ['pt', 'en', 'ceb', 'de', 'fr', 'sv', 'nl', 'ru', 'es', 'it', 'arz'];
         
@@ -275,10 +267,12 @@ async function brain(val) {
                     const data = await resp.json();
                     if (data.extract) {
                         removeTemp();
-                        
-                        // O BOT FALA
+
+                        // --- VOZ SEMPRE EM PORTUGUÊS ---
                         const falar = new SpeechSynthesisUtterance(data.extract);
-                        falar.lang = (lang === 'pt') ? 'pt-BR' : 'en-US';
+                        falar.lang = 'pt-BR'; // Sotaque Brasileiro
+                        falar.rate = 1.1;     // Velocidade normal
+                        synth.cancel();       // Para qualquer voz anterior antes de falar
                         synth.speak(falar);
 
                         return sendMsg(`🌐 **Wikipédia:** ${data.extract}`, "bot");
@@ -288,16 +282,10 @@ async function brain(val) {
         }
     }
 
-    // SE NÃO ENTENDER NADA
     removeTemp();
-    sendMsg("🤔 Não entendi. Tente perguntar 'Quanto é 50 x 2' ou 'O que é o Coração?'", "bot");
+    sendMsg("🤔 Desculpe, não consegui entender ou calcular isso. Tente '10 x 5' ou 'O que é o Sol?'", "bot");
 }
 
-// Função auxiliar para enviar mensagem (ajuste conforme o nome da sua função)
-function sendMsg(msg, tipo) {
-    // Aqui deve estar o seu código original que coloca a mensagem na tela
-    console.log(tipo + ": " + msg); 
-    // Exemplo: colocar no chat log...
-    exibirNaTela(msg, tipo); 
-}
 </script>
+</body>
+</html>
