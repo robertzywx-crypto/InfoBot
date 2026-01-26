@@ -90,17 +90,17 @@
 
 <div class="app">
     <div class="header">
-        <h1>Inforbot</h1>
+        <h1>🤖Inforbot</h1>
         <div class="theme-controls">
             <button class="theme-btn" onclick="document.body.classList.add('light-mode')">Modo Claro</button>
             <button class="theme-btn" onclick="document.body.classList.remove('light-mode')">Modo Escuro</button>
         </div>
     </div>
     <div id="chat" class="chat">
-        <div class="message bot"><div class="bubble">Olá Roberto! Sou o Inforbot. O que vamos conversar agora?</div></div>
+        <div class="message bot"><div class="bubble">Olá. Sou o Inforbot. O que precisa?</div></div>
     </div>
     <div class="input-area">
-        <input type="text" id="input" placeholder="Diga algo, Roberto...">
+        <input type="text" id="input" placeholder="peça uma piada, curiosidade, ou qualquer outra pergunta">
         <button id="send">➤</button>
     </div>
 </div>
@@ -492,7 +492,7 @@ async function brain(val) {
     // 5. 11 WIKIPÉDIAS COM SÍMBOLO ANALISANDO
     const analise = document.createElement("div");
     analise.className = "message bot";
-    analise.innerHTML = `<div class="bubble analyzing"><div class="spinner"></div> Analisando em 11 Wikipédias...</div>`;
+    analise.innerHTML = `<div class="bubble analyzing"><div class="spinner"></div> ⏳pesquisando...</div>`;
     document.getElementById("chat").appendChild(analise);
 
     let busca = t.replace(/o que é|quem é|fale sobre|pesquise/g, "").replace(/\?/g, "").trim();
@@ -515,7 +515,7 @@ async function brain(val) {
 
     analise.remove();
     ultimaMensagemUsuario = t;
-    return responder("Ainda não tenho essa informação específica, Roberto. O que mais quer saber?");
+    return responder("Procurei, mas isso ainda está escondido de mim");
 }
 
 const inputArea = document.getElementById("input");
