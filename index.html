@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>InforBot Super Gênio</title>
+    <title>InforBot Super</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
     <style>
         /* INTERFACE CLÁSSICA ORIGINAL QUE VOCÊ GOSTA */
@@ -66,7 +66,7 @@
 
         /* ANIMAÇÃO DAS LETRAS: AUMENTA NO MOUSE (PEDIDO PELO ISAQUE) */
         .bubble:hover {
-            transform: scale(1.06);
+            transform: scale(1.02);
             font-size: 19px !important;
             font-weight: bold;
             box-shadow: 0 8px 20px rgba(0,0,0,0.4);
@@ -100,7 +100,7 @@
 <div class="app">
     <div class="header">
         <h1>🤖 InforBot</h1>
-        <button class="theme-toggle" onclick="document.body.classList.toggle('light-mode')">🌓 TEMA</button>
+        <button class="theme-toggle" onclick="document.body.classList.toggle('light-mode')">🌓MUDAR TEMA</button>
     </div>
     <div id="chat" class="chat">
         <div class="message bot"><div class="bubble">Olá, eu sou InforBot, estou aqui para o que você precisar.</div></div>
@@ -283,7 +283,7 @@ async function brain(val) {
     }
 
     removeTemp();
-    sendMsg("🤔 Desculpe, não consegui entender ou calcular isso. Tente '10 x 5' ou 'O que é o Sol?'", "bot");
+    sendMsg("🤔 Desculpe. procurei mas isso ainda está escondido de mim...'", "bot");
 }
 
 </script>
