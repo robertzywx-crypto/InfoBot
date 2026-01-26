@@ -213,7 +213,91 @@ document.getElementById("send").onclick = () => {
     input.value = "";
 };
 
-document.getElementById("input").onkeypress = (e) => { if (e.key === "Enter") document.getElementById("send").click(); };
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+
+<script>
+// Variáveis de memória e voz
+const synth = window.speechSynthesis;
+
+async function brain(val) {
+    let t = val.toLowerCase().trim();
+
+    // 1. EFEITO VISUAL (PESQUISANDO)
+    sendMsg("⏳ Analisando...", "bot-temp");
+    const removeTemp = () => { 
+        document.querySelectorAll(".bot-temp").forEach(e => e.remove()); 
+    };
+
+    // 2. SUPER MATEMÁTICA (REFORÇADA)
+    // Detecta números ou palavras/sinais matemáticos
+    const sinais = ["raiz", "√", "x", "÷", ":", "vezes", "dividido", "+", "-"];
+    const temMatematica = /[0-9]/.test(t) || sinais.some(s => t.includes(s));
+
+    if (temMatematica) {
+        try {
+            // Tradução para linguagem de máquina
+            let expressao = t
+                .replace(/raiz quadrada de|raiz de|√/g, "sqrt")
+                .replace(/vezes| x | x/g, " * ") // O espaço evita bugar palavras com x
+                .replace(/dividido por|:|÷/g, "/")
+                .replace(/,/g, ".") 
+                .replace(/[?a-záàâãéèêíïóôõöúç]/g, ""); // Remove letras
+
+            if (expressao.trim() !== "" && /[0-9]/.test(expressao)) {
+                let res = math.evaluate(expressao);
+                removeTemp();
+                return sendMsg(`🔢 **Resultado:** ${res}`, "bot");
+            }
+        } catch(e) {
+            console.log("Não é conta, tentando outra coisa...");
+        }
+    }
+
+    // 3. BANCO DE DADOS LOCAL (PIADAS / ANATOMIA)
+    if (t.includes("piada")) {
+        removeTemp();
+        const piadas = ["O que o pato disse para a pata? Vem Quá!", "Por que o livro de matemática se suicidou? Porque tinha muitos problemas."];
+        return sendMsg("🤣 " + piadas[Math.floor(Math.random() * piadas.length)], "bot");
+    }
+
+    // 4. BUSCA NAS 11 WIKIPÉDIAS (O GÊNIO)
+    // Limpa a pergunta para pesquisar apenas o termo
+    let busca = t.replace(/o que é|quem é|fale sobre|pesquise|me diga/g, "").replace(/\?/g, "").trim();
+
+    if (busca.length > 2) {
+        const wikis = ['pt', 'en', 'ceb', 'de', 'fr', 'sv', 'nl', 'ru', 'es', 'it', 'arz'];
+        
+        for (let lang of wikis) {
+            try {
+                const url = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(busca)}?origin=*`;
+                const resp = await fetch(url);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    if (data.extract) {
+                        removeTemp();
+                        
+                        // O BOT FALA
+                        const falar = new SpeechSynthesisUtterance(data.extract);
+                        falar.lang = (lang === 'pt') ? 'pt-BR' : 'en-US';
+                        synth.speak(falar);
+
+                        return sendMsg(`🌐 **Wikipédia:** ${data.extract}`, "bot");
+                    }
+                }
+            } catch(e) { continue; }
+        }
+    }
+
+    // SE NÃO ENTENDER NADA
+    removeTemp();
+    sendMsg("🤔 Não entendi. Tente perguntar 'Quanto é 50 x 2' ou 'O que é o Coração?'", "bot");
+}
+
+// Função auxiliar para enviar mensagem (ajuste conforme o nome da sua função)
+function sendMsg(msg, tipo) {
+    // Aqui deve estar o seu código original que coloca a mensagem na tela
+    console.log(tipo + ": " + msg); 
+    // Exemplo: colocar no chat log...
+    exibirNaTela(msg, tipo); 
+}
 </script>
-</body>
-</html>
