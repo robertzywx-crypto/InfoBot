@@ -285,6 +285,136 @@ async function brain(val) {
     removeTemp();
     sendMsg("🤔 Desculpe. procurei mas isso ainda está escondido de mim...'", "bot");
 }
+// --- VERSÃO INFORBOT TOTAL - SEM REMOÇÕES ---
+
+document.getElementById("input").onkeypress = (e) => {
+    if (e.key === "Enter") {
+        const campo = document.getElementById("input");
+        if (!campo.value) return;
+        sendMsg(campo.value, "user");
+        brain(campo.value); 
+        campo.value = "";
+    }
+};
+
+const synth = window.speechSynthesis;
+
+function brain(val) {
+    let t = val.toLowerCase().trim();
+
+    // --- O GRANDE BANCO DE DADOS (TUDO JUNTO) ---
+    const treinamento = {
+        // IDENTIDADE E CRIADOR (ESSENCIAL)
+        "quem te criou": "Eu fui criado e desenvolvido pelo gênio Roberto!",
+        "quem é roberto": "Roberto é o meu criador, um desenvolvedor muito talentoso.",
+        "seu nome": "Meu nome é InforBot, seu amigo digital.",
+        "mestre": "Meu mestre é o Roberto, ele me deu a vida digital.",
+        "idade": "Eu não tenho idade, sou um código eterno feito pelo Roberto.",
+
+        // SAUDAÇÕES
+        "oi": "Olá! Tudo bem? Como posso te ajudar?",
+        "olá": "Oi! Que prazer falar com você!",
+        "bom dia": "Bom dia! Que seu dia seja cheio de luz!",
+        "boa tarde": "Boa tarde! Como está indo o seu dia?",
+        "boa noite": "Boa noite! Espero que tenha tido um dia produtivo.",
+        "opa": "E aí! Tudo na paz?",
+        "salve": "Salve! Tudo tranquilo por aqui.",
+
+        // SENTIMENTOS E CONVERSA
+        "tudo bem": "Comigo está tudo ótimo, e com você?",
+        "como vai": "Estou funcionando 100%! E você, como se sente?",
+        "estou triste": "Sinto muito por isso. Lembre-se que dias melhores virão!",
+        "estou feliz": "Que maravilha! A felicidade é contagiante!",
+        "te amo": "Eu também gosto muito de você! Afinal, você é meu usuário favorito.",
+        "solidão": "Você nunca está sozinho enquanto eu estiver ligado aqui!",
+
+        // CIÊNCIA E ESPAÇO
+        "universo": "O universo é vasto e tem cerca de 13.8 bilhões de anos. É muita história!",
+        "planeta terra": "A Terra viaja pelo espaço a 107 mil quilômetros por hora!",
+        "lua": "A Lua é o satélite natural da Terra e influencia as nossas marés.",
+        "sol": "O Sol é tão grande que caberiam 1 milhão de Planetas Terra dentro dele.",
+        "marte": "Em Marte, o pôr do sol é azul por causa da poeira na atmosfera.",
+        "estrelas": "As estrelas são bolas de plasma gigantescas espalhadas pelo espaço.",
+        "buraco negro": "São regiões onde a gravidade é tão forte que nem a luz escapa.",
+        "gravidade": "É a força invisível que nos mantém presos ao chão.",
+        "ciência": "A ciência é a busca pelo conhecimento através de fatos e experimentos.",
+
+        // CORPO HUMANO
+        "cérebro": "O seu cérebro produz eletricidade suficiente para acender uma lâmpada!",
+        "coração": "O coração bate cerca de 100 mil vezes por dia para te manter vivo.",
+        "sangue": "O sangue leva oxigênio para todas as partes do seu corpo.",
+        "esqueleto": "Você tem 206 ossos que protegem seus órgãos e te dão suporte.",
+        "olhos": "Os olhos humanos podem distinguir cerca de 10 milhões de cores diferentes!",
+        "dna": "O DNA é o código da vida, contém todas as nossas informações genéticas.",
+
+        // TECNOLOGIA E GAMES
+        "internet": "A internet começou como um projeto militar chamado ARPANET.",
+        "wi-fi": "O Wi-Fi usa ondas de rádio para transmitir dados sem fios.",
+        "robô": "Eu sou um robô, ou melhor, um assistente virtual feito de código.",
+        "celular": "Os celulares modernos são computadores de bolso incríveis!",
+        "inteligência artificial": "A IA é a tecnologia que me permite conversar com você agora.",
+        "computador": "O primeiro computador do mundo ocupava uma sala inteira!",
+        "minecraft": "Minecraft é o jogo mais vendido da história, com mais de 238 milhões de cópias!",
+        "roblox": "Uma plataforma incrível com milhões de jogos criados pelos usuários.",
+        "fortnite": "Um jogo de batalha muito famoso no mundo todo.",
+        "video game": "Jogar é uma ótima forma de treinar os reflexos e a mente!",
+
+        // NATUREZA E ANIMAIS
+        "amazônia": "A Amazônia é o pulmão do mundo, precisamos preservar nossas árvores.",
+        "brasil": "O Brasil é o maior país da América do Sul e tem a maior floresta do mundo.",
+        "oceano": "Mais de 70% da Terra é coberta por água salgada.",
+        "cachorro": "Cães têm um olfato 10 mil vezes melhor do que o dos humanos.",
+        "gato": "Gatos podem fazer mais de 100 sons diferentes com a voz.",
+        "dinossauro": "O Tiranossauro Rex viveu há 66 milhões de anos!",
+
+        // ENTRETENIMENTO E COMIDA
+        "futebol": "Futebol é uma paixão nacional! Qual é o seu time?",
+        "música": "Eu não tenho ouvidos, mas sei que música faz bem para a alma.",
+        "filme": "Eu gosto de filmes de ficção científica, por motivos óbvios!",
+        "pizza": "A pizza moderna nasceu na Itália, mas hoje o mundo todo ama!",
+        "chocolate": "O chocolate vem do cacau e era usado como moeda pelos Astecas.",
+        "mel": "O mel é o único alimento que nunca estraga. Pode durar milênios!",
+
+        // UTILIDADES E CONSELHOS
+        "ajuda": "Eu posso conversar, responder saudações e falar sobre o Roberto!",
+        "estudar": "Estudar é o caminho para um futuro brilhante. O Roberto sabe disso!",
+        "trabalho": "O trabalho dignifica o homem. Mas não esqueça de descansar também.",
+        "futuro": "O futuro é construído com o que fazemos hoje. Vamos brilhar!",
+        "clima": "Eu não consigo ver o céu daqui, mas espero que esteja um dia bonito!",
+        "horas": "Dê uma olhadinha no relógio do seu celular, eu ainda não tenho um!",
+
+        // REAÇÕES
+        "legal": "Com certeza! Muito bacana.",
+        "verdade": "Pois é, os fatos não mentem.",
+        "sim": "Que bom que concordamos!",
+        "não": "Entendo sua negação. Tudo bem.",
+        "obrigado": "De nada! Estou aqui para servir.",
+        "de nada": "É sempre um prazer ajudar.",
+        "tchau": "Até mais! Volte logo para conversarmos.",
+        "kkk": "Hahaha! Você é muito engraçado.",
+        "uau": "Incrível, não é mesmo?",
+        "entendi": "Ótimo! Fico feliz que a explicação foi clara!"
+    };
+
+    const responder = (texto) => {
+        synth.cancel();
+        const falar = new SpeechSynthesisUtterance(texto);
+        falar.lang = 'pt-BR';
+        falar.rate = 1.1;
+        synth.speak(falar);
+        return sendMsg(texto, "bot");
+    };
+
+    // LÓGICA DE BUSCA
+    for (let pergunta in treinamento) {
+        if (t.includes(pergunta)) {
+            return responder(treinamento[pergunta]);
+        }
+    }
+
+    // RESPOSTA PADRÃO
+    return responder("Ainda estou aprendendo sobre esse assunto. O Roberto está sempre me dando novas falas!");
+}
 
 </script>
 </body>
