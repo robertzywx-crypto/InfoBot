@@ -363,7 +363,7 @@ async function brain(val) {
     if (/[0-9]/.test(t)) {
         try {
             let res = math.evaluate(t.replace(/x/g, "*"));
-            return responder(`Roberto, o cálculo resultou em: **${res}**. Sou muito bom em números!`);
+            return responder( o cálculo resultou em: **${res}**. Sou muito bom em números!`);
         } catch(e){}
     }
 
@@ -382,7 +382,7 @@ async function brain(val) {
     // 5. WIKIPEDIA (11 LÍNGUAS)
     if (t.includes("o que e") || t.includes("quem e") || t.split(" ").length === 1) {
         const loading = document.createElement("div");
-        loading.innerHTML = `<div class="analyzing"><div class="spinner"></div> ⏳ Roberto, pesquisando em 11 Wikipédias...</div>`;
+        loading.innerHTML = `<div class="analyzing"><div class="spinner"></div> ⏳ pesquisando...</div>`;
         document.getElementById("chat").appendChild(loading);
         const wikis = ['pt', 'en', 'es', 'fr', 'de', 'it', 'ru', 'ja', 'zh', 'nl', 'pl'];
         let busca = t.replace(/o que e|quem e|pesquise/g, "").trim();
@@ -409,7 +409,7 @@ async function brain(val) {
         return responder(r1 + alvo + r2 + r3);
     }
 
-    responder("Roberto, procurei no meu sistema de 150 curiosidades e na Wiki, mas não achei nada sobre isso. Pode me explicar?");
+    responder("Procurei. mas ainda está escondido de mim...");
 }
 
 function responder(texto) {
