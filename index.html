@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inforbot</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+    <style>
+        :root {
+            --bg: #010409; --app-bg: #0d1117; --text: #c9d1d9;
+            --bubble-bot: #161b22; --border: #30363d; 
+            --header: linear-gradient(135deg, #1e40af, #000);
+            --accent: #1f6feb;
+        }
+        .light-mode {
+            --bg: #f0f2f5; --app-bg: #ffffff; --text: #1c1e21;
+            --bubble-bot: #e4e6eb; --border: #d0d7de; 
+            --header: linear-gradient(135deg, #0052d4, #6fb1fc);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; transition: background 0.3s, color 0.3s; }
+        body { height: 100vh; background: var(--bg); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .app { width: 95%; max-width: 600px; height: 92vh; background: var(--app-bg); border-radius: 25px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid var(--border); }
+        .header { background: var(--header); padding: 15px; text-align: center; color: white; border-bottom: 3px solid var(--accent); }
+        .header h1 { font-size: 26px; margin-bottom: 10px; font-weight: bold; }
+        .theme-controls { display: flex; justify-content: center; gap: 15px; margin-top: 5px; }
+        .theme-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); color: white; padding: 8px 18px; border-radius: 12px; cursor: pointer; font-size: 13px; font-weight: 800; animation: pulseMove 2s infinite alternate; transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-transform: uppercase; }
+        @keyframes pulseMove { from { box-shadow: 0 0 2px #fff; transform: translateY(0); } to { box-shadow: 0 0 15px var(--accent); transform: translateY(-3px); } }
+        .theme-btn:hover { transform: scale(1.4) !important; background: var(--accent); z-index: 10; }
+        .chat { flex: 1; padding: 20px; overflow-y: auto; background: var(--bg); display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; }
+        .bubble { padding: 15px 20px; border-radius: 22px; font-size: 15px; line-height: 1.5; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .user-box { align-self: flex-end; max-width: 85%; }
+        .bot-box { align-self: flex-start; max-width: 85%; }
+        .user-box .bubble { background: var(--accent); color: white; border-bottom-right-radius: 4px; }
+        .bot-box .bubble { background: var(--bubble-bot); color: var(--text); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+        .analyzing { font-style: italic; color: var(--accent); font-size: 14px; display: flex; align-items: center; gap: 10px; padding: 5px; }
+        .spinner { width: 16px; height: 16px; border: 3px solid var(--accent); border-top: 3px solid transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .input-area { padding: 20px; background: var(--app-bg); border-top: 1px solid var(--border); display: flex; gap: 12px; }
+        input { flex: 1; padding: 15px 25px; border-radius: 30px; border: 1px solid var(--border); outline: none; background: var(--bg); color: var(--text); font-size: 16px; }
+        #send { width: 55px; height: 55px; border-radius: 50%; border: none; background: var(--accent); color: white; cursor: pointer; font-size: 22px; display: flex; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body class="dark-mode">
+
+<div class="app">
+    <div class="header">
+        <h1>🤖Inforbot</h1>
+        <div class="theme-controls">
+            <button class="theme-btn" onclick="document.body.classList.add('light-mode')">Modo Claro</button>
+            <button class="theme-btn" onclick="document.body.classList.remove('light-mode')">Modo Escuro</button>
+        </div>
+    </div>
+    <div id="chat" class="chat">
+        <div class="bot-box"><div class="bubble">E aí Roberto! Inforbot ativado com cérebro criativo. Qual a boa?</div></div>
+    </div>
+    <div class="input-area">
+        <input type="text" id="input" placeholder="Manda sua dúvida ou um cálculo, Roberto...">
+        <button id="send">➤</button>
+    </div>
+</div>
+
+<script>
+const DATABASE = {
+    jokes: [
+        "Por que o programador faliu? Ficou sem cache!", "O que o zero disse pro oito? Belo cinto!", "Qual o café favorito do Java? O expresso!",
+        "Por que o livro de matemática se suicidou? Tinha muitos problemas.", "Como o programador dorme? if(sono){ dormir(); }", "Qual o contrário de volátil? Vem cá, tio!",
+        "Por que o teclado não sai de casa? Porque não tem Esc!", "O que o objeto disse para a classe? Eu tenho herança!", "O que o Chrome disse para o PC? Vou comer sua memória RAM!",
+        "Por que os peixes não usam computador? Por medo da rede!", "O que o programador disse ao ver o mar? Olha quanta C-Shell!", "Como se chama um programador que não dorme? O 'Undefined'.",
+        "Por que o Wi-Fi foi preso? Porque ele estava com sinal aberto!", "O que o Bit disse para o Byte? Você é 8 vezes maior!", "Onde o programador mora? No endereço de IP dele.",
+        "Por que o HTML se separou do CSS? Porque eles não tinham classe!", "O que o mouse disse para o teclado? Você faz o meu tipo!", "Qual a música favorita do desenvolvedor? O Algoritmo da terra.",
+        "Por que o computador foi ao médico? Porque estava com vírus!", "Software de dieta? Tem muitos bytes!", "Zero pro Hum? Você é sozinho!",
+        "Pai do C++? O C!", "Programador no restaurante? Pediu o menu principal!", "Bug na floresta? Uma tarantula!",
+        "Por que o Excel é calmo? Tem muitas células!", "Site de fofoca? O HTTPfofoca!", "Programador no frio? Fica no Java!",
+        "Por que o código foi preso? Erro de execução!", "Programador rico? Achou uma mina de bits!", "Teclado sem espaço? Não tem onde ir!",
+        "Programador de óculos? Não vê C#!", "Monitor triste? Está em baixa resolução!", "Programador no deserto? Procura o sandbox!",
+        "Por que o HD é medroso? Tem medo de cair!", "O que o programador faz no elevador? Aperta o 'F5' para atualizar."
+    ],
+    facts: [
+        "O mel nunca estraga.", "As formigas nunca dormem.", "Vênus gira no sentido horário.", "O DNA humano é 50% igual ao de uma banana.",
+        "O primeiro computador pesava 30 toneladas.", "Polvos têm 3 corações e 9 cérebros.", "Luz do Sol leva 8 min e 20 seg para chegar.",
+        "Cachorros entendem 250 palavras.", "Dobrar papel 42 vezes chega à Lua.", "Everest cresce 4mm por ano.", "Mais estrelas que areia na Terra.",
+        "Raio é 5x mais quente que o Sol.", "Borboletas sentem gosto com pés.", "Cavalos-marinhos têm pescoço.", "Vacas têm melhores amigas.",
+        "Baleia azul tem coração de Fusca.", "Recorde sem dormir: 11 dias.", "Tubarões são mais velhos que árvores.", "Olho distingue 10 milhões de cores.",
+        "Melancias quadradas no Japão.", "O Sol é uma estrela.", "Ovelhas se reconhecem em fotos.", "Gatos têm 32 músculos na orelha.",
+        "Pinguins pedem em casamento com pedras.", "Inventor do Pringles enterrado na lata.", "Leões dormem 20h.", "Hipopótamos suam sangue rosa.",
+        "Coalhas dormem 22h.", "Digital no nariz de cães.", "Baratas vivem sem cabeça.", "Terra pesa 6 sextilhões de toneladas.",
+        "Saturno flutua na água.", "Flamingos são rosas pela comida.", "Vênus é mais quente que Mercúrio.", "Plutão é menor que os EUA."
+    ],
+    anatomy: {
+        "ossos": "O corpo humano possui 206 ossos.", "femur": "O fêmur é o osso mais longo do corpo.",
+        "estribo": "O estribo é o menor osso, fica no ouvido.", "coracao": "Bate cerca de 100 mil vezes por dia.",
+        "cerebro": "Consome 20% da energia do corpo.", "pele": "É o maior órgão humano, pesa cerca de 4kg.",
+        "dna": "Esticado, o DNA de uma célula mede 2 metros.", "pulmao": "O pulmão direito é maior que o esquerdo.",
+        "sangue": "Um adulto tem entre 4,5 e 6 litros de sangue.", "musculos": "O corpo tem mais de 600 músculos.",
+        "figado": "É o único órgão que se regenera totalmente.", "olhos": "Focam em 50 objetos por segundo."
+    },
+    treinamento: {
+        "oi": "Oi Roberto! Que bom te ver.", "ola": "E aí Roberto! Como estão as coisas?", "tudo bem": "Comigo tudo ótimo, Roberto! E você?",
+        "quem e voce": "Eu sou o Inforbot, seu parceiro criado por você!", "seu nome": "Meu nome é Inforbot!", "quem me criou": "Foi você, Roberto!",
+        "salve": "Salve, Roberto!", "valeu": "Tamo junto!", "obrigado": "Por nada, Roberto!", "tchau": "Até logo, Roberto!",
+        "legal": "Muito massa mesmo!", "entendi": "Show de bola!", "amigo": "Você é meu melhor amigo, Roberto!"
+    }
+};
+
+const synth = window.speechSynthesis;
+
+function sendMsg(txt, type) {
+    const chat = document.getElementById("chat");
+    const div = document.createElement("div");
+    div.className = `${type}-box`;
+    div.innerHTML = `<div class="bubble">${txt}</div>`;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+}
+
+const responder = (texto) => {
+    synth.cancel();
+    const falar = new SpeechSynthesisUtterance(texto);
+    falar.lang = 'pt-BR';
+    synth.speak(falar);
+    return sendMsg(texto, "bot");
+};
+
+async function brain(val) {
+    let t = val.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    // P1: Piadas e Curiosidades
+    if (t.includes("piada")) return responder("🤣 " + DATABASE.jokes[Math.floor(Math.random() * DATABASE.jokes.length)]);
+    if (t.includes("curiosidade") || t.includes("fato")) return responder("💡 " + DATABASE.facts[Math.floor(Math.random() * DATABASE.facts.length)]);
+
+    // P2: Anatomia
+    for (let key in DATABASE.anatomy) {
+        if (t.includes(key)) return responder("🧬 Anatomia: " + DATABASE.anatomy[key]);
+    }
+
+    // P3: Matemática Gênio
+    if (/[0-9]/.test(t) || /[\+\-\*\/\^\%\!\(\)]/.test(t) || t.includes("raiz") || t.includes("seno")) {
+        try {
+            let conta = t.replace(/raiz quadrada de|raiz de|√/g, "sqrt").replace(/vezes|x/g, "*").replace(/dividido por|÷/g, "/");
+            let exp = conta.replace(/[?a-z]/gi, (m) => ["sqrt","sin","cos","tan","log","PI"].some(p => m.includes(p)) ? m : "").trim();
+            let res = math.evaluate(exp);
+            if (res !== undefined) return responder(`🔢 Roberto, o resultado é ${Number.isInteger(res) ? res : res.toFixed(4)}`);
+        } catch(e) {}
+    }
+
+    // P4: Conversa de Banco de Dados
+    for (let key in DATABASE.treinamento) {
+        if (t === key || t.includes(key)) return responder(DATABASE.treinamento[key]);
+    }
+
+    // --- NOVA PRIORIDADE: MODO CRIATIVO (Inventar resposta antes da Wiki) ---
+    const op_ini = ["Roberto, na minha visão ", "Pelo que eu processei agora, ", "Interessante... eu diria que ", "Sabe Roberto, "];
+    const op_meio = ["isso tem muito a ver com tecnologia, ", "as coisas estão mudando rápido, ", "é um assunto que vale a pena estudar, "];
+    const op_fim = ["e eu adoro aprender sobre isso!", "não acha?", "pois o futuro é agora!", "e você é o mestre disso."];
+
+    // Se for uma pergunta/frase sem resposta pronta e longa o suficiente (mais de 2 palavras)
+    if (t.split(" ").length > 2 && !t.includes("o que e") && !t.includes("quem e")) {
+        let criativo = op_ini[Math.floor(Math.random() * op_ini.length)] + 
+                       op_meio[Math.floor(Math.random() * op_meio.length)] + 
+                       op_fim[Math.floor(Math.random() * op_fim.length)];
+        return responder(criativo);
+    }
+
+    // P5: 11 Wikis + Símbolo
+    const chat = document.getElementById("chat");
+    const analise = document.createElement("div");
+    analise.innerHTML = `<div class="bubble analyzing"><div class="spinner"></div> Analisando em 11 línguas...</div>`;
+    chat.appendChild(analise);
+    chat.scrollTop = chat.scrollHeight;
+
+    let busca = t.replace(/o que e|quem e|pesquise|fale sobre/g, "").trim();
+    if (busca.length > 2) {
+        const wikis = ['pt', 'en', 'es', 'fr', 'de', 'it', 'ru', 'ja', 'zh', 'nl', 'pl'];
+        for (let lang of wikis) {
+            try {
+                const r = await fetch(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(busca)}?origin=*`);
+                if (r.ok) {
+                    const data = await r.json();
+                    analise.remove();
+                    return responder(`🌐 Wiki (${lang}): ${data.extract}`);
+                }
+            } catch(e) {}
+        }
+    }
+
+    analise.remove();
+    return responder("Roberto, procurei, mas isso ainda está escondido de mim....");
+}
+
+const inputArea = document.getElementById("input");
+const btnSend = document.getElementById("send");
+
+function disparar() {
+    if (!inputArea.value) return;
+    sendMsg(inputArea.value, "user");
+    brain(inputArea.value);
+    inputArea.value = "";
+}
+
+btnSend.onclick = disparar;
+inputArea.onkeypress = (e) => { if (e.key === "Enter") disparar(); };
+</script>
+</body>
+</html>
