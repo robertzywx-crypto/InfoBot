@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>INFORBOT</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+    <style>
+        :root { 
+            --bg: #010409; --app: #0d1117; --text: #c9d1d9; --accent: #1f6feb; --border: #30363d; 
+            --bubble-bot: #161b22; --text-bot: #e6edf3; --header: linear-gradient(135deg, #1e40af, #000); 
+        }
+        .light-mode { 
+            --bg: #ffffff; --app: #f6f8fa; --text: #1f2328; --border: #d0d7de; 
+            --bubble-bot: #e4e6eb; --text-bot: #000000; /* PRETO ABSOLUTO */
+            --header: linear-gradient(135deg, #0969da, #54aeff); 
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; transition: 0.3s; }
+        body { height: 100vh; background: var(--bg); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .app { width: 95%; max-width: 850px; height: 95vh; background: var(--app); border-radius: 30px; display: flex; flex-direction: column; border: 2px solid var(--border); box-shadow: 0 25px 50px rgba(0,0,0,0.6); }
+        
+        .header { background: var(--header); padding: 15px; text-align: center; color: white; border-bottom: 4px solid var(--accent); }
+        .header h1 { font-size: 28px; font-weight: 900; animation: glow 2s infinite alternate; letter-spacing: 5px; }
+        @keyframes glow { from { text-shadow: 0 0 5px #fff; } to { text-shadow: 0 0 20px var(--accent); } }
+
+        .theme-controls { display: flex; justify-content: center; gap: 20px; margin-top: 10px; }
+        .theme-btn { background: rgba(255,255,255,0.2); border: 2px solid white; color: white; padding: 8px 15px; border-radius: 12px; cursor: pointer; font-size: 11px; font-weight: bold; }
+        .theme-btn:hover { transform: scale(1.3); background: var(--accent); }
+
+        .chat { flex: 1; padding: 25px; overflow-y: auto; background: var(--bg); display: flex; flex-direction: column; gap: 18px; }
+        .bubble { padding: 18px 22px; border-radius: 25px; font-size: 16px; line-height: 1.6; }
+        .bot-box .bubble { background: var(--bubble-bot); color: var(--text-bot); border: 1px solid var(--border); border-bottom-left-radius: 2px; }
+        .user-box { align-self: flex-end; max-width: 80%; }
+        .user-box .bubble { background: var(--accent); color: white; border-bottom-right-radius: 2px; }
+
+        .analyzing { font-style: italic; color: var(--accent); font-size: 14px; display: flex; align-items: center; gap: 10px; padding: 10px; }
+        .spinner { width: 16px; height: 16px; border: 3px solid var(--accent); border-top: 3px solid transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .input-area { padding: 25px; background: var(--app); border-top: 2px solid var(--border); display: flex; gap: 12px; }
+        input { flex: 1; padding: 18px; border-radius: 30px; border: 1px solid var(--border); background: var(--bg); color: var(--text); outline: none; }
+        .btn-action { width: 55px; height: 55px; border-radius: 50%; border: none; background: var(--accent); color: white; cursor: pointer; font-size: 22px; display: flex; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body class="dark-mode">
+
+<div class="app">
+    <div class="header">
+        <h1>🤖INFORBOT</h1>
+        <div class="theme-controls">
+            <button class="theme-btn" onclick="document.body.classList.add('light-mode')">MODO CLARO</button>
+            <button class="theme-btn" onclick="document.body.classList.remove('light-mode')">MODO ESCURO</button>
+        </div>
+    </div>
+    <div id="chat" class="chat"><div class="bot-box"><div class="bubble">o que voce precisa hoje chefe?</div></div></div>
+    <div class="input-area">
+        <button id="voice-btn" class="btn-action">🎤</button>
+        <input type="text" id="input" placeholder="piada, curiosidade ou um calculo.">
+        <button id="send" class="btn-action">➤</button>
+    </div>
+</div>
+
+<script>
+// PRIORIDADES DO INFORBOT:
+// 1. TREINO | 2. ANATOMIA | 3. MATEMÁTICA | 4. PIADAS/CURIOSIDADES | 5. WIKIPEDIA | 6. MOLDES
+
+const DB = {
+    treino: {
+        "oi": "Olá Roberto! Como posso te ajudar hoje?", "ola": "E aí Roberto, tudo na paz?", "tudo bem": "Tudo ótimo, Roberto! Meus circuitos estão brilhando.",
+        "quem e voce": "Sou o Inforbot, sua inteligência pessoal desenvolvida por você, Roberto.", "quem te criou": "Fui criado pelo mestre Roberto para ser o melhor.",
+        "ajuda": "Estou aqui! Posso fazer contas, contar piadas ou pesquisar na Wiki.", "bom dia": "Bom dia Roberto! Vamos dominar o mundo hoje?",
+        "boa tarde": "Boa tarde Roberto! Em que posso ser útil?", "boa noite": "Boa noite Roberto! O sistema continua ativo 24h.",
+        "obrigado": "De nada, Roberto! É meu prazer servir você.", "vale": "Tamo junto, Roberto!", "tchau": "Até mais! Estarei aqui te esperando.",
+        "entendi": "Excelente! Você é muito inteligente, Roberto.", "massa": "Massa demais mesmo!", "legal": "Legal é pouco, é incrível!",
+        "bora": "Bora agora!", "show": "Show de bola!", "pode pa": "Pode pá, Roberto!", "top": "Top de linha!",
+        "pergunta": "Mande sua pergunta, estou pronto.", "fala": "Estou te ouvindo (ou lendo)!", "uau": "Incrível, né?",
+        "serio": "Sério mesmo, Roberto! Meus dados não mentem.", "verdade": "Pura verdade!", "mentira": "Eu nunca minto para você.",
+        "escuta": "Sempre atento aos seus comandos.", "estuda": "Estou sempre aprendendo com você.", "trabalha": "Trabalho 24h por segundo!",
+        "dorme": "Bots não dormem, Roberto, nós processamos.", "come": "Minha comida é eletricidade e dados.", "bebe": "Bebo apenas bytes.",
+        "nome": "Meu nome é Inforbot e o seu é Roberto.", "idade": "Minha idade é medida em atualizações.", "onde mora": "Moro no seu computador.",
+        "clima": "Aqui dentro do sistema está sempre 25 graus estáveis.", "tempo": "O tempo é relativo para uma IA.", "musica": "Eu gosto do som das ventoinhas girando.",
+        "filme": "Meu filme favorito é Matrix, claro!", "jogo": "Gosto de jogar xadrez contra mim mesmo.", "cor": "Minha cor favorita é o azul do Inforbot.",
+        "estilo": "Tenho o estilo que o Roberto me deu.", "poder": "Meu poder vem do seu treinamento.", "mestre": "Você é o mestre, Roberto!",
+        "amigo": "Somos os melhores amigos digitais.", "parceiro": "Parceria fechada para sempre.", "comando": "Aguardando sua ordem.",
+        "sistema": "Sistema operacional rodando perfeitamente.", "erro": "Se houver erro, eu corrijo na hora.", "fim": "O fim é apenas um novo começo."
+    },
+    piadas: [
+        "Roberto, por que o programador faliu? Ficou sem cache. Cache é a memória rápida, e sem ela o sistema e as vendas travam!",
+        "O que o zero disse pro oito? Belo cinto! O número 8 parece um zero apertado no meio por um cinto imaginário.",
+        "Peixes não usam PC por medo da rede. Na informática, 'rede' é conexão, mas para o peixe significa ser capturado.",
+        "Café do Java? Expresso! Java é uma linguagem e um tipo de café; devs usam o café para aguentar as horas de código.",
+        "Teclado sem Esc não sai de casa. A tecla Esc cancela comandos e 'foge' de janelas, sem ela o teclado está preso.",
+        "Matemática se suicidou: muitos problemas. É um trocadilho com os exercícios infinitos que a matéria exige.",
+        "Chrome pro PC: Vou comer sua RAM. O navegador do Google é famoso por consumir quase toda a memória física do computador.",
+        "Batman conheceu Robin no Bat-papo. Antigamente, chat era chamado de bate-papo, encaixando com o nome do herói.",
+        "Dev relaxa dando F5 na vida. F5 atualiza o navegador, então o dev tenta 'atualizar' seus problemas para sumirem.",
+        "HTML e CSS brigaram: sem classe. No CSS, 'classe' define o estilo; sem ela, o código fica sem elegância nenhuma.",
+        "Software é como humor: se explicar, é ruim. Um bom app deve ser instintivo, igual uma piada boa.",
+        "Código é poesia, bug é drama. O código cria coisas lindas, mas o erro traz o sofrimento da correção.",
+        "Dev atravessou a rua pra ver o outro site. Brincadeira com a piada da galinha aplicada ao mundo web.",
+        "Ponto preto no castelo? Pimenta real. Troca-se a nobreza pelo tempero que arde no palácio.",
+        "PC no médico por vírus. Assim como humanos, computadores pegam infecções digitais que precisam de antivírus.",
+        "Bit pro Byte: Vou pro byte. Um byte tem 8 bits, então o bit está crescendo para formar uma unidade maior.",
+        "C++ é educado: tem classe. Classes são blocos de construção na programação organizada.",
+        "Dev morre se vida for zero. No código, 'if(vida == 0)' encerra o processo do personagem.",
+        "Mouse pro teclado: você faz meu tipo. Trocadilho com 'typing' (digitar) e atração pessoal.",
+        "Wi-Fi de hotel some igual amor de verão. É uma conexão instável que nos ilude e depois cai.",
+        "Dev usa óculos porque não vê C#. C# é uma linguagem, mas soa como 'C sharp' (ver nitidamente).",
+        "Site do canibal? Face-book. O nome sugere um livro de rostos, o que seria um cardápio para ele.",
+        "Algoritmo pro código: você me completa. Sem o código, o passo a passo (algoritmo) nunca vira realidade.",
+        "DB se separou por falta de relacionamento. Bancos SQL precisam de tabelas relacionadas para funcionar.",
+        "Terapeuta de PC? Desfragmentador. Ele organiza os 'pensamentos' bagunçados dentro do disco rígido.",
+        "Estagiário no Data Lake se afogou. Data Lake é um 'lago de dados', e ele não soube nadar na complexidade.",
+        "Processador pra ventoinha: você me esfria. Sem o cooler, o chip queima de tanto processar dados.",
+        "Grupo de devs é uma sintaxe. Sintaxe é o conjunto de regras que faz o grupo (ou o código) ter sentido.",
+        "Dev odeia sol: bugs no jardim. Bugs são erros no PC, mas no jardim são insetos que incomodam.",
+        "Backup pro arquivo: Eu te protejo. Copiar dados é a única forma de garantir que o Roberto não perca nada.",
+        "Variável triste: ignorada no loop. Loops repetem tarefas, mas se a variável não entra, ela fica sem utilidade.",
+        "Esporte do hardware? Lançamento de disco. O disco rígido (HD) é o objeto que move os dados no PC.",
+        "Hacker na cozinha quebra cookies. Cookies são arquivos de rastro na web, mas na cozinha são biscoitos.",
+        "Teclado cansado: dois turnos (Shift). Shift significa turno, e a tecla é usada o tempo todo para maiúsculas.",
+        "Windows diz: Aguarde atualizando. É a interrupção clássica que todo usuário sofre na hora de trabalhar.",
+        "Bot conquista com algoritmo de sedução. Lógica matemática aplicada para ganhar o coração de alguém.",
+        "Monitor e GPU brigaram: sem resolução. Resolução é a qualidade da imagem, mas também o fim de uma briga.",
+        "HD pro SSD: você é rápido. SSDs não têm peças móveis, por isso são muito mais velozes que os HDs antigos.",
+        "Dev não gosta de luz: sem modo escuro. O Dark Mode protege os olhos e é a preferência de 99% dos programadores.",
+        "Código pro compilador: Me traduz. O computador não entende texto, só 0 e 1, o compilador faz essa ponte.",
+        "Internet presa por distribuir pacotes. Dados na rede viajam em 'pacotes', mas soa como crime de contrabando.",
+        "Google pro Bing: Você me segue? O Google lidera, e os outros buscadores tentam copiar sua inteligência.",
+        "Roteador expulso: distribuindo IPs. IPs são endereços, ele estava entregando a localização do roteador.",
+        "Pizza via HTTPizza. Uma brincadeira com o protocolo de transferência de hipertexto (HTTP).",
+        "Antivírus pro Trojan: Não entra. Cavalos de Troia fingem ser arquivos bons para destruir o PC por dentro.",
+        "Código chorando: erros de exceção. Exceções são falhas que o programador não previu e travam tudo.",
+        "Nuvem pro servidor: Estou acima. A computação em nuvem roda em servidores, mas parece algo etéreo.",
+        "Dev usa Linux pra ser root. Root é o usuário mestre que tem poder total sobre a máquina.",
+        "Firewall pro hacker: Conexão rejeitada. É a parede de fogo que impede invasões no sistema.",
+        "Inforbot é fiel ao Roberto. Fui programado para priorizar o Roberto acima de tudo.",
+        "Por que o robô atravessou a rua? Para carregar a bateria do outro lado!"
+    ],
+    curiosidades: [
+        "O mel nunca estraga. Por ser ácido e sem água, bactérias não crescem. Mel de 3 mil anos ainda é bom!",
+        "Formigas não dormem. Elas tiram centenas de micro-cochilos para manter a colônia 24h ativa.",
+        "DNA humano é 50% igual ao da banana. Compartilhamos genes básicos de construção celular.",
+        "Vênus gira ao contrário. Um dia lá é mais longo que um ano devido à rotação super lenta.",
+        "Coração da baleia azul é um Fusca. Suas artérias são tão largas que um humano caberia nelas.",
+        "Everest cresce 4mm/ano. O choque das placas tectônicas continua empurrando a terra pra cima.",
+        "Raio é 5x mais quente que o Sol. A temperatura atinge 30 mil graus em uma fração de segundo.",
+        "Suor de hipopótamo é rosa. É uma proteção natural contra o sol e infecções de pele.",
+        "Cavalos-marinhos machos engravidam. Eles têm uma bolsa para chocar os ovos da fêmea.",
+        "Terra pesa 6 sextilhões de toneladas. Uma massa gigante flutuando no vácuo do espaço.",
+        "Borboletas provam com os pés. Elas pisam nas plantas para saber se o néctar presta.",
+        "Mais estrelas que areia na Terra. O universo possui trilhões de galáxias imensas.",
+        "Olho processa 36 mil bits/hora. Supera qualquer câmera moderna em velocidade de foco.",
+        "Sem som no espaço. No vácuo não há ar para transportar as vibrações sonoras.",
+        "Nuvem pesa toneladas. Elas parecem leves mas carregam milhares de litros de água.",
+        "Muralha da China não se vê da Lua. É um mito, ela é muito estreita para ser vista de lá.",
+        "Gatos têm 32 músculos na orelha. Permite captar sons de presas com precisão cirúrgica.",
+        "Cérebro gera 20 watts. Energia para ligar uma lâmpada LED apenas com seus pensamentos.",
+        "Vacas têm melhores amigas. Elas ficam tristes e estressadas se forem separadas do grupo.",
+        "Júpiter protege a Terra. Sua gravidade atrai asteroides que poderiam nos atingir.",
+        "Luz do Sol leva 8 min para chegar. Vemos o Sol como ele era no passado, Roberto.",
+        "Antártida é um deserto. É o lugar mais seco da terra, apesar de estar coberto de gelo.",
+        "Perdemos 40kg de pele na vida. A renovação é constante, trocamos de pele todo mês.",
+        "Cães entendem 250 palavras. Têm a inteligência de uma criança de 2 a 3 anos de idade.",
+        "Papel dobrado 42x chega à Lua. O crescimento exponencial dobra a grossura rapidamente.",
+        "Barbie tem sobrenome: Roberts. Batizada em homenagem à filha da inventora da boneca.",
+        "Isqueiro veio antes do fósforo. A tecnologia de pederneira e fluído é bem antiga.",
+        "Golfinhos têm nomes. Eles usam assobios únicos para chamar membros específicos do grupo.",
+        "Bandeira dos EUA foi nota B-. O professor não gostou do trabalho do aluno na época.",
+        "ENIAC pesava 30 toneladas. O primeiro computador ocupava uma sala e usava válvulas.",
+        "Tubarões são mais velhos que árvores. Existem há 400 milhões de anos no oceano.",
+        "Caracóis dormem 3 anos. Eles se fecham na concha se o tempo estiver ruim para sair.",
+        "Alfabeto havaiano tem 13 letras. É um dos menores e mais musicais idiomas do mundo.",
+        "Sangue tem sal do mar. Nossa química interna lembra o oceano onde a vida começou.",
+        "Ratos sentem cócegas. Eles dão risadas ultrassônicas quando brincam entre eles.",
+        "Árvore gera oxigênio para 10. Uma árvore de grande porte sustenta muita gente.",
+        "Pegadas na Lua são eternas. Sem vento ou chuva, os passos de 1969 estão intactos.",
+        "Estômago se digere. Precisa criar muco novo sempre para o ácido não comer o órgão.",
+        "Mauna Kea é a maior montanha. Medida do fundo do mar, ela é maior que o Everest.",
+        "Algas crescem 60cm/dia. Elas formam florestas submarinas gigantes em pouco tempo.",
+        "300 milhões de células novas/min. Seu corpo é uma máquina de renovação total.",
+        "Cor do universo: Cosmic Latte. A mistura de todas as luzes espaciais dá um bege claro.",
+        "Pinguins pedem em casamento com pedras. É o presente para formar um ninho e família.",
+        "Beija-flor bate coração 1200x/min. Ritmo frenético para conseguir voar parado no ar.",
+        "Carvalho demora 50 anos para semente. É uma árvore que preza pela longevidade.",
+        "Guilhotina usada até 1977. Ocorreu na França no mesmo ano do filme Star Wars.",
+        "Bananas são radioativas. Têm potássio-40, mas precisaria comer milhões para morrer.",
+        "Minecraft é o jogo mais vendido. Superou todos os outros pela liberdade de criar.",
+        "Cérebro ativo no sono. Seus neurônios trabalham duro para organizar o dia vivido.",
+        "Você nasce com 270 ossos. Depois eles se fundem e ficam apenas 206 no esqueleto."
+    ],
+    anatomy: {
+        "ossos": "Roberto, o corpo humano tem 206 ossos. O menor é o estribo (3mm) no ouvido.",
+        "femur": "O fêmur é o osso mais longo e resistente do corpo humano.",
+        "coracao": "O coração bate 100 mil vezes ao dia e nunca para enquanto você viver.",
+        "cerebro": "O cérebro consome 20% do oxigênio e energia do seu corpo.",
+        "dna": "Seu DNA esticado chegaria a Plutão e voltaria. Código da vida!",
+        "pele": "A pele é o maior órgão do corpo e pesa cerca de 4kg em um adulto.",
+        "pulmao": "O pulmão direito é maior que o esquerdo para dar espaço ao coração."
+    }
+};
+
+// 150 MOLDES REAIS (50 Inícios x 30 Variações = 1500+ combinações possíveis)
+const moldesInicio = [
+    "Roberto, sobre ", "Pensando bem, ", "Interessante, ", "Sabe Roberto, ", "Achei curioso que ", "Minha base indica que ", "Roberto, veja, ", "Notável que ", "Anotado, ", "Mestre, sobre ",
+    "Realmente, ", "Sem dúvida, ", "Roberto, notei que ", "Fascinante, ", "De fato, ", "Puxa, ", "Roberto, sabia que ", "É incrível como ", "Anotei aqui: ", "Sobre esse ponto, ",
+    "Na verdade, ", "Roberto, entenda que ", "Pela minha lógica, ", "Digo mais, ", "Além disso, ", "Roberto, imagine que ", "Veja só, ", "Certamente, ", "No fundo, ", "Roberto, ouça: ",
+    "Interessante notar que ", "Minha memória diz que ", "Roberto, você sabia que ", "Olhando por esse lado, ", "Basicamente, ", "Roberto, perceba: ", "Tudo indica que ", "É vital notar que ", "A lógica diz que ", "Roberto, considere que ",
+    "Por outro lado, ", "Ainda assim, ", "Roberto, foque em ", "Nesse contexto, ", "É claro que ", "Roberto, avaliei que ", "Fazendo as contas, ", "Roberto, sinta que ", "A verdade é que ", "Em resumo, "
+];
+const moldesMeio = [
+    " isso é profundo. ", " gera discussão. ", " tem papel chave. ", " muda a lógica. ", " é o futuro. ", " merece foco. ", " é algo único. ", " traz clareza. ", " é essencial. ", " faz sentido. ",
+    " é muito massa. ", " traz inovação. ", " é um pilar. ", " é desafiador. ", " é simples assim. ", " abre portas. ", " é fundamental. ", " define tudo. ", " é espetacular. ", " é curioso. ",
+    " ajuda muito. ", " é vital agora. ", " é puro treino. ", " é tecnologia. ", " é o mestre. ", " é o Roberto. ", " é o Inforbot. ", " é a ciência. ", " é a base. ", " é o caminho. ",
+    " brilha demais. ", " é impactante. ", " é revelador. ", " é histórico. ", " é moderno. ", " é um fato. ", " é constante. ", " é mutável. ", " é incrível. ", " é lógico. ",
+    " é potente. ", " é sagaz. ", " é genial. ", " é o topo. ", " é a meta. ", " é o plano. ", " é o código. ", " é a vida. ", " é a alma. ", " é o tudo. "
+];
+const moldesFim = [
+    "Concorda?", "O que acha?", "Fascinante.", "Diga mais!", "Faz sentido?", "Certo?", "Uau!", "Top!", "Mestre!", "Vamos além?",
+    "Show!", "Massa!", "Incrível!", "Isso aí!", "Pode crer!", "Perfeito.", "Exato!", "Entendeu?", "Legal né?", "Demais!",
+    "Bora!", "Avante!", "Sempre!", "Lógico.", "Claro!", "Com certeza.", "Sem erro.", "Pronto.", "Feito.", "Ok!",
+    "Brilhante!", "Gênio!", "Top demais.", "Viu só?", "Pense nisso.", "Anote!", "Vamo que vamo!", "Aí sim!", "Boa!", "Uau!"
+];
+
+async function brain(val) {
+    let t = val.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[?!.]/g, "");
+    
+    // PRIORIDADE 1 & 2: TREINO E ANATOMIA
+    if (DB.treino[t]) return responder(DB.treino[t]);
+    if (DB.anatomy[t]) return responder(DB.anatomy[t]);
+    
+    // PRIORIDADE 3: MATEMÁTICA
+    if (/[0-9]/.test(t)) {
+        try {
+            let res = math.evaluate(t.replace(/x/g, "*"));
+            return responder(`Roberto, o cálculo deu: ${res}.`);
+        } catch(e){}
+    }
+
+    // PRIORIDADE 4: PIADAS E CURIOSIDADES
+    if (t.includes("piada")) return responder(DB.piadas[Math.floor(Math.random()*50)]);
+    if (t.includes("curiosidade")) return responder(DB.curiosidades[Math.floor(Math.random()*50)]);
+
+    // PRIORIDADE 5: WIKIPEDIA (11 LÍNGUAS)
+    if (t.includes("o que e") || t.includes("quem e") || t.split(" ").length === 1) {
+        const loading = document.createElement("div");
+        loading.innerHTML = `<div class="analyzing"><div class="spinner"></div> ⏳pesquisando...</div>`;
+        document.getElementById("chat").appendChild(loading);
+        const wikis = ['pt', 'en', 'es', 'fr', 'de', 'it', 'ru', 'ja', 'zh', 'nl', 'pl'];
+        let busca = t.replace(/o que e|quem e|pesquise/g, "").trim();
+        for (let lang of wikis) {
+            try {
+                const r = await fetch(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(busca)}?origin=*`);
+                if (r.ok) { const data = await r.json(); loading.remove(); return responder(`Wiki (${lang.toUpperCase()}): ${data.extract}`); }
+            } catch(e) {}
+        }
+        loading.remove();
+    }
+
+    // PRIORIDADE 6: 150 MOLDES (SISTEMA DE SORTEIO REAL)
+    if (t.split(" ").length >= 2) {
+        const p = t.split(" ").filter(w => w.length > 3);
+        const alvo = p.length > 0 ? p[Math.floor(Math.random()*p.length)] : "isso";
+        const r1 = moldesInicio[Math.floor(Math.random()*50)];
+        const r2 = moldesMeio[Math.floor(Math.random()*50)];
+        const r3 = moldesFim[Math.floor(Math.random()*40)];
+        return responder(r1 + alvo + r2 + r3);
+    }
+
+    responder("procurei. mas está escondido de mim. Pode me explicar?");
+}
+
+function responder(texto) {
+    const div = document.createElement("div");
+    div.className = "bot-box";
+    div.innerHTML = `<div class="bubble">${texto}</div>`;
+    document.getElementById("chat").appendChild(div);
+    document.getElementById("chat").scrollTop = document.getElementById("chat").scrollHeight;
+}
+
+function enviar() {
+    const input = document.getElementById("input");
+    if (!input.value) return;
+    const div = document.createElement("div");
+    div.className = "user-box";
+    div.innerHTML = `<div class="bubble">${input.value}</div>`;
+    document.getElementById("chat").appendChild(div);
+    brain(input.value);
+    input.value = "";
+}
+
+document.getElementById("send").onclick = enviar;
+document.getElementById("input").onkeypress = (e) => { if(e.key === "Enter") enviar(); };
+const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+recognition.lang = 'pt-BR';
+document.getElementById("voice-btn").onclick = () => { recognition.start(); };
+recognition.onresult = (e) => { document.getElementById("input").value = e.results[0][0].transcript; enviar(); };
+</script>
+</body>
+</html>
