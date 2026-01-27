@@ -325,6 +325,19 @@ const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognit
 recognition.lang = 'pt-BR';
 document.getElementById("voice-btn").onclick = () => { recognition.start(); };
 recognition.onresult = (e) => { document.getElementById("input").value = e.results[0][0].transcript; enviar(); };
+<script>
+  (function() {
+    var link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+    link.type = 'image/png';
+    link.rel = 'shortcut icon';
+    link.href = 'https://emojiapi.dev/api/v1/robot/192.png';
+    document.getElementsByTagName('head')[0].appendChild(link);
+    
+    var apple = document.createElement('link');
+    apple.rel = 'apple-touch-icon';
+    apple.href = 'https://emojiapi.dev/api/v1/robot/192.png';
+    document.getElementsByTagName('head')[0].appendChild(apple);
+  })();
 </script>
 </body>
 </html>
