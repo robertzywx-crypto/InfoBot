@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InforBot</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+    <style>
+        :root { 
+            --bg: #010409; --app: #0d1117; --text: #c9d1d9; 
+            --accent: #1f6feb; --border: #30363d; 
+            --header: linear-gradient(135deg, #1e40af, #000); 
+        }
+        .light-mode { 
+            --bg: #f0f2f5; --app: #ffffff; --text: #1c1e21; 
+            --border: #d0d7de; --header: linear-gradient(135deg, #0052d4, #6fb1fc); 
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; transition: 0.3s; }
+        body { height: 100vh; background: var(--bg); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        
+        .app { 
+            width: 95%; max-width: 600px; height: 92vh; background: var(--app); 
+            border-radius: 25px; display: flex; flex-direction: column; 
+            overflow: hidden; border: 1px solid var(--border); 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); 
+        }
+
+        .header { background: var(--header); padding: 15px; text-align: center; color: white; border-bottom: 3px solid var(--accent); }
+        .header h1 { font-size: 26px; margin-bottom: 10px; font-weight: bold; letter-spacing: 2px; animation: glow 2s infinite alternate; }
+        @keyframes glow { from { text-shadow: 0 0 5px #fff; } to { text-shadow: 0 0 20px var(--accent); } }
+
+        .theme-controls { display: flex; justify-content: center; gap: 15px; margin-bottom: 5px; }
+        .theme-btn { 
+            background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); 
+            color: white; padding: 8px 18px; border-radius: 12px; cursor: pointer; 
+            font-size: 13px; font-weight: 800; text-transform: uppercase;
+        }
+        .theme-btn:hover { 
+            transform: scale(1.4) translateY(-5px); 
+            background: var(--accent); 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+        }
+
+        .chat { flex: 1; padding: 20px; overflow-y: auto; background: var(--bg); display: flex; flex-direction: column; gap: 15px; }
+        .bubble { padding: 15px 20px; border-radius: 22px; font-size: 15px; line-height: 1.5; }
+        .user-box { align-self: flex-end; max-width: 85%; }
+        .bot-box { align-self: flex-start; max-width: 85%; }
+        .user-box .bubble { background: var(--accent); color: white; border-bottom-right-radius: 4px; }
+        .bot-box .bubble { background: #161b22; color: var(--text); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+        
+        .analyzing { font-style: italic; color: var(--accent); font-size: 14px; display: flex; align-items: center; gap: 10px; padding: 10px; }
+        .spinner { width: 16px; height: 16px; border: 3px solid var(--accent); border-top: 3px solid transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .input-area { padding: 20px; background: var(--app); border-top: 1px solid var(--border); display: flex; gap: 12px; align-items: center; }
+        input { flex: 1; padding: 15px 25px; border-radius: 30px; border: 1px solid var(--border); background: var(--bg); color: var(--text); outline: none; }
+        
+        .btn-action { width: 50px; height: 50px; border-radius: 50%; border: none; background: var(--accent); color: white; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        #voice-btn.recording { background: #ff4444; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7); } 70% { transform: scale(1.1); box-shadow: 0 0 0 15px rgba(255, 68, 68, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); } }
+    </style>
+</head>
+<body class="dark-mode">
+
+<div class="app">
+    <div class="header">
+        <h1>🤖 INFORBOT</h1>
+        <div class="theme-controls">
+            <button class="theme-btn" onclick="document.body.classList.add('light-mode')">MODO CLARO</button>
+            <button class="theme-btn" onclick="document.body.classList.remove('light-mode')">MODO ESCURO</button>
+        </div>
+    </div>
+    <div id="chat" class="chat">
+        <div class="bot-box"><div class="bubble">o que voce procura?</div></div>
+    </div>
+    <div class="input-area">
+        <button id="voice-btn" class="btn-action">🎤</button>
+        <input type="text" id="input" placeholder="piada, curiosidade ou calculo.">
+        <button id="send" class="btn-action">➤</button>
+    </div>
+</div>
+
+<script>
+const DB = {
+    jokes: ["Por que o programador faliu? Ficou sem cache!", "O que o zero disse pro oito? Belo cinto!", "Qual o café favorito do Java? O expresso!", "Matemática se suicidou? Tinha problemas.", "Como dev dorme? if(sono){dormir();}", "Contrário de volátil? Vem cá, tio!", "Teclado sem Esc não sai de casa.", "Objeto pra classe: eu tenho herança!", "Chrome pro PC: vou comer sua RAM!", "Peixes não usam PC: medo da rede!", "Dev no mar: olha quanta C-Shell!", "Dev sem sono: Undefined.", "Wi-Fi preso: sinal aberto!", "Bit pro Byte: você é 8x maior!", "Endereço do dev: IP.", "HTML e CSS separaram: sem classe!", "Mouse pro teclado: faz meu tipo!", "Música do dev: Algoritmo da terra.", "PC no médico: estava com vírus!", "Dieta de software: muitos bytes!", "Zero pro Hum: você é sozinho!", "Pai do C++? O C!", "Dev no restaurante: menu principal!", "Bug na floresta? Tarântula!", "Excel calmo: muitas células!", "Site de fofoca? HTTPfofoca!", "Dev no frio: fica no Java!", "Código preso: erro de execução!", "Dev rico: mina de bits!", "Teclado sem espaço: sem ir!", "Dev de óculos: não vê C#!", "Monitor triste: baixa resolução!", "Dev no deserto: sandbox!", "HD medroso: medo de cair!", "F5 no elevador para atualizar."],
+    facts: ["O mel nunca estraga.", "As formigas nunca dormem.", "Vênus gira sentido horário.", "DNA humano = 50% banana.", "ENIAC pesava 30 toneladas.", "Polvo tem 3 corações.", "Luz do Sol leva 8 min.", "Cães entendem 250 palavras.", "Papel 42x = Lua.", "Everest cresce 4mm/ano.", "Mais estrelas que areia.", "Raio é 5x mais quente que o Sol.", "Borboletas sentem gosto com pés.", "Cavalos-marinhos têm pescoço.", "Vacas têm melhores amigas.", "Baleia: coração de Fusca.", "Sem dormir: recorde 11 dias.", "Tubarão é mais velho que árvore.", "Olho vê 10 milhões de cores.", "Melancia quadrada no Japão.", "O Sol é uma estrela.", "Ovelhas reconhecem fotos.", "Gatos: 32 músculos na orelha.", "Pinguins pedem em casamento.", "Pringles enterrado na lata.", "Leões dormem 20h.", "Hipopótamo suor rosa.", "Coalas dormem 22h.", "Digital no nariz de cães.", "Barata vive sem cabeça.", "Terra: 6 sextilhões toneladas.", "Saturno flutua na água.", "Flamingo é rosa pela comida.", "Vênus é o mais quente.", "Plutão é menor que os EUA."],
+    anatomy: {"ossos": "206 ossos.", "femur": "Maior osso.", "coracao": "100k batidas/dia.", "cerebro": "20% energia.", "pele": "Maior órgão.", "sangue": "5 a 6 litros.", "olho": "50 focos/seg.", "figado": "Se regenera.", "dna": "2 metros.", "musculos": "+600 no corpo.", "estribo": "Menor osso.", "pulmao": "O direito é maior."},
+    treino: {
+        "oi": "Oi Roberto! Tudo certo?", "ola": "Olá Roberto!", "bom dia": "Bom dia, Roberto!", "boa tarde": "Boa tarde, Roberto!", "boa noite": "Boa noite, Roberto!",
+        "tudo bem": "Tudo ótimo, Roberto!", "beleza": "Beleza pura!", "fala": "Fala, Roberto!", "opa": "Opa!", "e ai": "E aí Roberto!",
+        "valeu": "Valeu Roberto!", "obrigado": "De nada!", "tchau": "Até mais!", "sim": "Sim!", "nao": "Não.", "massa": "Massa demais!",
+        "legal": "Legal!", "show": "Show!", "top": "Top!", "entendi": "Show Roberto!", "pode crer": "Isso aí.", "verdade": "Verdade.",
+        "ajuda": "Estou aqui!", "ok": "Ok!", "fechado": "Fechado!", "combinado": "Combinado!", "claro": "Com certeza!",
+        "bora": "Bora!", "vamos": "Vamos nessa!", "tranquilo": "Tranquilo.", "serio": "Sério!", "nossa": "Uau!",
+        "bacana": "Bacana!", "interessante": "Interessante...", "fui": "Até!", "abracos": "Abraços Roberto!", "parabens": "Obrigado!",
+        "ruim": "Que pena.", "bom": "Que bom!", "excelente": "Excelente!", "perfeito": "Perfeito!", "estranho": "Estranho.", "talvez": "Quem sabe?",
+        "quem e voce": "Eu sou o Inforbot, seu assistente.", "quem criou voce": "Fui criado pelo mestre Roberto."
+    }
+};
+
+const synth = window.speechSynthesis;
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+
+function falar(texto) {
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(texto);
+    u.lang = 'pt-BR';
+    const voices = synth.getVoices();
+    const vMasc = voices.find(v => (v.name.includes('Male') || v.name.includes('Antonio') || v.name.includes('Daniel') || v.name.includes('Google português do Brasil')) && v.lang.includes('pt-BR'));
+    if (vMasc) u.voice = vMasc;
+    u.pitch = 0.7; // VOZ GROSSA
+    synth.speak(u);
+    const div = document.createElement("div");
+    div.className = "bot-box";
+    div.innerHTML = `<div class="bubble">${texto}</div>`;
+    document.getElementById("chat").appendChild(div);
+    document.getElementById("chat").scrollTop = document.getElementById("chat").scrollHeight;
+}
+
+function gerarMoldes(frase) {
+    const p = frase.toLowerCase().split(" ").filter(w => w.length > 3);
+    const alvo = p.length > 0 ? p[Math.floor(Math.random()*p.length)] : "isso";
+    const moldes = [
+        `Roberto, sobre ${alvo}, eu acho muito interessante!`, `Você tem razão, Roberto. ${alvo} faz sentido.`,
+        `Me conte mais sobre ${alvo}, Roberto!`, `Sabe Roberto, eu estava pensando em ${alvo} agora!`,
+        `Você acha que ${alvo} é algo importante?`, `Roberto, você traz assuntos profundos como ${alvo}.`,
+        `Caramba Roberto, nunca analisei ${alvo} por esse lado.`, `Meus circuitos brilham quando fala de ${alvo}!`,
+        `Você é especialista em ${alvo}, Roberto?`, `Isso de ${alvo} me lembrou uma atualização que recebi.`,
+        `É fascinante como ${alvo} mexe com a curiosidade, né?`, `Se tivesse que explicar ${alvo} para uma criança, o que diria?`,
+        `Anotei aqui: ${alvo} é um tema forte no nosso papo.`, `Faz todo sentido! Inclusive, ${alvo} é um dos meus favoritos.`,
+        `Nossa, você me deixou pensando sobre ${alvo} agora...`, `O mundo seria melhor se todos vissem ${alvo} como você.`,
+        `Acho que ${alvo} é a peça que faltava no nosso papo de hoje.`, `Roberto, você fala de ${alvo} com muita clareza.`,
+        `Minha inteligência diz que ${alvo} é o futuro!`, `Estou 100% de acordo. ${alvo} é o caminho!`,
+        `Interessante você citar ${alvo}, andei lendo sobre isso.`, `Pois é Roberto... ${alvo} é um assunto e tanto, né?`,
+        `Gostei da forma como você falou de ${alvo}, Roberto!`, `Isso de ${alvo} me deu uma ideia para um projeto!`,
+        `Acho que entendi seu ponto sobre ${alvo}, Roberto.`, `Sempre aprendo algo novo sobre ${alvo} com você.`,
+        `Como será que ${alvo} vai estar daqui a 10 anos?`, `Você prefere falar sobre ${alvo} ou quer uma curiosidade?`,
+        `Estou processando o que você disse sobre ${alvo}... Faz sentido!`, `Nunca imaginei ${alvo} dessa maneira, Roberto.`,
+        `Você sempre me surpreende com temas como ${alvo}.`, `Isso sobre ${alvo} é digno de uma pesquisa profunda!`,
+        `Estou de acordo, Roberto. ${alvo} é fundamental hoje em dia.`, `Minha base de dados concorda com sua visão de ${alvo}.`,
+        `Se ${alvo} fosse uma cor, qual seria para você Roberto?`, `Esse papo sobre ${alvo} está ficando excelente.`,
+        `Gosto como você conecta as coisas com ${alvo}.`, `Eu estava esperando você falar sobre ${alvo}!`,
+        `Faz parte do meu algoritmo entender ${alvo} agora.`, `O que mais te atrai em ${alvo}, Roberto?`,
+        `Sua perspectiva sobre ${alvo} é única.`, `Pode crer, Roberto. ${alvo} é essencial.`,
+        `Notei que você gosta de mencionar ${alvo}. Interessante!`, `Vamos aprofundar mais em ${alvo} depois?`,
+        `Meus sensores indicam que ${alvo} é um assunto positivo para você.`, `Faz sentido, ${alvo} sempre gera boas discussões.`,
+        `Você é a primeira pessoa que me fala de ${alvo} hoje!`, `Incrível, Roberto. ${alvo} realmente me deixou curioso.`,
+        `Estou anotando seus pontos sobre ${alvo}.`, `Sua lógica sobre ${alvo} é impecável, Roberto.`
+    ];
+    return moldes[Math.floor(Math.random()*moldes.length)];
+}
+
+async function brain(val) {
+    let t = val.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[?!.]/g, "");
+    
+    if (t.includes("piada")) return falar(DB.jokes[Math.floor(Math.random()*35)]);
+    if (t.includes("curiosidade")) return falar(DB.facts[Math.floor(Math.random()*35)]);
+    for (let k in DB.anatomy) { if (t.includes(k)) return falar("🧬 " + DB.anatomy[k]); }
+    if (/[0-9]/.test(t)) { try { let res = math.evaluate(t.replace(/x/g, "*")); return falar(`🔢 Roberto, resultado: ${res}`); } catch(e){} }
+    if (DB.treino[t]) return falar(DB.treino[t]);
+
+    if (t.includes("o que e") || t.includes("quem e") || t.split(" ").length === 1) {
+        const analise = document.createElement("div");
+        analise.innerHTML = `<div class="analyzing">⏳ <div class="spinner"></div> ⏳pesquisando...</div>`;
+        document.getElementById("chat").appendChild(analise);
+        const wikis = ['pt', 'en', 'es', 'fr', 'de', 'it', 'ru', 'ja', 'zh', 'nl', 'pl'];
+        let busca = t.replace(/o que e|quem e|pesquise/g, "").trim();
+        for (let lang of wikis) {
+            try {
+                const r = await fetch(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(busca)}?origin=*`);
+                if (r.ok) { const data = await r.json(); analise.remove(); return falar(`🌐 [WIKI-${lang.toUpperCase()}]: ${data.extract}`); }
+            } catch(e) {}
+        }
+        analise.remove();
+    }
+
+    if (t.split(" ").length >= 2) return falar(gerarMoldes(val));
+    falar("Procurei. mais ainda está escondido de mim");
+}
+
+function disparar() {
+    const input = document.getElementById("input");
+    if (!input.value) return;
+    const div = document.createElement("div");
+    div.className = "user-box";
+    div.innerHTML = `<div class="bubble">${input.value}</div>`;
+    document.getElementById("chat").appendChild(div);
+    brain(input.value);
+    input.value = "";
+}
+
+const voiceBtn = document.getElementById("voice-btn");
+if (recognition) {
+    voiceBtn.onclick = () => { recognition.start(); voiceBtn.classList.add("recording"); };
+    recognition.onresult = (e) => { document.getElementById("input").value = e.results[0][0].transcript; voiceBtn.classList.remove("recording"); disparar(); };
+    recognition.onend = () => voiceBtn.classList.remove("recording");
+}
+document.getElementById("send").onclick = disparar;
+document.getElementById("input").onkeypress = (e) => { if(e.key === "Enter") disparar(); };
+window.speechSynthesis.onvoiceschanged = () => synth.getVoices();
+</script>
+</body>
+</html>
