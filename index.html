@@ -105,7 +105,7 @@ const DATABASE = {
         "palmeiras": "Verdão! Sempre buscando o topo, igual à minha inteligência.",
         "sao paulo": "Tricolor! Soberano como minhas respostas.",
         "vasco": "O Gigante da Colina! História pura.",
-        "brasileirao": "O campeonato mais equilibrado do mundo!",
+        "engraçado": "voce é engraçado Roberto kkk",
         "copa do mundo": "Onde o mundo para pra ver o futebol. Eu fico processando os dados de cada gol.",
         "gol": "GOOOOOL! Sinto a energia daqui!",
         "bom dia": "Bom dia, Roberto! Vamos conquistar o dia hoje?",
@@ -2039,10 +2039,10 @@ function send() {
 
 function fast(type) {
     if (type === 'piada') {
-        userSay("🤡 Segure o riso que lá vem piada");
+        userSay("🤡 me conte uma piada");
         setTimeout(() => botSay(DATABASE.piadas[Math.floor(Math.random() * DATABASE.piadas.length)]), 600);
     } else {
-        userSay("💡 Sabia que o mundo é mais estranho do que parece?");
+        userSay("💡 me conte uma curiosidade");
         setTimeout(() => botSay(DATABASE.curiosidades[Math.floor(Math.random() * DATABASE.curiosidades.length)]), 600);
     }
 }
