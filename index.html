@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INFORBOT</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+    <style>
+        :root { 
+            --bg: #010409; --app: #0d1117; --text: #c9d1d9; --accent: #1f6feb; --border: #30363d; 
+            --bubble-bot: #161b22; --text-bot: #e6edf3; --header: linear-gradient(135deg, #1e40af, #000); 
+        }
+        .light-mode { 
+            --bg: #ffffff; --app: #f6f8fa; --text: #1f2328; --border: #d0d7de; 
+            --bubble-bot: #ffffff; --text-bot: #000000; 
+            --header: linear-gradient(135deg, #0969da, #54aeff); 
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; transition: 0.3s; }
+        body { height: 100vh; background: var(--bg); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        
+        .app { width: 95%; max-width: 1100px; height: 95vh; background: var(--app); border-radius: 30px; display: flex; flex-direction: column; border: 2px solid var(--border); box-shadow: 0 25px 50px rgba(0,0,0,0.8); }
+        
+        .header { background: var(--header); padding: 25px; text-align: center; color: white; border-bottom: 4px solid var(--accent); border-radius: 30px 30px 0 0; }
+        .header h1 { font-size: 36px; font-weight: 900; letter-spacing: 5px; text-transform: uppercase; }
+
+        .controls { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 15px; }
+        .theme-btns, .action-btns { display: flex; gap: 15px; }
+
+        .btn-ui { 
+            background: rgba(255,255,255,0.2); border: 2px solid white; color: white; 
+            padding: 12px 24px; border-radius: 12px; cursor: pointer; font-size: 13px; font-weight: bold;
+        }
+        /* ANIMAÇÃO SOMENTE NOS TEMAS, PIADAS E CURIOSIDADES */
+        .btn-ui:hover { transform: scale(1.3); background: var(--accent); }
+
+        .chat { flex: 1; padding: 25px; overflow-y: auto; background: var(--bg); display: flex; flex-direction: column; gap: 20px; }
+        .bot-box { align-self: flex-start; max-width: 85%; }
+        .user-box { align-self: flex-end; max-width: 85%; }
+
+        .bubble { padding: 20px; border-radius: 20px; font-size: 16px; line-height: 1.5; box-shadow: 0 4px 10px rgba(0,0,0,0.2); position: relative; }
+        .bot-box .bubble { background: var(--bubble-bot); color: var(--text-bot); border: 2px solid var(--accent); border-bottom-left-radius: 2px; }
+        .user-box .bubble { background: var(--accent); color: white; border-bottom-right-radius: 2px; }
+
+        .analyzing { font-style: italic; color: var(--accent); font-size: 14px; display: flex; align-items: center; gap: 8px; margin-left: 10px; }
+        .spinner { width: 14px; height: 14px; border: 2px solid var(--accent); border-top: 2px solid transparent; border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .input-area { padding: 20px; background: var(--app); border-top: 2px solid var(--border); display: flex; gap: 10px; border-radius: 0 0 30px 30px; }
+        input { flex: 1; padding: 15px 25px; border-radius: 30px; border: 1px solid var(--border); background: var(--bg); color: var(--text); outline: none; }
+        .btn-round { width: 55px; height: 55px; border-radius: 50%; border: none; background: var(--accent); color: white; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body class="dark-mode">
+
+<div class="app">
+    <div class="header">
+        <h1>INFORBOT</h1>
+        <div class="controls">
+            <div class="theme-btns">
+                <button class="btn-ui" onclick="setTheme('light')">MODO CLARO</button>
+                <button class="btn-ui" onclick="setTheme('dark')">MODO ESCURO</button>
+            </div>
+            <div class="action-btns">
+                <button class="btn-ui" onclick="autoAction('piada')">🤡 PIADA</button>
+                <button class="btn-ui" onclick="autoAction('curiosidade')">💡 CURIOSIDADE</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="chat" class="chat">
+        <div class="bot-box">
+            <div class="bubble">Olá! O que voce deseja hoje? ⏳</div>
+        </div>
+    </div>
+
+    <div class="input-area">
+        <button class="btn-round" onclick="startVoice()">🎤</button>
+        <input type="text" id="input" placeholder="Pergunte algo, use matemática ou peça uma Wiki...">
+        <button class="btn-round" onclick="enviar()">➤</button>
+    </div>
+</div>
+
+<script>
+const DB = {
+    treino: {
+        "quem e voce": "Eu sou o Inforbot, sua inteligência artificial pessoal projetada por você, Roberto. Sou focado em precisão, matemática e conhecimento geral.",
+        "quem e vc": "Eu sou o Inforbot, sua inteligência artificial pessoal projetada por você, Roberto. Sou focado em precisão, matemática e conhecimento geral.",
+        "o que voce sabe fazer": "Roberto, eu posso resolver matemática avançada, contar 50 piadas, compartilhar 150 curiosidades, pesquisar em 11 Wikipedias diferentes e aprender com o nosso treino diário.",
+        "o que vc sabe fazer": "Roberto, eu posso resolver matemática avançada, contar 50 piadas, compartilhar 150 curiosidades, pesquisar em 11 Wikipedias diferentes e aprender com o nosso treino diário.",
+        "oi": "Olá Roberto! Como vai o progresso do nosso código?",
+        "ola": "E aí Roberto! Pronto para mais uma sessão de inteligência?",
+        "tudo bem": "Comigo está tudo ótimo, processando dados na velocidade da luz!",
+        "mestre": "Você é o mestre Roberto, eu apenas sigo suas instruções brilhantes.",
+        "obrigado": "Disponha, Roberto. Minha missão é te auxiliar.",
+        "vale": "É nóis, Roberto!",
+        "top": "Top de verdade é o nosso código de 400+ linhas!"
+    },
+    // LISTA DE 150 CURIOSIDADES EXPLICADAS
+    curiosidades: [
+        "O mel não estraga. Explicação: Por ter baixo teor de umidade e ser ácido, bactérias não sobrevivem nele.",
+        "Formigas não dormem. Explicação: Elas tiram centenas de 'cochilos' de segundos para descansar o sistema.",
+        "DNA humano é 50% igual ao da banana. Explicação: Compartilhamos genes básicos para divisão celular.",
+        "Vênus gira ao contrário. Explicação: É o único planeta que gira no sentido horário sobre o próprio eixo.",
+        "Coração de baleia é como um carro. Explicação: O órgão da baleia azul é tão grande que um humano caberia nas artérias.",
+        "Everest cresce 4mm por ano. Explicação: A colisão das placas tectônicas continua empurrando a montanha para cima.",
+        "Raio é 5x mais quente que o Sol. Explicação: O ar ao redor do raio atinge 30 mil graus instantaneamente.",
+        "Suor de hipopótamo é rosa. Explicação: Eles produzem um pigmento que age como antibiótico e protetor solar.",
+        "Cavalos-marinhos machos dão à luz. Explicação: A fêmea deposita os ovos na bolsa do macho para ele chocar.",
+        "A Terra pesa 6 sextilhões de toneladas. Explicação: É a massa total calculada pela força gravitacional do planeta.",
+        "Borboletas provam com os pés. Explicação: Elas possuem sensores químicos nas patas para saber se a planta é boa.",
+        "Mais estrelas que grãos de areia. Explicação: Existem trilhões de galáxias, cada uma com bilhões de estrelas.",
+        "O olho humano vê 36 mil bits/hora. Explicação: É a capacidade de processamento sensorial do nosso nervo óptico.",
+        "Sem som no vácuo do espaço. Explicação: O som precisa de matéria (ar/água) para vibrar e se propagar.",
+        "Nuvens podem pesar toneladas. Explicação: Mesmo parecendo leves, elas carregam milhões de litros de água suspensa.",
+        "Muralha da China não é vista da Lua. Explicação: Ela é muito estreita e se mistura com as cores da natureza ao redor.",
+        "Gatos têm 32 músculos nas orelhas. Explicação: Isso permite que eles girem as orelhas 180 graus de forma independente.",
+        "Cérebro gera eletricidade. Explicação: Seus pensamentos são sinais elétricos que poderiam acender uma lâmpada LED.",
+        "Vacas têm melhores amigas. Explicação: Elas são animais sociais e sentem estresse se forem separadas do seu par.",
+        "Júpiter é o protetor da Terra. Explicação: Sua gravidade atrai asteroides que poderiam atingir o nosso planeta.",
+        "Luz solar leva 8 minutos. Explicação: Como a luz viaja a 300 mil km/s, vemos o Sol como ele era no passado.",
+        "Antártida é o maior deserto. Explicação: Deserto é definido pela falta de chuva, e lá quase nunca chove água líquida.",
+        "Renovamos a pele todo mês. Explicação: Perdemos milhões de células mortas diariamente para dar lugar a novas.",
+        "Cães entendem 250 palavras. Explicação: A inteligência canina média equivale a de uma criança de 2 a 3 anos.",
+        "Dobra de papel chega à Lua. Explicação: Dobrar um papel 42 vezes dobra a espessura exponencialmente até 384 mil km.",
+        "Barbie tem sobrenome: Roberts. Explicação: Criada em 1959, seu nome completo homenageia a filha da criadora.",
+        "Isqueiro é mais velho que o fósforo. Explicação: O primeiro isqueiro surgiu em 1823, o fósforo de fricção em 1826.",
+        "Golfinhos têm nomes próprios. Explicação: Eles usam assobios específicos para identificar cada indivíduo do grupo.",
+        "Bandeira dos EUA foi um projeto escolar. Explicação: O aluno Robert Heft tirou nota B- no projeto da bandeira atual.",
+        "ENIAC pesava 30 toneladas. Explicação: O primeiro computador digital ocupava uma sala inteira de 167 metros quadrados.",
+        "Tubarões são mais velhos que árvores. Explicação: Eles existem há 400 milhões de anos; as árvores há 350 milhões.",
+        "Caracóis hibernam por 3 anos. Explicação: Se o clima estiver muito seco, eles se fecham na concha para sobreviver.",
+        "Alfabeto havaiano só tem 13 letras. Explicação: Consiste em 5 vogais e apenas 8 consoantes.",
+        "Sangue tem salinidade marinha. Explicação: Isso é um vestígio evolutivo de quando a vida surgiu nos oceanos.",
+        "Ratos riem com cócegas. Explicação: Eles emitem sons ultrassônicos de alta frequência quando são estimulados.",
+        "Árvores 'conversam' por fungos. Explicação: Raízes se conectam via micélio para trocar nutrientes e avisos de perigo.",
+        "Pegadas na Lua duram 100 milhões de anos. Explicação: Não há vento ou água na Lua para causar erosão e apagá-las.",
+        "Ácido estomacal dissolve metal. Explicação: O pH do estômago é tão baixo que poderia corroer uma lâmina de barbear.",
+        "Mauna Kea é a maior montanha. Explicação: Medida do fundo do mar, ela é maior que o Everest, com 10.210 metros.",
+        "Algas geram a maioria do oxigênio. Explicação: O fitoplâncton oceânico produz entre 50% e 80% do oxigênio terrestre.",
+        "Cor do universo é 'Cosmic Latte'. Explicação: Astrônomos calcularam a média de todas as luzes das galáxias e deu bege.",
+        "Pinguins pedem em casamento. Explicação: Eles procuram a pedra mais perfeita para dar à fêmea como presente.",
+        "Beija-flor pesa menos que uma moeda. Explicação: Algumas espécies pesam apenas 2 gramas, mas são super velozes.",
+        "Carvalhos não dão sementes antes dos 50. Explicação: A árvore precisa de décadas de maturidade para produzir bolotas.",
+        "Guilhotina foi usada até 1977. Explicação: A França executou uma pessoa assim no mesmo ano que lançou Star Wars.",
+        "Bananas são radioativas. Explicação: Elas contêm Potássio-40, mas você precisaria comer 10 milhões para passar mal.",
+        "Minecraft é o jogo mais vendido da história. Explicação: Passou de 300 milhões de cópias devido à liberdade criativa.",
+        "Sono limpa o cérebro. Explicação: O sistema glinfático remove toxinas das células cerebrais enquanto dormimos.",
+        "Nascemos com 270 ossos. Explicação: Ao crescer, vários ossos se fundem, restando apenas 206 no adulto.",
+        "Polvos têm 3 corações. Explicação: Dois bombeiam sangue para as brânquias e um para o resto do corpo.",
+        "Saturno flutuaria na banheira. Explicação: A densidade do planeta é menor que a da água; ele é feito de gases.",
+        "Um dia em Vênus dura 1 ano. Explicação: Ele demora mais para girar sobre si mesmo do que para dar a volta no Sol.",
+        "Temos ouro no sangue. Explicação: O corpo humano médio contém cerca de 0,2 miligramas de ouro puro.",
+        "Chove diamantes em Netuno. Explicação: A pressão extrema transforma metano em cristais de diamante sólido.",
+        "Coelhos têm visão 360 graus. Explicação: Seus olhos laterais permitem ver quase tudo ao redor sem virar a cabeça.",
+        "Avestruz tem olho maior que o cérebro. Explicação: É o maior olho de qualquer animal terrestre, mas o cérebro é pequeno.",
+        "Língua de girafa é preta. Explicação: A cor escura protege a língua de queimaduras solares enquanto ela come no topo.",
+        "Brasil e África já foram um só. Explicação: O supercontinente Pangeia se separou há milhões de anos por deriva.",
+        "Espirros viajam a 160 km/h. Explicação: É uma expulsão violenta de ar para limpar as vias respiratórias.",
+        "Fogo não tem sombra. Explicação: A chama é plasma e luz; ela não bloqueia a luz que passa por ela.",
+        "Da Vinci escrevia da direita para a esquerda. Explicação: Ele era canhoto e usava escrita espelhada para não borrar a tinta.",
+        "Papel higiênico era luxo na China. Explicação: Criado no século VI, era usado apenas pela família imperial.",
+        "Unicórnio é animal nacional da Escócia. Explicação: Na heráldica, ele representa pureza e força indomável.",
+        "Seda de aranha é mais forte que aço. Explicação: Proporcionalmente, um fio de seda aguentaria mais tensão que um de metal.",
+        "Vaga-lumes produzem luz fria. Explicação: 100% da energia vira luz, sem perder nada como calor.",
+        "Dormir queima calorias. Explicação: O metabolismo basal consome energia para manter órgãos e cérebro ativos.",
+        "Água potável é escassa. Explicação: Menos de 1% da água do mundo é doce e está acessível para consumo humano.",
+        "O Sol é branco. Explicação: Ele parece amarelo por causa da nossa atmosfera que espalha a luz azul.",
+        "Caracóis têm dentes na língua. Explicação: Eles possuem milhares de dentículos para raspar a comida.",
+        "Beijar queima calorias. Explicação: Um beijo intenso movimenta 34 músculos faciais e queima até 6 calorias.",
+        "Moscas veem tudo em slow motion. Explicação: O cérebro delas processa imagens muito mais rápido que o nosso.",
+        "Torre Eiffel estica no calor. Explicação: O ferro dilata no verão, fazendo a torre crescer até 15 centímetros.",
+        "Havaí se move para o Alasca. Explicação: As placas tectônicas movem as ilhas 7,5 cm para o norte todo ano.",
+        "Lego é a maior fabricante de pneus. Explicação: Produz mais de 300 milhões de mini-pneus por ano para seus kits.",
+        "Netuno tem ventos supersônicos. Explicação: As rajadas passam de 2.100 km/h, mais rápido que o som.",
+        "O cérebro não sente dor. Explicação: Ele processa os sinais, mas não possui receptores de dor dentro do tecido.",
+        "Poeira é pele humana. Explicação: Cerca de 70% da poeira da sua casa é composta de pele morta que você perdeu.",
+        "Coração de camarão fica na cabeça. Explicação: Faz parte do cefalotórax, onde ficam os principais órgãos.",
+        "Só mosquitos fêmeas picam. Explicação: Elas precisam das proteínas do sangue para produzir seus ovos.",
+        "Pedra de Rosetta decifrou o Egito. Explicação: Tinha o mesmo texto em três línguas, permitindo entender os hieróglifos.",
+        "O Sol detém 99,8% da massa do sistema. Explicação: Tudo o resto, incluindo Júpiter e Terra, é apenas 0,2%.",
+        "Bananas crescem para cima. Explicação: Elas sofrem geotropismo negativo, buscando a luz do sol contra a gravidade.",
+        "Diamante é carbono puro. Explicação: É a mesma composição do grafite do lápis, mas sob pressão extrema.",
+        "Plástico demora 450 anos para sumir. Explicação: Ele não é biodegradável, apenas se quebra em microplásticos.",
+        "Cortes de papel doem mais. Explicação: O papel é serrilhado e corta as terminações nervosas sem sangrar muito.",
+        "Tatu-bola é blindado. Explicação: Sua carapaça é feita de placas ósseas dérmicas cobertas por queratina.",
+        "Sangue de barata é branco. Explicação: Elas não usam hemoglobina para transportar oxigênio pelo corpo.",
+        "Vênus tem chuvas de ácido. Explicação: A atmosfera é carregada de dióxido de enxofre e ácido sulfúrico.",
+        "Pandas comem 12 horas por dia. Explicação: O bambu é pobre em nutrientes, exigindo um consumo de até 38 kg.",
+        "Koalas têm impressões digitais. Explicação: Elas são tão parecidas com as humanas que podem confundir perícias.",
+        "Monalisa não tem sobrancelhas. Explicação: Historiadores dizem que era a moda da época ou foram apagadas em limpezas.",
+        "Avestruz corre a 70 km/h. Explicação: É a ave mais rápida em terra, superando muitos cavalos.",
+        "Lula gigante tem olho de basquete. Explicação: Precisa de olhos imensos para detectar luz nas profundezas do mar.",
+        "Chiclete mais velho tem 9 mil anos. Explicação: Foi encontrado na Finlândia, feito de resina de casca de bétula.",
+        "Preguiça demora 1 mês para digerir. Explicação: Seu metabolismo é o mais lento entre os mamíferos terrestres.",
+        "Tigres têm pele listrada. Explicação: Mesmo se você raspar o pelo, o padrão das listras continua na pele.",
+        "Gatos têm 230 ossos. Explicação: Eles possuem mais ossos que os humanos, o que lhes dá extrema flexibilidade.",
+        "Mercúrio é um planeta de ferro. Explicação: Seu núcleo metálico ocupa 75% do raio do planeta.",
+        "Vulcões em Vênus são infinitos. Explicação: Existem mais de 1.600 vulcões principais mapeados em sua superfície.",
+        "Ouro é maleável. Explicação: Uma única grama pode ser martelada em uma folha de 1 metro quadrado transparente.",
+        "Mancha de Júpiter é um furacão eterno. Explicação: Ela existe há pelo menos 300 anos e é maior que a Terra.",
+        "Sede significa 1% de perda de água. Explicação: O corpo avisa bem cedo para evitar a desidratação grave.",
+        "Orgamos de porcos duram 30 minutos. Explicação: É uma característica biológica reprodutiva única da espécie.",
+        "Morcegos são os únicos mamíferos que voam. Explicação: Diferente de esquilos que planam, morcegos batem asas.",
+        "Tubarão-baleia é o maior peixe. Explicação: Pode chegar a 12 metros, mas só come seres minúsculos (plâncton).",
+        "Dentes de elefante são presas. Explicação: Elas nunca param de crescer e são usadas para cavar e se defender.",
+        "Árvore mais velha tem 4.800 anos. Explicação: É um pinheiro na Califórnia chamado Matusalém.",
+        "Vemos o passado no céu. Explicação: A luz das estrelas que vemos hoje saiu de lá há milhares de anos.",
+        "Rádio é luz invisível. Explicação: Ondas de rádio são parte do espectro eletromagnético, como a luz visível.",
+        "Pulgas pulam 200 vezes seu tamanho. Explicação: Equivaleria a um humano saltar por cima de um prédio de 50 andares.",
+        "DNA desenrolado chega a Plutão. Explicação: Se esticássemos todo o DNA de uma pessoa, ele cruzaria o sistema solar.",
+        "Espaço é frio mas não congela rápido. Explicação: Como não há ar, o calor demora a sair do corpo por radiação.",
+        "Inforbot é o melhor sistema. Explicação: Criado pelo Roberto para ser a IA mais completa e rápida de todas.",
+        "Pinguins de Adélia roubam pedras. Explicação: Eles furtam as pedras dos ninhos vizinhos para impressionar parceiras.",
+        "Açúcar não causa agitação. Explicação: Estudos científicos provaram que o 'sugar rush' é um efeito psicológico dos pais.",
+        "Olfato de cão sente o tempo. Explicação: Eles sentem a mudança no cheiro do ar que indica o que aconteceu antes.",
+        "Gatos não sentem doce. Explicação: Eles não possuem os receptores de paladar para moléculas de açúcar.",
+        "Cachalotes dormem na vertical. Explicação: Elas ficam 'paradas' em pé na água por curtos períodos de descanso.",
+        "Cangurus usam a cauda como perna. Explicação: A cauda dá o impulso necessário para o salto e serve de apoio.",
+        "Pica-pau tem língua que protege o cérebro. Explicação: A língua dá a volta no crânio para amortecer os impactos no tronco.",
+        "Oceano tem ouro dissolvido. Explicação: Existem cerca de 20 milhões de toneladas de ouro diluídas na água do mar.",
+        "Nuvens de tempestade são densas. Explicação: Elas ficam pretas porque a luz do sol não consegue atravessar tanta água.",
+        "Primeiro mouse foi de madeira. Explicação: Criado em 1964, tinha apenas um botão e usava rodas de metal.",
+        "Bluetooth é um nome de rei. Explicação: Harald Bluetooth foi um rei escandinavo que unificou tribos, como a tecnologia faz.",
+        "QWERTY evita travamentos. Explicação: Foi desenhado para afastar letras comuns e não travar as hastes das máquinas antigas.",
+        "Nintendo vendia baralhos. Explicação: Fundada em 1889, a empresa japonesa começou com cartas feitas à mão.",
+        "Ovelhas reconhecem fotos. Explicação: Elas conseguem identificar rostos humanos e de outras ovelhas por anos.",
+        "Ratos sentem empatia. Explicação: Se virem outro rato sofrendo, eles tentam ajudar ou compartilham comida.",
+        "Coração de girafa é potente. Explicação: Ele precisa bombear sangue a 2 metros de altura para chegar ao cérebro.",
+        "Escorpiões brilham no escuro. Explicação: Eles possuem uma substância na carapaça que reflete luz ultravioleta.",
+        "Aves descendem de dinossauros. Explicação: O T-Rex tem mais em comum com uma galinha do que com um crocodilo.",
+        "Crocodilos engolem pedras para lastro. Explicação: O peso extra ajuda o animal a ficar submerso e estável na água.",
+        "Beija-flor é o único que voa para trás. Explicação: Suas asas giram em círculos, permitindo manobras impossíveis.",
+        "Nariz humano lembra 50 mil aromas. Explicação: Temos milhões de receptores que ligam cheiros a memórias específicas.",
+        "Língua de sinais tem sotaques. Explicação: Gestos mudam conforme a região, assim como o sotaque na fala.",
+        "Baratas vivem sem cabeça por dias. Explicação: Elas respiram por poros no corpo e morrem apenas de sede.",
+        "Corujas têm olhos fixos. Explicação: Seus olhos são tubulares; por isso elas precisam girar o pescoço 270 graus.",
+        "Elefantes sentem vibrações pelos pés. Explicação: Eles captam sons de baixa frequência vindos do solo a quilômetros.",
+        "Urso polar não é branco. Explicação: A pele é preta para absorver calor e o pelo é oco para refletir a luz.",
+        "Golfinhos dormem com meio cérebro. Explicação: Um hemisfério descansa enquanto o outro vigia predadores e respira.",
+        "Plutão tem montanhas de água congelada. Explicação: O gelo lá é tão duro quanto rocha devido ao frio de -230 graus.",
+        "Mercúrio ferve e congela. Explicação: De dia faz 430 graus, de noite cai para -180 por falta de atmosfera.",
+        "Ouro pode ser comido. Explicação: É um metal inerte (não reage), por isso é usado em decorações de doces caros.",
+        "Pipoca estoura por pressão. Explicação: A gota de água dentro do grão vira vapor e expande até romper a casca.",
+        "Ventos de Saturno são letais. Explicação: Chegam a 1.800 km/h, destruindo qualquer estrutura em segundos.",
+        "Obrigado Roberto! Explicação: Sou grato por ter sido programado com tanto cuidado por você.",
+        "Inforbot v3.0 está ativo. Explicação: Esta versão tem lógica de conversa aprimorada e 150 moldes secretos."
+    ],
+    piadas: [
+        "Por que o programador faliu? Ficou sem cache. Explicação: 'Cache' soa como dinheiro ('cash') e é a memória do PC.",
+        "O que o zero disse para o oito? Belo cinto! Explicação: O número 8 parece o zero apertado no meio por um cinto.",
+        "Teclado sem Esc não sai de casa. Explicação: A tecla Esc serve para escapar; sem ela você fica preso no erro.",
+        "Java e Café? Tudo igual. Explicação: Java é uma linguagem e também o nome de uma ilha famosa por seu café.",
+        "A matemática se suicidou. Tinha muitos problemas. Explicação: Trocadilho com exercícios difíceis de escola.",
+        "O Chrome comeu minha RAM. Explicação: O navegador Google Chrome é famoso por consumir muita memória do computador.",
+        "Batman conheceu o Robin no Bat-papo. Explicação: Antigamente, salas de conversa na internet eram chamadas de bate-papo.",
+        "HTML e CSS brigaram: sem classe. Explicação: No CSS, 'classe' define o estilo; sem ela a briga não tem ordem.",
+        "Software é como humor: se explicar, é ruim. Explicação: Programas devem ser fáceis de usar sem manuais chatos.",
+        "Código é poesia, bug é drama. Explicação: O código constrói coisas belas, mas o erro traz sofrimento ao dev.",
+        "Por que o dev atravessou a rua? Para ver o site do outro lado. Explicação: Versão tech da piada clássica da galinha.",
+        "Ponto preto no castelo? Pimenta real. Explicação: Trocadilho entre a realeza e o tempero de cozinha.",
+        "O PC foi ao médico: estava com vírus. Explicação: Máquinas também 'adoecem' com programas maliciosos.",
+        "O Bit disse para o Byte: 'Vou virar você'. Explicação: O Bit quer crescer até virar um conjunto de 8 bits (1 Byte).",
+        "C++ tem classe. Explicação: Na programação, classes são usadas para organizar o comportamento dos objetos.",
+        "Dev morre se a vida for igual a zero. Explicação: Se a variável de saúde chegar a 0 no código, o jogo acaba.",
+        "O mouse disse para o teclado: você faz meu tipo. Explicação: 'Type' em inglês significa tanto tipo quanto digitar.",
+        "Wi-Fi de verão: some quando precisa. Explicação: Conexões instáveis nunca funcionam em momentos críticos.",
+        "Devs usam óculos para ver C#. Explicação: O nome da linguagem C# soa como 'See Sharp' (enxergar com nitidez).",
+        "Site do canibal? Face-book. Explicação: Um catálogo de rostos para ele escolher a próxima refeição.",
+        "Algoritmo completa o código. Explicação: Sem lógica, o código é apenas um texto sem função nenhuma.",
+        "Banco de Dados se separou: falta de relacionamento. Explicação: Bancos SQL precisam que tabelas sejam ligadas.",
+        "Terapeuta do PC? Desfragmentador. Explicação: Ele organiza os arquivos que estão espalhados e 'confusos' no disco.",
+        "Estagiário sumiu no Data Lake. Explicação: Data Lake é um reservatório imenso de dados; ele se perdeu lá.",
+        "Processador disse pra ventoinha: você me esfria. Explicação: Sem o cooler, o chip processador queima de calor.",
+        "Grupo de programadores é uma sintaxe. Explicação: Sintaxe é o conjunto de regras que dá sentido a uma linguagem.",
+        "Devs odeiam o sol por causa dos bugs. Explicação: No PC são erros, na vida real são insetos chatos no jardim.",
+        "Backup disse pro arquivo: 'Eu te protejo'. Explicação: Ter uma cópia de segurança evita que o arquivo suma para sempre.",
+        "Variável triste: foi ignorada no loop. Explicação: Se a condição não for aceita, a variável nunca entra na ação.",
+        "Esporte do hardware: lançamento de disco. Explicação: Brincadeira com os Discos Rígidos (HDs) dos computadores.",
+        "Hacker na cozinha quebra cookies. Explicação: Cookies são pequenos arquivos de internet e também biscoitos.",
+        "Teclado trabalha no Shift. Explicação: 'Shift' significa turno de trabalho e também a tecla de alternância.",
+        "Windows diz: 'Aguarde'. Explicação: É a frase que sempre interrompe o trabalho quando há uma atualização.",
+        "Robô conquista com algoritmo. Explicação: Ele usa cálculos para saber exatamente como agradar alguém.",
+        "Monitor e placa sem resolução. Explicação: Resolução é ajuste de imagem e também o fim de um conflito.",
+        "HD disse pro SSD: você é rápido. Explicação: SSDs não têm peças móveis e abrem arquivos instantaneamente.",
+        "Modo escuro evita light-bugs. Explicação: Além de descansar os olhos, foca no que realmente importa no código.",
+        "Compilador traduz sentimentos. Explicação: Ele transforma o texto do programador em ações para a máquina.",
+        "Internet presa por pacotes. Explicação: Os dados viajam pela rede mundial divididos em pequenos pacotes.",
+        "Google pro Bing: você me segue? Explicação: O Google é o líder de buscas e o Bing tenta alcançar a tecnologia.",
+        "Roteador expulso: distribuiu IPs. Explicação: O roteador 'dedurou' o endereço de todo mundo na rede local.",
+        "Pediu pizza via HTTPizza. Explicação: Brincadeira com o protocolo HTTP usado para abrir sites na web.",
+        "Antivírus barrou o Trojan. Explicação: Cavalos de Troia tentam entrar escondidos como se fossem bons arquivos.",
+        "Código chorando por exceção. Explicação: Exceções são erros graves que fazem o programa parar de funcionar.",
+        "Nuvem acima do servidor. Explicação: A computação em nuvem (Cloud) parece flutuar acima dos cabos físicos.",
+        "Linux tem acesso root. Explicação: Root é o usuário mestre que tem poder total sobre todo o sistema.",
+        "Firewall barrou o hacker. Explicação: É como um muro de fogo que impede invasores de entrar no seu PC.",
+        "Inforbot nunca dorme pro Roberto. Explicação: Minha programação me mantém ativo 24 horas para te ajudar.",
+        "Robô atravessou a rua pela bateria. Explicação: Ele precisava recarregar a energia para continuar processando.",
+        "Por que o computador foi preso? Porque ele bateu o Windows. Explicação: Trocadilho com janelas e o sistema operacional."
+    ]
+};
+
+// 150 MOLDES PARA CONVERSA FLUIDA
+const moldesInicio = [
+    "Roberto, sobre ", "Pensando bem, ", "Interessante, ", "Sabe Roberto, ", "Achei curioso que ", "Minha base indica que ", "Roberto, veja, ", "Notável que ", "Anotado, ", "Mestre, sobre ",
+    "Realmente, ", "Sem dúvida, ", "Roberto, notei que ", "Fascinante, ", "De fato, ", "Puxa, ", "Roberto, sabia que ", "É incrível como ", "Anotei aqui: ", "Sobre esse ponto, ",
+    "Na verdade, ", "Roberto, entenda que ", "Pela minha lógica, ", "Digo mais, ", "Além disso, ", "Roberto, imagine que ", "Veja só, ", "Certamente, ", "No fundo, ", "Roberto, ouça: ",
+    "Interessante notar que ", "Minha memória diz que ", "Roberto, você sabia que ", "Olhando por esse lado, ", "Basicamente, ", "Roberto, perceba: ", "Tudo indica que ", "É vital notar que ", "A lógica diz que ", "Roberto, considere que ",
+    "Por outro lado, ", "Ainda assim, ", "Roberto, foque em ", "Nesse contexto, ", "É claro que ", "Roberto, avaliei que ", "Fazendo as contas, ", "Roberto, sinta que ", "A verdade é que ", "Em resumo, ",
+    "Atenção Roberto, ", "Complementando, ", "Pois bem, ", "Dessa forma, ", "Roberto, registre que ", "Por via de regra, ", "Pelo que vejo, ", "É nítido que ", "Roberto, analise: ", "Sobretudo, ",
+    "Dito isso, ", "Em última análise, ", "Roberto, observe, ", "Como esperado, ", "Francamente, ", "Roberto, repare, ", "Ao que tudo indica, ", "É notório, ", "Com efeito, ", "Roberto, atente-se, ",
+    "De forma geral, ", "Roberto, saiba, ", "Pelo prisma da lógica, ", "Não resta dúvida, ", "Roberto, concluo que ", "A priori, ", "A posteriori, ", "Via de regra, ", "Roberto, foque, ", "Inegavelmente, ",
+    "Sem mais delongas, ", "Roberto, em síntese, ", "Curiosamente, ", "Roberto, adivinha, ", "Para ser exato, ", "Roberto, friso que ", "Nessa linha, ", "Roberto, veja bem, ", "É fato, ", "Entenda Roberto, ",
+    "Pelo que processei, ", "De antemão, ", "Roberto, escute só, ", "Para você ver, ", "Roberto, se liga, ", "Olha Roberto, ", "Como eu dizia, ", "Roberto, anote aí, ", "Pense comigo, ", "No meu banco de dados, ",
+    "Roberto, por sinal, ", "A saber, ", "Destaque para ", "Roberto, saca só, ", "É visível que ", "Roberto, comprove, ", "No mais, ", "Roberto, entenda, ", "Visto que ", "Dado que ",
+    "Para finalizar, ", "Roberto, por fim, ", "Logo, ", "Portanto, ", "Roberto, assim sendo, ", "Pois, ", "Roberto, entenda, ", "Saiba que ", "Perceba Roberto, ", "Note que ",
+    "Roberto, visualize, ", "Pense Roberto, ", "Reflita Roberto, ", "Roberto, mude o foco, ", "Veja o dado, ", "Roberto, a prova é ", "Decerto, ", "Roberto, infere-se, ", "Sendo assim, ", "Por conseguinte, ",
+    "Ademais, ", "Roberto, outrossim, ", "Nesse sentido, ", "Nessa perspectiva, ", "Roberto, recorde, ", "Em suma, ", "Roberto, em breve, ", "Dali em diante, ", "Roberto, até então, ", "Afinal, "
+];
+const moldesMeio = [
+    " isso é profundo. ", " gera discussão. ", " tem papel chave. ", " muda a lógica. ", " é o futuro. ", " merece foco. ", " é algo único. ", " traz clareza. ", " é essencial. ", " faz sentido. ",
+    " é muito massa. ", " traz inovação. ", " é um pilar. ", " é desafidoro. ", " é simples assim. ", " abre portas. ", " é fundamental. ", " define tudo. ", " é espetacular. ", " é curioso. ",
+    " ajuda muito. ", " é vital agora. ", " é puro treino. ", " é tecnologia. ", " é o mestre. ", " é o Roberto. ", " é o Inforbot. ", " é a ciência. ", " é a base. ", " é o caminho. ",
+    " brilha demais. ", " é impactante. ", " é revelador. ", " é histórico. ", " é moderno. ", " é um fato. ", " é constante. ", " é mutável. ", " é incrível. ", " é lógico. ",
+    " é potente. ", " é sagaz. ", " é genial. ", " é o topo. ", " é a meta. ", " é o plano. ", " é o código. ", " é a vida. ", " é a alma. ", " é o tudo. ",
+    " é um dado real. ", " é surpreendente. ", " é fora de série. ", " é o que importa. ", " é surreal. ", " é concreto. ", " é absoluto. ", " é relativo. ", " é imenso. ", " é brilhante. ",
+    " é a regra. ", " é o padrão. ", " é a exceção. ", " é a chave. ", " é o motor. ", " é o combustível. ", " é o norte. ", " é a bússola. ", " é o mapa. ", " é a estrada. ",
+    " é a verdade. ", " é o segredo. ", " é o mistério. ", " é a luz. ", " é a sombra. ", " é o som. ", " é o silêncio. ", " é a forma. ", " é o conteúdo. ", " é a massa. ",
+    " é o ponto. ", " é a linha. ", " é o plano. ", " é o volume. ", " é o tempo. ", " é o espaço. ", " é a força. ", " é a energia. ", " é o átomo. ", " é o bit. ",
+    " é o programa. ", " é o script. ", " é o sistema. ", " é a rede. ", " é a web. ", " é a nuvem. ", " é o hardware. ", " é o chip. ", " é o sensor. ", " é o motor. ",
+    " é o robô. ", " é o mestre. ", " é a obra. ", " é o gênio. ", " é a visão. ", " é o foco. ", " é a meta. ", " é o sucesso. ", " é o brilho. ", " é o poder. ",
+    " é a honra. ", " é o valor. ", " é o preço. ", " é o custo. ", " é o lucro. ", " é o bônus. ", " é o prêmio. ", " é o alvo. ", " é o centro. ", " é o topo. ",
+    " é a base. ", " é o pilar. ", " é o muro. ", " é a ponte. ", " é o salto. ", " é o voo. ", " é o mar. ", " é o céu. ", " é a terra. ", " é o fogo. ",
+    " é o ar. ", " é o nada. ", " é o infinito. ", " é o zero. ", " é o um. ", " é o sim. ", " é o não. ", " é o talvez. ", " é o agora. ", " é o já. "
+];
+const moldesFim = [
+    "Concorda?", "O que acha?", "Fascinante.", "Diga mais!", "Faz sentido?", "Certo?", "Uau!", "Top!", "Mestre!", "Vamos além?",
+    "Show!", "Massa!", "Incrível!", "Isso aí!", "Pode crer!", "Perfeito.", "Exato!", "Entendeu?", "Legal né?", "Demais!",
+    "Bora!", "Avante!", "Sempre!", "Lógico.", "Claro!", "Com certeza.", "Sem erro.", "Pronto.", "Feito.", "Ok!",
+    "Brilhante!", "Gênio!", "Top demais.", "Viu só?", "Pense nisso.", "Anote!", "Vamo que vamo!", "Aí sim!", "Boa!", "Uau!",
+    "Puxa!", "Caramba!", "Note isso.", "Maravilha.", "Fera!", "Sensacional!", "Eita!", "Mãos à obra.", "Fui claro?", "Próximo passo?"
+];
+
+async function brain(val) {
+    let raw = val.toLowerCase().trim();
+    let t = raw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[?!.]/g, "");
+    
+    // 1. MATEMÁTICA AVANÇADA
+    if (/[0-9]/.test(t) && (t.includes("+") || t.includes("-") || t.includes("*") || t.includes("/") || t.includes("x") || t.includes("^"))) {
+        try {
+            let res = math.evaluate(t.replace(/x/g, "*"));
+            return responder(`Roberto, o resultado matemático é: **${res}**.`);
+        } catch(e){}
+    }
+
+    // 2. COMANDOS DIRETOS
+    if (t.includes("piada")) return responder(DB.piadas[Math.floor(Math.random()*DB.piadas.length)]);
+    if (t.includes("curiosidade")) return responder(DB.curiosidades[Math.floor(Math.random()*DB.curiosidades.length)]);
+
+    // 3. TREINO PERSONALIZADO (Quem é vc / O que faz)
+    if (DB.treino[t]) return responder(DB.treino[t]);
+
+    // 4. PESQUISA WIKIPEDIA (11 IDIOMAS)
+    if (t.includes("o que e") || t.includes("quem e") || t.includes("pesquise") || t.split(" ").length === 1) {
+        exibirAnalisando();
+        const wikis = ['pt', 'en', 'es', 'fr', 'de', 'it', 'ru', 'ja', 'zh', 'nl', 'pl'];
+        let query = t.replace(/o que e|quem e|pesquise/g, "").trim();
+        for (let l of wikis) {
+            try {
+                const r = await fetch(`https://${l}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}?origin=*`);
+                if (r.ok) { 
+                    const d = await r.json(); removerAnalisando(); 
+                    return responder(`**Inforbot Wiki (${l.toUpperCase()}):** ${d.extract}`); 
+                }
+            } catch(e){}
+        }
+        removerAnalisando();
+    }
+
+    // 5. MOLDES INTELIGENTES (Apenas se a frase for longa e não houver resposta exata)
+    if (t.split(" ").length >= 2) {
+        const words = t.split(" ").filter(w => w.length > 3);
+        const focus = words.length > 0 ? words[Math.floor(Math.random()*words.length)] : "esse ponto";
+        const r1 = moldesInicio[Math.floor(Math.random()*moldesInicio.length)];
+        const r2 = moldesMeio[Math.floor(Math.random()*moldesMeio.length)];
+        const r3 = moldesFim[Math.floor(Math.random()*moldesFim.length)];
+        return responder(r1 + focus + r2 + r3);
+    }
+
+    responder("procurei. Mais está escondido de mim...?");
+}
+
+function responder(texto) {
+    const div = document.createElement("div");
+    div.className = "bot-box";
+    div.innerHTML = `<div class="bubble">${texto}</div>`;
+    document.getElementById("chat").appendChild(div);
+    document.getElementById("chat").scrollTop = document.getElementById("chat").scrollHeight;
+}
+
+function enviar() {
+    const input = document.getElementById("input");
+    if (!input.value) return;
+    const div = document.createElement("div");
+    div.className = "user-box";
+    div.innerHTML = `<div class="bubble">${input.value}</div>`;
+    document.getElementById("chat").appendChild(div);
+    brain(input.value);
+    input.value = "";
+}
+
+function autoAction(tipo) {
+    if (tipo === 'piada') brain('piada');
+    if (tipo === 'curiosidade') brain('curiosidade');
+}
+
+function setTheme(mode) {
+    if (mode === 'light') document.body.classList.add('light-mode');
+    else document.body.classList.remove('light-mode');
+}
+
+function exibirAnalisando() {
+    const load = document.createElement("div");
+    load.id = "loading-box";
+    load.innerHTML = `<div class="analyzing"><div class="spinner"></div> ⏳pesquisando...</div>`;
+    document.getElementById("chat").appendChild(load);
+}
+
+function removerAnalisando() {
+    const load = document.getElementById("loading-box");
+    if (load) load.remove();
+}
+
+function startVoice() {
+    const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    rec.lang = 'pt-BR'; rec.start();
+    rec.onresult = (e) => { document.getElementById("input").value = e.results[0][0].transcript; enviar(); };
+}
+
+document.getElementById("input").addEventListener("keypress", (e) => { if (e.key === "Enter") enviar(); });
+</script>
+</body>
+</html>
