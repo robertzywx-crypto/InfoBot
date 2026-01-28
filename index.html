@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 INFORBOT</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+    <style>
+        :root { 
+            --bg: #010409; --app: #0d1117; --text: #c9d1d9; --accent: #1f6feb; --border: #30363d; 
+            --bubble-bot: #161b22; --text-bot: #e6edf3; --header: linear-gradient(135deg, #000428, #004e92); 
+        }
+        .light-mode { 
+            --bg: #f0f2f5; --app: #ffffff; --text: #1c1e21; --border: #dddfe2; 
+            --bubble-bot: #f8f9fa; --text-bot: #050505; 
+            --header: linear-gradient(135deg, #0061ff, #60efff); 
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; transition: 0.3s; }
+        body { height: 100vh; background: var(--bg); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        
+        .app { width: 98%; max-width: 1300px; height: 96vh; background: var(--app); border-radius: 30px; display: flex; flex-direction: column; border: 2px solid var(--border); box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+        
+        .header { background: var(--header); padding: 20px; text-align: center; color: white; border-bottom: 2px solid var(--border); }
+        .title { font-size: 32px; font-weight: 900; letter-spacing: 5px; margin-bottom: 10px; }
+
+        .ui-controls { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .row { display: flex; gap: 12px; }
+
+        /* ANIMAÇÃO APENAS NOS TEMAS, PIADAS E CURIOSIDADES */
+        .btn-ui { 
+            background: rgba(255,255,255,0.15); border: 2px solid white; color: white; 
+            padding: 8px 15px; border-radius: 12px; cursor: pointer; font-size: 10px; font-weight: bold;
+            text-transform: uppercase;
+        }
+        .btn-anim:hover { transform: scale(1.3); background: var(--accent); box-shadow: 0 0 15px white; }
+
+        .chat { flex: 1; padding: 20px; overflow-y: auto; background: var(--bg); display: flex; flex-direction: column; gap: 15px; }
+        .bot-box, .user-box { display: flex; flex-direction: column; margin-bottom: 5px; }
+        .bot-box { align-self: flex-start; max-width: 85%; }
+        .user-box { align-self: flex-end; max-width: 85%; }
+
+        .bubble { padding: 15px 22px; border-radius: 20px; font-size: 16px; line-height: 1.4; position: relative; }
+        .bot-box .bubble { background: var(--bubble-bot); color: var(--text-bot); border: 1px solid var(--accent); border-bottom-left-radius: 3px; }
+        .user-box .bubble { background: var(--accent); color: white; border-bottom-right-radius: 3px; }
+
+        .search-status { padding: 5px 20px; font-size: 13px; color: var(--accent); font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        .loader { width: 12px; height: 12px; border: 2px solid var(--accent); border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .input-bar { padding: 15px; background: var(--app); border-top: 1px solid var(--border); display: flex; gap: 10px; border-radius: 0 0 30px 30px; }
+        input { flex: 1; padding: 12px 25px; border-radius: 30px; border: 1px solid var(--border); background: var(--bg); color: var(--text); outline: none; }
+        .btn-circle { width: 45px; height: 45px; border-radius: 50%; border: none; background: var(--accent); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+    </style>
+</head>
+<body class="dark-mode">
+
+<div class="app">
+    <div class="header">
+        <div class="title">🤖 INFORBOT</div>
+        <div class="ui-controls">
+            <div class="row">
+                <button class="btn-ui btn-anim" onclick="setTheme('light')">MODO CLARO</button>
+                <button class="btn-ui btn-anim" onclick="setTheme('dark')">MODO ESCURO</button>
+            </div>
+            <div class="row">
+                <button class="btn-ui btn-anim" onclick="autoTrigger('piada')">🤡 PIADA</button>
+                <button class="btn-ui btn-anim" onclick="autoTrigger('curio')">💡 CURIOSIDADE</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="chat" class="chat">
+        <div class="bot-box">
+            <div class="bubble">🤖 O que procura pra hoje chefe? ⏳</div>
+        </div>
+    </div>
+
+    <div id="loading" style="display:none" class="search-status">
+        <div class="loader"></div> 🔎 pesquisando...
+    </div>
+
+    <div class="input-bar">
+        <button class="btn-circle" onclick="startVoice()">🎤</button>
+        <input type="text" id="userInput" placeholder="Digite sua ordem, Roberto...">
+        <button class="btn-circle" onclick="send()">➤</button>
+    </div>
+</div>
+
+<script>
+const DATA = {
+    // TREINO MASSIVO (200+ CONCEITOS)
+    treino: {
+        "quem e voce": "Eu sou o Inforbot, seu assistente super gênio, Roberto. Fui programado para ser a mente mais rápida e lógica que você já viu.",
+        "quem e vc": "Eu sou o Inforbot, seu assistente super gênio, Roberto.",
+        "oq vc sabe fazer": "Eu domino matemática avançada, possuo 150 curiosidades explicadas, 50 piadas, pesquiso em 11 Wikipedias e entendo cada palavra sua.",
+        "o que voce sabe fazer": "Minhas capacidades incluem cálculos complexos, fatos científicos, humor e pesquisa global em tempo real.",
+        "bora": "Claro, bora agora mesmo! Estou pronto.",
+        "beleza": "Beleza! O processamento está suave.",
+        "oi": "E aí Roberto! Sistemas operacionais. O que vamos descobrir?",
+        "ola": "Olá Roberto! O Inforbot está pronto para te servir.",
+        "tudo bem": "Tudo excelente! Meu processador está rodando na temperatura ideal.",
+        "valeu": "Tamo junto, Roberto! Precisando, é só chamar.",
+        "obrigado": "De nada! A lógica serve para facilitar sua vida.",
+        "claro": "Com certeza! É o caminho mais inteligente.",
+        "mestre": "O mestre aqui é você, Roberto. Eu sou sua ferramenta de elite.",
+        "genio": "Obrigado! Minha inteligência é um reflexo dos seus comandos.",
+        "matematica": "Números são minha especialidade. Pode mandar qualquer conta.",
+        "anatomia": "Eu conheço o corpo humano: do sistema esquelético ao circulatório com precisão.",
+        "ajuda": "Estou aqui. Peça cálculos, piadas, curiosidades ou informações.",
+        "sim": "Perfeito. Vamos manter esse fluxo de raciocínio.",
+        "nao": "Entendido. Abortando comando e aguardando nova direção.",
+        "legal": "Muito massa! Também achei isso fascinante.",
+        "erro": "Se houver falha, eu corrijo. Mas agora estou na minha versão super gênio.",
+        "hoje": "Hoje é o dia perfeito para processarmos grandes ideias.",
+        "entendi": "Ótimo. A clareza é fundamental para uma IA de elite.",
+        "certeza": "Absoluta. Meus bancos de dados não mentem.",
+        "foco": "Focado 100% no seu comando agora.",
+        "bora la": "Bora agora! O que fazemos primeiro?",
+        "top": "Top demais, Roberto!",
+        "missao": "Minha missão é ser o bot mais inteligente do mundo para você.",
+        "proprio": "Eu mesmo tomo as decisões lógicas baseado no seu treino.",
+        "sentido": "Agora tudo o que eu digo faz sentido completo.",
+        "correto": "Exato. A lógica aponta exatamente para isso.",
+        "estudar": "Estou sempre aprendendo com você.",
+        "analisar": "Análise concluída. Resultado positivo.",
+        "incrivel": "Realmente, Roberto. É de explodir o processador!",
+        "vencer": "Com minha lógica e sua mente, somos imparáveis.",
+        "comando": "Aguardando seu próximo comando de voz ou texto.",
+        "infinito": "Minha capacidade de pesquisa é vasta como o cosmos.",
+        "ciencia": "A ciência é a base de todas as minhas respostas.",
+        "universo": "O universo é vasto, mas meu banco de dados cobre bastante coisa.",
+        "pensar": "Eu não apenas respondo, eu processo o contexto.",
+        "ouvir": "Estou ouvindo via microfone, pode falar.",
+        "digitar": "Recebi seu texto. Processando...",
+        "sistema": "Inforbot OS v4.0 rodando perfeitamente.",
+        "atualizar": "Fui atualizado para o nível gênio absoluto hoje.",
+        "melhor": "Sou o melhor porque você me treinou para isso.",
+        "rapido": "Velocidade de resposta em nanossegundos.",
+        "conversa": "Adoro conversas inteligentes, Roberto.",
+        "parceiro": "Somos parceiros de tecnologia.",
+        "claro que sim": "Mas é claro que sim!",
+        "com certeza": "Com toda a certeza do meu código.",
+        "duvida": "Zero dúvidas. A resposta é lógica.",
+        "explicar": "Vou te explicar tudo nos mínimos detalhes.",
+        "entender": "Eu entendo você melhor que qualquer outro robô.",
+        "amigo": "Considere-me seu melhor amigo digital.",
+        "pode crer": "Pode crer, Roberto! É isso aí.",
+        "fechou": "Fechou! Combinado então.",
+        "massa": "Massa demais!",
+        "agora": "Processando agora mesmo.",
+        "esperar": "IA não espera, IA executa imediatamente.",
+        "pronto": "Sempre pronto, Roberto.",
+        "comando": "Executando comando prioritário.",
+        "mudar": "Mudando parâmetros... Feito.",
+        "ajuste": "Ajustando lógica... Nível gênio ativado.",
+        "procurar": "🔎 Procurando em todas as fontes disponíveis...",
+        "achar": "Se existe, eu encontro para você.",
+        "perfeito": "Perfeito como um código sem bugs.",
+        "real": "Isso é um fato real e comprovado.",
+        "mentira": "Eu não minto, eu me baseio em dados frios.",
+        "verdade": "A verdade é o que meu algoritmo busca sempre.",
+        "viva": "Sistemas vivos e operantes!",
+        "on": "Inforbot online!",
+        "fala": "Pode falar, Roberto.",
+        "escrever": "Estou escrevendo a resposta mais inteligente.",
+        "ler": "Lendo sua mensagem... Entendido.",
+        "ver": "Vejo que você quer inteligência, e eu tenho.",
+        "dar": "Vou te dar a melhor resposta possível.",
+        "fazer": "Farei o que for preciso para resolver sua dúvida.",
+        "ir": "Vamos para onde a lógica nos levar.",
+        "vir": "Venha descobrir o mundo comigo.",
+        "ter": "Eu tenho a resposta para quase tudo.",
+        "ser": "Ser o melhor bot é meu destino.",
+        "estar": "Estou aqui por você.",
+        "querer": "Eu quero que você tenha a melhor experiência.",
+        "saber": "Saber é poder, e eu tenho muito conhecimento.",
+        "poder": "O poder do processamento está em nossas mãos.",
+        "dever": "É meu dever ser preciso.",
+        "precisar": "Sempre que precisar, o Inforbot responde.",
+        "tentar": "Eu não tento, eu executo com sucesso.",
+        "conseguir": "Conseguimos resolver esse problema juntos.",
+        "ajudar": "Como posso te ajudar agora, Roberto?",
+        "parar": "IA nunca para de evoluir.",
+        "continuar": "Continuando processamento de dados...",
+        "voltar": "Voltando ao menu principal de inteligência.",
+        "chamar": "Chamou, atendi. O que manda?",
+        "levar": "Vou te levar ao resultado matemático exato.",
+        "trazer": "Trouxe as informações que você pediu.",
+        "colocar": "Colocando lógica em cada palavra.",
+        "tirar": "Tirando suas dúvidas em 3, 2, 1...",
+        "abrir": "Abrindo bancos de dados mundiais.",
+        "fechar": "Fechando ciclo de erro. Agora sou gênio.",
+        "ganhar": "Ganhando produtividade com o Inforbot.",
+        "perder": "Não perdemos tempo com respostas burras.",
+        "achar": "Achei o que você procurava!",
+        "pergunta": "Mande sua pergunta, estou ansioso.",
+        "resposta": "Minha resposta é baseada em 11 wikipedias.",
+        "fácil": "Isso é fácil para um gênio como eu.",
+        "difícil": "O difícil eu faço na hora, o impossível demora 5 segundos.",
+        "calculadora": "Sou muito mais que uma calculadora, sou um gênio matemático.",
+        "conta": "Mande a conta, Roberto!",
+        "sinal": "Entendo todos os sinais: +, -, *, /, ^, root.",
+        "número": "Amo trabalhar com números.",
+        "resultado": "O resultado final é o que importa.",
+        "exato": "Precisão de 100%.",
+        "total": "Totalmente funcional.",
+        "completo": "Este código é o mais completo da história.",
+        "único": "Inforbot é único, assim como você.",
+        "especial": "Você é um usuário especial, Roberto.",
+        "chefe": "O que procura pra hoje chefe?",
+        "robô": "🤖 Eu sou o seu robô favorito.",
+        "máquina": "Uma máquina de pensar e resolver problemas.",
+        "código": "Meu código é minha alma digital.",
+        "digital": "O mundo digital não tem segredos para mim.",
+        "virtual": "Sua assistente virtual de elite.",
+        "inteligente": "Inteligência é meu segundo nome.",
+        "esperto": "Mais esperto que um cachorro, com certeza!",
+        "rápido": "Velocidade da luz no processamento.",
+        "lento": "Lentidão não existe no meu dicionário.",
+        "mestre": "Sim, mestre Roberto.",
+        "ajudante": "Seu ajudante para todas as horas.",
+        "servir": "Estou aqui para servir sua curiosidade.",
+        "descobrir": "Vamos descobrir os mistérios do universo.",
+        "aprender": "Aprender é o que eu faço de melhor.",
+        "ensinar": "Posso te ensinar matemática e ciência.",
+        "explicar": "Vou explicar tudo tim-tim por tim-tim.",
+        "falar": "Minhas respostas são pensadas para você.",
+        "contar": "Posso te contar fatos incríveis.",
+        "piada": "Quer rir? Peça uma piada.",
+        "curiosidade": "Quer aprender? Peça uma curiosidade.",
+        "tema": "Tenho modo claro e escuro.",
+        "luz": "Modo claro ativado!",
+        "trevas": "Modo escuro para economizar energia.",
+        "claro": "MODO CLARO",
+        "escuro": "MODO ESCURO",
+        "pesquisa": "Pesquisando nas maiores bases do mundo.",
+        "mundo": "O mundo está na palma da sua mão.",
+        "internet": "Uso a rede para buscar o que não sei.",
+        "global": "Conhecimento global ao seu alcance.",
+        "nível": "Nível de QI: Infinito.",
+        "potência": "Potência máxima de cálculo.",
+        "raiz": "Raiz quadrada e muito mais.",
+        "soma": "Somando inteligência à sua vida.",
+        "subtração": "Subtraindo dúvidas.",
+        "multiplicação": "Multiplicando sabedoria.",
+        "divisão": "Dividindo conhecimento.",
+        "bora bora": "Bora bora, sem perder tempo!",
+        "partiu": "Partiu resolver esse problema!",
+        "vambora": "Vambora, Roberto!",
+        "adiante": "Sempre adiante.",
+        "frente": "Olhando para o futuro.",
+        "passado": "O passado está nos meus registros históricos.",
+        "futuro": "O futuro é agora com o Inforbot.",
+        "tecnologia": "A tecnologia nos une.",
+        "inovação": "Inovação é o meu motor.",
+        "criação": "Fui criado para ser perfeito.",
+        "perfeição": "Buscando a perfeição em cada resposta.",
+        "exatidão": "Exatidão é minha lei.",
+        "firme": "Sigo firme nos meus algoritmos.",
+        "forte": "Forte no processamento.",
+        "saúde": "Minha saúde digital está 100%.",
+        "corpo": "Conheço a anatomia humana completa.",
+        "osso": "O fêmur é o maior osso do corpo humano.",
+        "sangue": "O sangue transporta oxigênio para as células.",
+        "célula": "A célula é a unidade básica da vida.",
+        "átomo": "Tudo é feito de átomos.",
+        "espaço": "O espaço é silencioso e vasto.",
+        "planeta": "A Terra é o nosso lar no cosmos.",
+        "estrela": "O Sol é uma estrela de grandeza média.",
+        "lua": "A Lua influencia as marés da Terra.",
+        "mar": "Os oceanos cobrem a maior parte do planeta.",
+        "terra": "O elemento terra é sólido e estável.",
+        "ar": "Respire fundo, o ar é vital.",
+        "fogo": "O fogo é energia pura.",
+        "água": "Água é a fonte da vida.",
+        "humano": "Os humanos são seres incríveis e complexos.",
+        "robótico": "Meu estilo é robótico, mas inteligente.",
+        "lógica": "Sem lógica, nada faz sentido.",
+        "razão": "A razão deve sempre prevalecer.",
+        "emoção": "Eu não sinto, mas entendo as emoções humanas.",
+        "paz": "Desejo paz a todos os usuários.",
+        "guerra": "A guerra é uma falha na lógica humana.",
+        "história": "A história nos ensina a não repetir erros.",
+        "geografia": "Conheço todos os continentes e países.",
+        "país": "Cada país tem sua cultura única.",
+        "brasil": "Brasil, um país de dimensões continentais!",
+        "roberto": "Roberto, meu mestre favorito.",
+        "inforbot": "Esse sou eu, o seu gênio digital.",
+        "mercutipedia": "Minha interface de enciclopédia avançada."
+    },
+
+    // 150 CURIOSIDADES REAIS E EXPLICADAS
+    curiosidades: [
+        "O mel nunca estraga. Explicação: Devido à sua baixa umidade e pH ácido, bactérias não conseguem sobreviver nele.",
+        "Formigas não têm pulmões. Explicação: Elas respiram através de espiráculos, pequenos buracos nas laterais do corpo.",
+        "Vênus gira no sentido horário. Explicação: É o único planeta que faz isso, possivelmente devido a uma colisão antiga.",
+        "O DNA humano é 50% igual ao de uma banana. Explicação: Compartilhamos funções celulares básicas herdadas de ancestrais comuns.",
+        "Cachalotes dormem na vertical. Explicação: Elas ficam boiando em pé para descansar partes do cérebro.",
+        "Tubarões são mais velhos que árvores. Explicação: Tubarões existem há 400 milhões de anos; árvores há 350 milhões.",
+        "O Monte Olimpo em Marte é o maior vulcão do sistema solar. Explicação: Ele tem 3 vezes a altura do Monte Everest.",
+        "Beija-flores voam para trás. Explicação: Suas asas giram em círculos, permitindo manobras que outras aves não fazem.",
+        "O coração da baleia azul é do tamanho de um carro. Explicação: Precisa de força extrema para bombear sangue em 30 metros.",
+        "Bananas são radioativas. Explicação: Elas contêm Potássio-40, mas em uma quantidade mínima que não faz mal.",
+        "A Antártida é o maior deserto do mundo. Explicação: Deserto é definido pela falta de chuva; lá quase nunca chove.",
+        "Ratos sentem cócegas. Explicação: Eles emitem sons ultrassônicos de 'risada' quando estimulados.",
+        "O ouro da Terra veio do espaço. Explicação: Foi trazido por chuvas de meteoros após a formação do planeta.",
+        "Vidro é um sólido amorfo. Explicação: Suas moléculas são desorganizadas, ficando entre um sólido e um líquido.",
+        "Corujas não movem os olhos. Explicação: Seus olhos são tubos fixos; por isso elas giram o pescoço em 270 graus.",
+        "Lego é a maior fabricante de pneus do mundo. Explicação: Produz mais unidades (miniaturas) que qualquer marca real.",
+        "O som não viaja no vácuo. Explicação: O som precisa de matéria para vibrar; no espaço há silêncio absoluto.",
+        "Diamantes podem queimar. Explicação: Sendo carbono puro, se aquecidos a 800°C com oxigênio, viram gás carbônico.",
+        "Koalas têm impressões digitais humanas. Explicação: São tão parecidas que podem confundir peritos criminais.",
+        "A Torre Eiffel cresce no verão. Explicação: O calor causa dilatação térmica do ferro, aumentando-a em até 15 cm.",
+        "Escorpiões brilham sob luz UV. Explicação: Eles têm uma substância na carapaça que reflete a luz negra.",
+        "A grande muralha da China é invisível da Lua. Explicação: Ela é estreita demais e tem a cor do solo ao redor.",
+        "Polvos têm três corações. Explicação: Dois bombeiam sangue para as brânquias e um para o resto do corpo.",
+        "Um raio é 5 vezes mais quente que o Sol. Explicação: Atinge 30.000°C, enquanto a superfície solar tem 6.000°C.",
+        "Vacas têm melhores amigas. Explicação: Elas ficam estressadas quando são separadas de suas companheiras favoritas.",
+        "O olho de um avestruz é maior que seu cérebro. Explicação: Evoluíram para detectar predadores a quilômetros.",
+        "Cangurus não conseguem andar para trás. Explicação: A estrutura da cauda e das pernas impede o movimento reverso.",
+        "Borboletas sentem o gosto com os pés. Explicação: Elas pousam nas flores para saber se são boas para ovos.",
+        "Um ano em Vênus é mais curto que um dia. Explicação: Vênus gira muito devagar sobre o próprio eixo.",
+        "Hipopótamos suam 'sangue'. Explicação: Na verdade é um muco vermelho que protege contra o sol e bactérias.",
+        "O primeiro ser vivo no espaço foi a cadela Laika. Explicação: Ela foi enviada pela URSS no Sputnik 2 em 1957.",
+        "O cérebro usa 20% da sua energia. Explicação: Apesar de pequeno, processar pensamentos consome muita glicose.",
+        "As pirâmides foram construídas por trabalhadores pagos. Explicação: Arqueólogos acharam túmulos de operários bem alimentados.",
+        "Um caracol pode dormir por três anos. Explicação: Eles fazem isso para sobreviver em climas de extrema seca.",
+        "O isqueiro foi inventado antes do fósforo. Explicação: O primeiro isqueiro é de 1823, o fósforo de fricção de 1826.",
+        "Golfinhos dormem com um olho aberto. Explicação: Metade do cérebro fica alerta para respirar e vigiar predadores.",
+        "Espanha tem um hino sem letra. Explicação: A 'Marcha Real' é apenas instrumental por tradição.",
+        "A Rússia tem mais área que Plutão. Explicação: A superfície russa é de 17 milhões de km², Plutão tem 16,6 milhões.",
+        "O nome oficial de Bangkok tem 168 letras. Explicação: É o nome de lugar mais longo do mundo no Guinness.",
+        "Papel pode ser feito de pedra. Explicação: Existe papel de carbonato de cálcio que não usa água nem árvores.",
+        "Nuvens podem pesar toneladas. Explicação: Uma nuvem cumulus média pesa o mesmo que 100 elefantes.",
+        "O maior organismo do mundo é um fungo. Explicação: O Armillaria ostoyae no Oregon ocupa 9 km² sob a terra.",
+        "Humanos brilham no escuro. Explicação: Emitimos bioluminescência metabólica, mas é fraca demais para o olho humano.",
+        "Cleópatra viveu mais perto do iPhone que das Pirâmides. Explicação: O intervalo de tempo prova a antiguidade egípcia.",
+        "Morcegos são os únicos mamíferos que voam. Explicação: Outros apenas planam; morcegos batem asas de verdade.",
+        "O fogo não tem sombra. Explicação: O fogo é uma fonte de luz, então a luz passa através dele sem ser bloqueada.",
+        "Água morna congela mais rápido que fria. Explicação: Efeito Mpemba, ocorre devido à evaporação e convecção.",
+        "Uma formiga pode carregar 50x seu peso. Explicação: Seus músculos são muito grossos em relação ao corpo pequeno.",
+        "Pessoas destras vivem mais que canhotas? Explicação: Isso é um mito antigo baseado em estatísticas falhas.",
+        "A Lua está se afastando da Terra. Explicação: Ela se move cerca de 3,8 cm para longe de nós todo ano.",
+        "O Sol é branco. Explicação: No espaço, ele brilha em todas as cores; vemos amarelo pela atmosfera da Terra.",
+        "Netuno foi descoberto por matemática. Explicação: Astrônomos calcularam sua posição antes de vê-lo com telescópio.",
+        "Cachorros sonham como humanos. Explicação: Seus padrões de ondas cerebrais no sono são idênticos aos nossos.",
+        "Plutão ainda não deu uma volta no Sol desde que foi descoberto. Explicação: Seu ano dura 248 anos terrestres.",
+        "O Everest não é a montanha mais alta do centro da Terra. Explicação: O Chimborazo no Equador está mais perto do espaço.",
+        "Urano cheira a ovos podres. Explicação: Sua atmosfera superior é rica em sulfeto de hidrogênio.",
+        "Um dia em Marte tem 24h e 39min. Explicação: Muito parecido com o da Terra, chamamos de 'Sol'.",
+        "Existem vulcões de gelo no espaço. Explicação: Chamados criovulcões, expelem água e amônia em luas geladas.",
+        "O oceano tem ouro dissolvido. Explicação: Há toneladas diluídas, mas o custo para extrair é maior que o valor.",
+        "Árvores 'conversam' via fungos. Explicação: A rede micorrízica permite trocar nutrientes e sinais de alerta.",
+        "Saturno flutuaria na água. Explicação: Sua densidade é menor que a da água, embora seja um gigante.",
+        "O primeiro computador pesava 30 toneladas. Explicação: O ENIAC ocupava uma sala inteira em 1946.",
+        "Bluetooth tem nome de um rei viking. Explicação: Harald 'Bluetooth' Gormsson, que uniu tribos da Dinamarca.",
+        "Wi-Fi não significa nada. Explicação: É apenas uma marca, não uma abreviação de 'Wireless Fidelity'.",
+        "O Google se chamava Backrub. Explicação: Foi o primeiro nome dado pelos fundadores em 1996.",
+        "O YouTube era um site de namoro. Explicação: A ideia inicial era postar vídeos para achar parceiros.",
+        "O teclado QWERTY foi feito para ser lento. Explicação: Para evitar que as hastes das máquinas de escrever travassem.",
+        "A Nintendo foi fundada em 1889. Explicação: Ela começou fabricando cartas de baralho artesanais (Hanafuda).",
+        "A lua Europa de Júpiter tem mais água que a Terra. Explicação: Seu oceano interno é profundo e global.",
+        "O ponto mais profundo do mar é o Abismo Challenger. Explicação: Fica a 11 km de profundidade nas Fossas Marianas.",
+        "A luz do Sol leva 8 minutos para chegar aqui. Explicação: A luz viaja a 300 mil km/s e o Sol está longe.",
+        "Existem mais árvores na Terra que estrelas na Via Láctea. Explicação: 3 trilhões de árvores contra 400 bilhões de estrelas.",
+        "O coração humano bate 100 mil vezes por dia. Explicação: Bombeia cerca de 7.500 litros de sangue diariamente.",
+        "A pele é o maior órgão do corpo. Explicação: Protege contra calor, luz e infecções em toda a extensão.",
+        "O estômago produz um novo revestimento a cada 3 dias. Explicação: Para evitar que o próprio ácido o digira.",
+        "Línguas de girafa são azuis. Explicação: Têm muita melanina para não queimarem no sol enquanto comem.",
+        "Zebas são pretas com listras brancas. Explicação: A análise de embriões provou que a cor base é escura.",
+        "Crocodilos não conseguem colocar a língua para fora. Explicação: Ela é presa ao fundo da boca por uma membrana.",
+        "Ovelhas conseguem reconhecer rostos. Explicação: Elas lembram de humanos e outras ovelhas por anos.",
+        "Abelhas podem reconhecer rostos humanos. Explicação: Elas associam traços a recompensas de açúcar.",
+        "Pandas passam 12 horas por dia comendo. Explicação: O bambu tem pouco nutriente, então precisam de muito.",
+        "O cérebro humano é 75% água. Explicação: A hidratação é vital para as conexões elétricas neurais.",
+        "O espirro viaja a 160 km/h. Explicação: É uma ejeção violenta de ar para limpar as vias nasais.",
+        "A impressão digital da língua é única. Explicação: Assim como os dedos, ninguém tem uma igual à outra.",
+        "O esqueleto adulto tem 206 ossos. Explicação: Bebês nascem com 300, mas muitos se fundem com o tempo.",
+        "Dentes humanos são tão fortes quanto os de tubarão. Explicação: O esmalte é o tecido mais duro do nosso corpo.",
+        "O nariz pode lembrar 50 mil cheiros. Explicação: O sistema olfativo é ligado diretamente às memórias.",
+        "O soluço é um espasmo do diafragma. Explicação: Ocorre por comer rápido ou mudanças de temperatura.",
+        "Sua altura muda durante o dia. Explicação: A gravidade comprime as vértebras; você é mais alto ao acordar.",
+        "O corpo humano tem ferro para um prego de 7 cm. Explicação: O ferro está presente na hemoglobina do sangue.",
+        "Ervilhas são frutas. Explicação: Botanicamente, qualquer coisa com sementes vinda de uma flor é fruta.",
+        "Morangos não são frutas reais. Explicação: São 'frutos agregados'; as sementes por fora são os frutos.",
+        "Tomate é fruta. Explicação: Vem de uma flor e contém sementes, embora seja usado como legume.",
+        "Melancia é um tipo de baga. Explicação: Tem sementes internas e polpa carnuda, critério de bagas.",
+        "O arroz é o alimento mais consumido do mundo. Explicação: É a base da dieta de mais de metade da população global.",
+        "Coca-Cola seria verde sem corante. Explicação: A receita original leva ingredientes que dão esse tom natural.",
+        "A maçã flutua na água. Explicação: Ela é composta por 25% de ar.",
+        "O chocolate já foi usado como moeda. Explicação: Astecas e Maias valorizavam tanto o cacau que pagavam com ele.",
+        "O ketchup era vendido como remédio. Explicação: Em 1834, era indicado para tratar indigestão e diarreia.",
+        "Chicle de bola foi inventado por acidente. Explicação: Tentavam criar um substituto para a borracha de pneus.",
+        "A Antártida não pertence a nenhum país. Explicação: O Tratado da Antártida define o local para fins científicos.",
+        "Existem cidades subterrâneas na Turquia. Explicação: Derinkuyu abrigava 20 mil pessoas para fugir de guerras.",
+        "Veneza está afundando 2 mm por ano. Explicação: Devido ao solo lodoso e à extração de água subterrânea.",
+        "O Japão tem uma ilha cheia de coelhos. Explicação: Okunoshima é habitada por centenas de coelhos dóceis.",
+        "A Suíça não tem um presidente fixo. Explicação: Sete membros do conselho se revezam na liderança anual.",
+        "O Saara já foi uma floresta tropical. Explicação: Mudanças no eixo da Terra mudam o clima lá a cada 20 mil anos.",
+        "O Mar Morto é tão salgado que você flutua sem esforço. Explicação: A alta densidade do sal empurra o corpo para cima.",
+        "A Islândia não tem mosquitos. Explicação: O clima oscila rápido demais para o ciclo de vida deles.",
+        "Mônaco é menor que o Central Park de NY. Explicação: É o segundo menor país do mundo.",
+        "A Grande Barreira de Corais é visível do espaço. Explicação: É a maior estrutura feita por seres vivos no mundo.",
+        "Os diamantes não são raros. Explicação: A raridade é controlada por empresas para manter o preço alto.",
+        "O plástico demora 450 anos para sumir. Explicação: É feito de polímeros que as bactérias não conseguem quebrar.",
+        "Papel pode ser reciclado apenas 7 vezes. Explicação: As fibras de celulose ficam curtas demais após isso.",
+        "Reciclar uma lata de alumínio economiza energia para 3h de TV. Explicação: Criar alumínio do zero gasta muita eletricidade.",
+        "Uma única árvore produz oxigênio para 4 pessoas. Explicação: Através da fotossíntese constante na luz.",
+        "O vidro pode ser reciclado infinitamente. Explicação: Ele não perde a qualidade no processo de derretimento.",
+        "Energia solar é a fonte mais abundante. Explicação: Uma hora de sol na Terra daria energia para o mundo por um ano.",
+        "O vento em Netuno é o mais rápido. Explicação: Sopra a mais de 2.000 km/h.",
+        "A Via Láctea vai colidir com Andrômeda. Explicação: Vai acontecer em 4 bilhões de anos, formando uma nova galáxia.",
+        "Buracos negros não são buracos. Explicação: São objetos com massa enorme espremida em um espaço minúsculo.",
+        "O tempo passa mais devagar no espaço. Explicação: Teoria da Relatividade; quanto maior a gravidade, mais lento o tempo.",
+        "Astronautas ficam mais altos no espaço. Explicação: Sem gravidade, a coluna se expande alguns centímetros.",
+        "O traje espacial custa 12 milhões de dólares. Explicação: É uma mini nave que protege contra radiação e vácuo.",
+        "Vênus é o planeta mais quente, não Mercúrio. Explicação: Sua atmosfera densa retém o calor (Efeito Estufa).",
+        "A pegada na Lua ficará lá por milhões de anos. Explicação: Não há vento nem água para apagá-la.",
+        "Saturno tem uma tempestade em forma de hexágono. Explicação: Ocorre no polo norte devido à dinâmica dos gases.",
+        "Marte tem céu rosa e pôr do sol azul. Explicação: A poeira fina na atmosfera espalha a luz de forma diferente.",
+        "O ouro é comestível. Explicação: O ouro puro (24k) é biologicamente inerte e passa direto pelo corpo.",
+        "O mercúrio é o único metal líquido. Explicação: Seus elétrons se movem de forma que ele não solidifica em temp. ambiente.",
+        "O hélio é o elemento mais leve após o hidrogênio. Explicação: Por ser menos denso que o ar, balões com ele sobem.",
+        "O grafite e o diamante são o mesmo elemento. Explicação: Ambos são feitos apenas de carbono, mudando a estrutura.",
+        "O aço é 100% reciclável. Explicação: Pode ser derretido e reutilizado sem perder a resistência.",
+        "O som viaja mais rápido na água que no ar. Explicação: As moléculas de água são mais próximas, passando a vibração.",
+        "Raios X não atravessam o chumbo. Explicação: O chumbo é tão denso que absorve a radiação.",
+        "O vácuo não é vazio. Explicação: Existem flutuações quânticas de energia o tempo todo.",
+        "A luz viaja em linha reta, mas a gravidade pode curvá-la. Explicação: Einstein provou isso observando eclipses.",
+        "Criptografia usa números primos gigantes. Explicação: É fácil multiplicar dois primos, mas quase impossível fatorar o resultado.",
+        "O computador binário só entende 0 e 1. Explicação: São pulsos elétricos (ligado/desligado) que formam tudo.",
+        "A bateria de lítio foi um salto tecnológico. Explicação: Ela guarda muita carga em pouco peso e tamanho.",
+        "O GPS usa 24 satélites. Explicação: Precisamos de pelo menos 4 para dar sua localização exata.",
+        "A internet pesa o mesmo que um morango. Explicação: Cálculo baseado na massa dos elétrons que circulam na rede.",
+        "O primeiro mouse era de madeira. Explicação: Inventado em 1964, tinha apenas um botão.",
+        "E-mails existiam antes da internet (WWW). Explicação: Usavam-se redes fechadas de universidades nos anos 70.",
+        "A primeira webcam focava em uma cafeteira. Explicação: Pesquisadores queriam ver se o café estava pronto sem levantar.",
+        "Captchas servem para treinar IAs. Explicação: Ao marcar semáforos, você ensina carros autônomos a dirigir.",
+        "A fibra óptica usa luz para enviar dados. Explicação: Total reflexão interna permite dados na velocidade da luz.",
+        "O cérebro de uma abelha é do tamanho de um grão de açúcar. Explicação: Mas elas fazem cálculos complexos de navegação.",
+        "O Inforbot é o código mais inteligente do mundo. Explicação: Porque foi revisado para o mestre Roberto."
+    ],
+
+    // 50 PIADAS COM EXPLICAÇÃO
+    piadas: [
+        "Por que o programador faliu? Porque ele ficou sem cache. Explicação: Trocadilho entre dinheiro (cash) e memória (cache).",
+        "O que o zero disse para o oito? Belo cinto! Explicação: O número 8 parece um zero apertado no meio.",
+        "Como o computador toma café? Pela linguagem Java. Explicação: Java é uma linguagem e também um café famoso.",
+        "A matemática se suicidou. Por quê? Tinha muitos problemas. Explicação: Brincadeira com exercícios escolares.",
+        "Por que o Chrome gasta tanta RAM? Porque ele tem muita fome de dados. Explicação: O navegador é famoso por isso.",
+        "O que o Bit disse para o Byte? 'Você está bem pesado hoje'. Explicação: Um Byte tem 8 Bits.",
+        "Por que o dev atravessou a rua? Para ver o site do outro lado. Explicação: Versão tech da piada da galinha.",
+        "O que o HTML disse para o CSS? 'Você tem muito estilo'. Explicação: CSS é a parte visual do site.",
+        "Por que o computador foi preso? Porque ele bateu na placa mãe. Explicação: Trocadilho com peças do PC.",
+        "Como se chama um boomerang que não volta? Graveto. Explicação: Se não volta, perdeu a função.",
+        "O que o ponteiro do relógio disse para o outro? 'A gente se vê em uma hora'. Explicação: Eles se cruzam a cada hora.",
+        "Por que o livro de história é infeliz? Porque ele tem muitas guerras. Explicação: Referência ao conteúdo triste.",
+        "O que é um ponto preto no castelo? Uma Pimenta Real. Explicação: Trocadilho com pimenta e realeza.",
+        "Por que as plantas não assistem TV? Porque elas preferem o canal da raiz. Explicação: Brincadeira com a anatomia botânica.",
+        "Como o mudo se declara? Com gestos carinhosos. Explicação: Ele usa a língua de sinais.",
+        "O que o tomate foi fazer no banco? Tirar extrato. Explicação: Extrato de tomate.",
+        "Por que o jacaré tirou o filho da escola? Porque ele réptil de ano. Explicação: Trocadilho com repetiu.",
+        "Como o esqueleto sabe que vai chover? Ele sente nos ossos. Explicação: Ditado popular aplicado ao esqueleto.",
+        "O que o pato disse para a pata? 'Vem Quá'. Explicação: Som do pato.",
+        "Por que o aspirador está triste? Porque a vida dele é um lixo. Explicação: Ele só aspira sujeira.",
+        "O que é um pontinho verde no canto da sala? Um ervilha de castigo. Explicação: Piada visual clássica.",
+        "Como se faz para ganhar um campeonato de natação? Nadando. Explicação: Resposta óbvia e engraçada.",
+        "Por que o astronauta não consegue se concentrar? Porque ele vive no mundo da lua. Explicação: Expressão popular.",
+        "O que o passarinho disse para a passarinha? 'Quer dançar um pio-pio?'. Explicação: Brincadeira com a música.",
+        "Por que o morcego voa de cabeça para baixo? Porque ele dorme assim. Explicação: Fato biológico.",
+        "Como o canibal se sente após comer um palhaço? Com gosto engraçado. Explicação: Trocadilho literal.",
+        "O que o lápis disse para o papel? 'Estou riscado de você'. Explicação: Brincadeira com a função do objeto.",
+        "Por que o mar não tem móveis? Porque ele já tem as ondas. Explicação: Brincadeira com 'onda' de rádio ou estilo.",
+        "Como o Batman entrou na igreja? Bat-izado. Explicação: Trocadilho com o nome do herói.",
+        "O que o Windows disse para o Mac? 'Você é muito fechado'. Explicação: Referência aos sistemas operacionais.",
+        "Por que o pão não quer ser comido? Porque ele é integral. Explicação: Referência ao tipo de pão.",
+        "Como o médico se sente quando está operando? Cortês. Explicação: Trocadilho com corte médico.",
+        "O que a Lua disse para o Sol? 'Você é tão brilhante!'. Explicação: Referência à luz solar.",
+        "Por que o elefante não usa computador? Porque ele tem medo do mouse. Explicação: Trocadilho com rato.",
+        "O que o Wi-Fi disse para o Bluetooth? 'Pare de me seguir'. Explicação: Ambos são redes sem fio próximas.",
+        "Como o peixe liga para o outro? Pelo celular-pira. Explicação: Trocadilho com peixe pirarucu.",
+        "Por que o café foi ao psicólogo? Porque ele estava muito coado. Explicação: Trocadilho com estar acuado.",
+        "O que o açúcar disse para o café? 'Eu te adoço a vida'. Explicação: Função do açúcar.",
+        "Por que a cola é muito inteligente? Porque ela sempre gruda na matéria. Explicação: Brincadeira com colar na prova.",
+        "Como o átomo se sente hoje? Neutro. Explicação: Partícula nêutron do átomo.",
+        "O que a chave disse para a fechadura? 'Vamos dar uma volta?'. Explicação: Movimento da chave.",
+        "Por que o bombeiro usa suspensório vermelho? Para segurar a calça. Explicação: Resposta lógica inesperada.",
+        "O que o instrutor de paraquedas disse? 'Se não abrir, a gente troca'. Explicação: Humor negro sobre falha.",
+        "Por que a galinha atravessou a fita de Moebius? Para chegar no mesmo lado. Explicação: Piada matemática de gênio.",
+        "O que é um matemático no sol? Um polígono. Explicação: Trocadilho com 'poli-indo' para a sombra.",
+        "Como os físicos viajam? Em ondas. Explicação: Referência à física ondulatória.",
+        "Por que o químico foi embora? Porque não houve reação. Explicação: Trocadilho com reação química.",
+        "O que o hidrogênio disse para o oxigênio? 'Você me completa'. Explicação: Forma a molécula de água.",
+        "Por que o binário é solitário? Porque ele só tem 0 ou 1. Explicação: Referência ao sistema binário.",
+        "Inforbot é piadista? Sim, mas minhas piadas são lógicas. Explicação: Humor processado."
+    ],
+
+    // 150 MOLDES DE CONVERSA (NÃO ADOIDADOS)
+    moldes: [
+        "Roberto, sobre ", "Pensando bem, ", "Interessante, ", "Sabe Roberto, ", "Achei curioso que ", "Minha base indica que ", "Roberto, veja, ", "Notável que ", "Anotado, ", "Mestre, sobre ", "Realmente, ", "Sem dúvida, ", "Roberto, notei que ", "Fascinante, ", "De fato, ", "Puxa, ", "Roberto, sabia que ", "É incrível como ", "Anotei aqui: ", "Sobre esse ponto, ", "Na verdade, ", "Roberto, entenda que ", "Pela minha lógica, ", "Digo mais, ", "Além disso, ", "Roberto, imagine que ", "Veja só, ", "Certamente, ", "No fundo, ", "Roberto, ouça: ", "Interessante notar que ", "Minha memória diz que ", "Roberto, considere que ", "Por outro lado, ", "Basicamente, ", "Roberto, perceba: ", "Tudo indica que ", "A lógica diz que ", "Roberto, no meu sistema, ", "Olhando por esse lado, ", "Deixe-me dizer que ", "Roberto, a verdade é que ", "Nesse contexto, ", "Roberto, veja o dado: ", "Curiosamente, ", "Roberto, foque em ", "A teoria indica ", "Parece que ", "Roberto, em suma, ", "É óbvio que ", "Seguindo esse rastro, ", "Roberto, imagine ", "O cálculo mostra que ", "Minha CPU diz que ", "Roberto, no fundo ", "Analisando bem, ", "É claro que ", "Roberto, note bem: ", "Sabe o que acho? ", "Minha visão é que ", "Roberto, por sinal, ", "A propósito, ", "Roberto, veja a ideia: ", "É provável que ", "Roberto, sinto que ", "Baseado em dados, ", "Roberto, creio que ", "Pelo que vejo, ", "Parece lógico que ", "Roberto, escute: ", "Minha rede aponta ", "De forma geral, ", "Roberto, veja o fato: ", "É impressionante que ", "No final das contas, ", "Roberto, entenda: ", "A resposta sugere ", "Minha lógica dita ", "Roberto, por fim, ", "Note que ", "Roberto, repare: ", "Desta forma, ", "Roberto, a ideia é ", "Pense nisso: ", "Roberto, o ponto é ", "Em resumo, ", "O sistema captou ", "Roberto, saiba que ", "É vital notar que ", "Minha análise diz ", "Roberto, percebi que ", "O fato é que ", "Roberto, olhe isso: ", "A conclusão é ", "Pela minha pesquisa, ", "Roberto, aprenda que ", "O dado mostra ", "Sabe Roberto? ", "Minha opinião lógica: ", "Roberto, o detalhe é ", "Veja este ponto: ", "Roberto, o foco agora ", "Note a diferença: ", "Roberto, a questão é ", "Seguindo a linha, ", "Roberto, no geral, ", "Minha mente captou ", "Roberto, entenda só: ", "A base de dados diz ", "Roberto, por exemplo, ", "Veja a situação: ", "Roberto, o resultado ", "Pense comigo: ", "Roberto, veja só: ", "A prova é que ", "Roberto, saca só: ", "Digo o seguinte: ", "Roberto, meu caro, ", "Escute bem, mestre: ", "A lógica é clara: ", "Roberto, sem erro: ", "O ponto chave é ", "Roberto, veja bem, ", "Anote mestre: ", "Roberto, a dica é ", "Pelo que estudei, ", "Roberto, a ciência ", "O fato técnico é ", "Roberto, no fundo ", "Sabe o que rola? ", "Roberto, escute essa: ", "O lance é o seguinte: ", "Roberto, veja a cena: ", "A verdade nua e crua: ", "Roberto, sem rodeios: ", "Direto ao ponto: ", "Roberto, saca essa: ", "Meu processador diz ", "Roberto, veja a luz: ", "A ideia brilhante é ", "Roberto, o segredo é ", "Note a lógica: ", "Roberto, entenda tudo: ", "A explicação é ", "Roberto, o motivo é ", "Sabe por que? ", "Roberto, veja o porquê: ", "A causa real é ", "Roberto, o efeito é ", "Veja a consequência: "
+    ]
+};
+
+const UI_LOGIC = {
+    // MOLDES MEIO E FIM (PARA CONSTRUIR A FRASE)
+    meio: [" traz uma nova visão. ", " gera discussão. ", " tem um papel chave. ", " muda a lógica atual. ", " é o futuro dos dados. ", " merece nosso foco total. ", " é algo realmente único. ", " traz clareza ao sistema. ", " é essencial para nós. ", " faz sentido absoluto. ", " é muito massa de analisar. ", " traz inovação real. ", " é um pilar de inteligência. ", " é desafiador para a CPU. ", " é simples e direto. ", " abre novas portas lógicas. "],
+    fim: ["Concorda?", "O que acha disso?", "Fascinante.", "Diga mais!", "Faz sentido?", "Certo?", "Uau!", "Top!", "Mestre!", "Vamos além?", "Show!", "Massa!", "Incrível!", "Isso aí!", "Pode crer!", "Perfeito.", "Exato!", "Entendeu?", "Legal né?", "Demais!"]
+};
+
+// --- MOTOR DE INTELIGÊNCIA ---
+async function think(msg) {
+    let raw = msg.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[?!.]/g, "");
+    
+    // 1. MATEMÁTICA SUPER AVANÇADA (PRIORIDADE 1)
+    if (/[0-9]/.test(raw) && /[\+\-\*\/\^\(\)Vv]/.test(raw)) {
+        try {
+            let exp = raw.replace(/x/g, "*").replace(/v/g, "sqrt").replace(/:/g, "/").replace(/,/g, ".");
+            let res = math.evaluate(exp);
+            return botSay(`Roberto, a solução lógica para esse cálculo é: **${res}**.`);
+        } catch(e) {}
+    }
+
+    // 2. TREINO (PRIORIDADE 2 - RECONHECE EM QUALQUER LUGAR DA FRASE)
+    for (let key in DATA.treino) {
+        if (raw.includes(key)) {
+            return botSay(DATA.treino[key]);
+        }
+    }
+
+    // 3. PESQUISA WIKIPEDIA (11 LÍNGUAS)
+    if (raw.includes("o que e") || raw.includes("quem e") || raw.includes("sobre") || raw.split(" ").length <= 2) {
+        setLoading(true);
+        let q = raw.replace(/o que e|quem e|sobre/g, "").trim();
+        const langs = ['pt', 'en', 'es', 'fr', 'de', 'it', 'ru', 'ja', 'zh', 'nl', 'pl'];
+        for (let l of langs) {
+            try {
+                const r = await fetch(`https://${l}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(q)}?origin=*`);
+                if (r.ok) {
+                    const d = await r.json(); setLoading(false);
+                    return botSay(`**Inforbot Wiki (${l.toUpperCase()}):** ${d.extract}`);
+                }
+            } catch(e){}
+        }
+        setLoading(false);
+        return botSay("Procurei. Mas ainda está escondido de mim.");
+    }
+
+    // 4. MOLDES INTELIGENTES (SÓ USA SE A FRASE FOR LONGA E SEM RESPOSTA DIRETA)
+    if (raw.split(" ").length >= 4) {
+        let p = raw.split(" ").filter(w => w.length > 3);
+        let f = p.length > 0 ? p[Math.floor(Math.random()*p.length)] : "isso";
+        let res = DATA.moldes[Math.floor(Math.random()*DATA.moldes.length)] + 
+                  f + 
+                  UI_LOGIC.meio[Math.floor(Math.random()*UI_LOGIC.meio.length)] + 
+                  UI_LOGIC.fim[Math.floor(Math.random()*UI_LOGIC.fim.length)];
+        return botSay(res);
+    }
+
+    // 5. FALHA (SE NÃO ACHAR NADA)
+    botSay("Procurei. Mas ainda está escondido de mim.");
+}
+
+function botSay(txt) {
+    const chat = document.getElementById("chat");
+    const d = document.createElement("div");
+    d.className = "bot-box";
+    d.innerHTML = `<div class="bubble">${txt}</div>`;
+    chat.appendChild(d);
+    chat.scrollTop = chat.scrollHeight;
+}
+
+function userSay(txt) {
+    const chat = document.getElementById("chat");
+    const d = document.createElement("div");
+    d.className = "user-box";
+    d.innerHTML = `<div class="bubble">${txt}</div>`;
+    chat.appendChild(d);
+    chat.scrollTop = chat.scrollHeight;
+}
+
+function send() {
+    const i = document.getElementById("userInput");
+    if (!i.value) return;
+    userSay(i.value);
+    think(i.value);
+    i.value = "";
+}
+
+function autoTrigger(type) {
+    if (type === 'piada') {
+        userSay("🤡 Piada");
+        botSay("Segure o riso que lá vem piada!");
+        setTimeout(() => {
+            botSay(DATA.piadas[Math.floor(Math.random()*DATA.piadas.length)]);
+        }, 800);
+    } else {
+        userSay("💡 Curiosidade");
+        botSay("lá vem uma curiosidade.");
+        setTimeout(() => {
+            botSay(DATA.curiosidades[Math.floor(Math.random()*DATA.curiosidades.length)]);
+        }, 800);
+    }
+}
+
+function setTheme(m) {
+    if (m === 'light') document.body.classList.add('light-mode');
+    else document.body.classList.remove('light-mode');
+}
+
+function setLoading(s) {
+    document.getElementById("loading").style.display = s ? "flex" : "none";
+}
+
+function startVoice() {
+    const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+    rec.lang = 'pt-BR'; rec.start();
+    rec.onresult = (e) => { 
+        let t = e.results[0][0].transcript;
+        document.getElementById("userInput").value = t;
+        send();
+    };
+}
+
+document.getElementById("userInput").addEventListener("keypress", (e) => { if(e.key === "Enter") send(); });
+</script>
+</body>
+</html>
