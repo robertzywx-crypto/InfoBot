@@ -1,0 +1,25 @@
+/* Animação de Acerto (Brilho e Pulo) */
+@keyframes acertoAnim {
+    0% { transform: scale(1); box-shadow: 0 0 0px #2ecc71; }
+    50% { transform: scale(1.1); box-shadow: 0 0 20px #2ecc71; }
+    100% { transform: scale(1); box-shadow: 0 0 0px #2ecc71; }
+}
+
+/* Animação de Erro (Balanço lateral) */
+@keyframes erroAnim {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+}
+
+.msg-acerto { 
+    border: 3px solid #2ecc71 !important; 
+    animation: acertoAnim 0.6s ease-in-out; 
+    background: rgba(46, 204, 113, 0.2) !important;
+}
+
+.msg-erro { 
+    border: 3px solid #e74c3c !important; 
+    animation: erroAnim 0.4s; 
+    background: rgba(231, 76, 60, 0.2) !important;
+}
