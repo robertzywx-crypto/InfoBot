@@ -1,0 +1,59 @@
+/* ============================================================ 
+   🎨 ESTILOS DE ANIMAÇÃO E JOGOS - INFORBOT 
+   ============================================================ */
+
+/* Animação para quando o Roberto ACERTAR */
+@keyframes acertoBrilho {
+    0% { transform: scale(1); box-shadow: 0 0 0px #2ecc71; border-color: #2ecc71; }
+    50% { transform: scale(1.05); box-shadow: 0 0 20px #2ecc71; border-color: #2ecc71; }
+    100% { transform: scale(1); box-shadow: 0 0 5px #2ecc71; border-color: #2ecc71; }
+}
+
+/* Animação para quando o Roberto ERRAR (Shake) */
+@keyframes erroTremer {
+    0%, 100% { transform: translateX(0); border-color: #e74c3c; }
+    20%, 60% { transform: translateX(-10px); }
+    40%, 80% { transform: translateX(10px); }
+}
+
+/* Classe aplicada via JavaScript no ACERTO */
+.msg-acerto {
+    animation: acertoBrilho 0.6s ease-in-out;
+    border: 2px solid #2ecc71 !important;
+    background: rgba(46, 204, 113, 0.15) !important;
+    color: #2ecc71 !important;
+}
+
+/* Classe aplicada via JavaScript no ERRO */
+.msg-erro {
+    animation: erroTremer 0.5s linear;
+    border: 2px solid #e74c3c !important;
+    background: rgba(231, 76, 60, 0.15) !important;
+    color: #e74c3c !important;
+}
+
+/* Estilo dos Botões de Letras (A, B, C, D, E) */
+.game-btn {
+    background: #1f6feb;
+    color: white;
+    border: 1px solid #ffffff;
+    padding: 8px 15px;
+    margin: 5px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+/* Animação de aumentar no HOVER (como você pediu) */
+.game-btn.anim:hover {
+    transform: scale(1.25);
+    background: #388bfd;
+    box-shadow: 0 0 15px rgba(56, 139, 253, 0.6);
+}
+
+/* Estilo para as bolhas do chat não ficarem grudadas */
+.bubble {
+    transition: all 0.3s ease;
+}
