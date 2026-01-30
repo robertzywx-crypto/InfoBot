@@ -1980,11 +1980,21 @@ const DATABASE = {
 };
 var modoJogo = false;
 var respostaCerta = "";
-// MOTOR DE ANALISE AVANÇADA
+
+// Banco de dados de Anatomia para o jogo C
+const dbJogos = {
+    anatomia: [
+        {q: "Qual o maior osso do corpo humano?", a: "femur"},
+        {q: "Qual o maior órgão do corpo humano?", a: "pele"},
+        {q: "Quantos ossos tem um adulto?", a: "206"},
+        {q: "Qual o músculo mais forte do corpo?", a: "masseter"}
+    ]
+};
+
 async function analyze(msg) {
     let raw = msg.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[?!.]/g, "");
-    
-    // 1. SE ESTIVER NO JOGO (Prioridade Máxima)
+
+    // 1. SE ESTIVER NO JOGO (Bloqueia tudo até acertar ou parar)
     if (modoJogo) {
         if (raw.includes(String(respostaCerta).toLowerCase())) {
             modoJogo = false;
@@ -1997,7 +2007,11 @@ async function analyze(msg) {
         }
     }
 
-    // 2. MATEMÁTICA GÊNIO (Entende x e :)
+    // 2. ATIVAÇÃO DOS JOGOS (Isso aqui faltava no seu!)
+    if (raw === "jogos" || raw === "jogo") return abrirMenuJogos();
+    if (["a", "b", "c", "d", "e"].includes(raw)) return iniciarLogicaJogo(raw);
+
+    // 3. MATEMÁTICA GÊNIO
     if (/[0-9]/.test(raw) && /[\+\-\*\/\^\(\)Vvx:]/.test(raw)) {
         try {
             let exp = raw.replace(/x/g, "*").replace(/:/g, "/").replace(/v/g, "sqrt").replace(/,/g, ".");
@@ -2006,15 +2020,14 @@ async function analyze(msg) {
         } catch(e) {}
     }
 
-    // 3. BUSCA NO TREINO (CONVERSA REAL - 800+ PALAVRAS)
-    // Busca se a palavra-chave está dentro da frase
-    for (let key in DATABASE.treino) {
-        if (raw.includes(key)) {
-            return botSay(DATABASE.treino[key]);
+    // 4. BUSCA NO TREINO (DATABASE)
+    if (typeof DATABASE !== 'undefined' && DATABASE.treino) {
+        for (let key in DATABASE.treino) {
+            if (raw.includes(key)) return botSay(DATABASE.treino[key]);
         }
     }
 
-    // 4. PESQUISA WIKIPEDIA (11 LÍNGUAS)
+    // 5. PESQUISA WIKIPEDIA (Só entra aqui se NÃO for jogo)
     if (raw.includes("o que e") || raw.includes("quem e") || raw.includes("sobre") || raw.split(" ").length <= 2) {
         setLoading(true);
         let query = raw.replace(/o que e|quem e|sobre/g, "").trim();
@@ -2030,12 +2043,12 @@ async function analyze(msg) {
             } catch(e){}
         }
         setLoading(false);
-        return botSay("Procurei. Mas ainda está escondido de mim.");
     }
 
-    // 5. RESPOSTA PADRÃO SE NÃO ACHAR NADA
-    botSay("Procurei. Mas ainda está escondido de mim.");
+    botSay("Procurei. Mas ainda está escondido de mim, Roberto.");
 }
+
+// --- FUNÇÕES DE INTERFACE ---
 
 function botSay(txt) {
     const chat = document.getElementById("chat");
@@ -2091,16 +2104,19 @@ function listen() {
         send();
     };
 }
+
+// --- LÓGICA DOS JOGOS ---
+
 function abrirMenuJogos() {
     userSay("JOGOS");
     setTimeout(() => {
         botSay("🎮 **MENU DE JOGOS DO INFORBOT**<br><br>" +
-               "Escolha uma letra:<br>" +
-               "🅰️ **A** - Jogo da Sorte (1-10)<br>" +
-               "🅱️ **B** - Matemática Rápida<br>" +
-               "🅲 **C** - Quiz de Anatomia<br>" +
+               "Roberto, escolha uma letra:<br>" +
+               "🅰️ **A** - Jogo da Sorte<br>" +
+               "🅱️ **B** - Matemática<br>" +
+               "🅲 **C** - Anatomia<br>" +
                "🅳 **D** - Capitais<br>" +
-               "🅴 **E** - Palavra Invertida");
+               "🅴 **E** - Invertido");
     }, 600);
 }
 
@@ -2125,6 +2141,9 @@ function iniciarLogicaJogo(letra) {
         botSay("🔄 Palavra invertida: **otrebor**. O que é?");
     }
 }
+    document.getElementById("userInput").addEventListener("keypress", (e) => {
+    if (e.key === "Enter") send();
+});
 </script>
 </body>
 </html>
