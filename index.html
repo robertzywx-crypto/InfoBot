@@ -88,7 +88,28 @@
 </div>
 
 <script>
+let modoJogo = false;
+let respostaCerta = "";
 
+// Banco de dados de Anatomia (como você pediu)
+const anatomyQuiz = [
+    {q: "Qual o maior osso do corpo humano?", a: "femur"},
+    {q: "Qual o maior órgão do corpo humano?", a: "pele"},
+    {q: "Quantos ossos tem um adulto?", a: "206"},
+    {q: "Qual o músculo mais forte do corpo?", a: "masseter"},
+    {q: "Qual o menor osso do corpo humano?", a: "estribo"}
+];
+    function abrirMenuJogos() {
+    userSay("JOGOS"); 
+    setTimeout(() => {
+        botSay("🎮 **MENU DE JOGOS DO INFORBOT**<br><br>" +
+               "Roberto, digite a letra para começar:<br>" +
+               "🅰️ **A** - Jogo da Sorte (1 a 10)<br>" +
+               "🅱️ **B** - Matemática Rápida<br>" +
+               "🅲 **C** - Quiz de Anatomia<br><br>" +
+               "Diga **'parar'** para sair do jogo.");
+    }, 600);
+}
 // BANCO DE DADOS MASSIVO - 800+ ENTRADAS REAIS
 const DATABASE = {
     treino: {
@@ -1972,7 +1993,45 @@ const DATABASE = {
 // MOTOR DE ANALISE AVANÇADA
 async function analyze(msg) {
     let raw = msg.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[?!.]/g, "");
-    
+    async function analyze(msg) {
+    let raw = msg.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    // --- PARTE DOS JOGOS (COLE AQUI) ---
+    if (modoJogo) {
+        if (raw.includes(respostaCerta.toString().toLowerCase())) {
+            modoJogo = false;
+            return botSay("🎆 **ACERTOU!** Você é fera, Roberto!");
+        } else if (raw === "parar") {
+            modoJogo = false;
+            return botSay("Jogo encerrado. O que vamos fazer agora?");
+        } else {
+            return botSay("❌ **ERRADO!** Tente de novo ou diga 'parar'.");
+        }
+    }
+
+    if (raw === "jogos" || raw === "jogo") return abrirMenuJogos();
+
+    if (raw === "a") {
+        modoJogo = true;
+        respostaCerta = Math.floor(Math.random() * 10) + 1;
+        return botSay("🎰 Pensei em um número de 1 a 10. Qual seu palpite?");
+    }
+    if (raw === "b") {
+        modoJogo = true;
+        let n1 = Math.floor(Math.random() * 20), n2 = Math.floor(Math.random() * 20);
+        respostaCerta = n1 + n2;
+        return botSay(`🧮 Roberto, quanto é ${n1} + ${n2}?`);
+    }
+    if (raw === "c") {
+        modoJogo = true;
+        let p = anatomyQuiz[Math.floor(Math.random() * anatomyQuiz.length)];
+        respostaCerta = p.a;
+        return botSay(`🧬 **ANATOMIA:** ${p.q}`);
+    }
+    // --- FIM DA PARTE DOS JOGOS ---
+
+    // Daqui para baixo continua o seu código original...
+}
     // 1. MATEMÁTICA GÊNIO (Entende x e :)
     if (/[0-9]/.test(raw) && /[\+\-\*\/\^\(\)Vvx:]/.test(raw)) {
         try {
