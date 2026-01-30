@@ -72,7 +72,7 @@
 
     <div id="chat" class="chat">
         <div class="bot-msg">
-            <div class="bubble">🤖 O que procura pra hoje chefe?⏳</div>
+            <div class="bubble">🤖 O que procura pra hoje chefe??⏳</div>
         </div>
     </div>
 
@@ -1979,38 +1979,34 @@ const DATABASE = {
         "Por que o vácuo é ruim de papo? Porque não tem som. Explicação: Física acústica."
     ]
 };
-
+var modoJogo = false;
+var respostaCerta = "";
 // MOTOR DE ANALISE AVANÇADA
 async function analyze(msg) {
     let raw = msg.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[?!.]/g, "");
     async function analyze(msg) {
     let raw = msg.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-// --- BLOCO NOVO DOS JOGOS (COLE AQUI) ---
+
+    // --- BLOCO DOS JOGOS (ESTE BLOCO TRAVA A WIKI) ---
     if (modoJogo) {
         if (raw.includes(respostaCerta.toString().toLowerCase())) {
             modoJogo = false;
-            botSay("🎆 **ACERTOU!** Você é fera, Roberto!");
-            return; // Bloqueia a Wikipedia
+            return botSay("🎆 **ACERTOU!** Você é fera, Roberto!");
         } else if (raw === "parar") {
             modoJogo = false;
-            botSay("Jogo encerrado.");
-            return; // Bloqueia a Wikipedia
+            return botSay("Jogo encerrado.");
         } else {
-            botSay("❌ **ERRADO!** Tente de novo ou diga 'parar'.");
-            return; // Bloqueia a Wikipedia
+            return botSay("❌ **ERRADO!** Tente de novo ou diga 'parar'.");
         }
     }
 
-    if (raw === "jogos" || raw === "jogo") {
-        abrirMenuJogos();
-        return;
+    if (raw === "jogos" || raw === "jogo") return abrirMenuJogos();
+    
+    if (["a", "b", "c", "d", "e"].includes(raw)) {
+        return iniciarLogicaJogo(raw);
     }
+    // --- FIM DO BLOCO DOS JOGOS ---
 
-    if (raw === "a" || raw === "b" || raw === "c" || raw === "d" || raw === "e") {
-        iniciarLogicaJogo(raw);
-        return;
-    }
-    // --- FIM DO BLOCO ---
     // 1. MATEMÁTICA GÊNIO (Entende x e :)
     if (/[0-9]/.test(raw) && /[\+\-\*\/\^\(\)Vvx:]/.test(raw)) {
         try {
@@ -2106,9 +2102,7 @@ function listen() {
     };
 }
 
-document.getElementById("userInput").addEventListener("keypress", (e) => {
-    if (e.key === "Enter") send();
-});
+
     function abrirMenuJogos() {
     userSay("JOGOS");
     setTimeout(() => {
