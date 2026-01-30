@@ -1968,11 +1968,15 @@ const DATABASE = {
         "Por que o vácuo é ruim de papo? Porque não tem som. Explicação: Física acústica."
     ]
 };
-// 1. VARIÁVEIS GLOBAIS
+// ==========================================
+// 1. CONFIGURAÇÕES E MEMÓRIA DO INFORBOT
+// ==========================================
 var modoJogo = false;
 var respostaCerta = "";
+const botNome = "Inforbot";
+const nomeUsuario = "Roberto";
 
-// 2. BANCO DE DADOS INTERNO DE JOGOS
+// Banco de Dados de Anatomia (20 questões) e Capitais
 const dbJogos = {
     anatomia: [
         {q: "Maior osso do corpo?", a: "femur"}, {q: "Maior órgão?", a: "pele"},
@@ -1983,85 +1987,52 @@ const dbJogos = {
         {q: "Quantas costelas temos?", a: "24"}, {q: "Maior artéria?", a: "aorta"},
         {q: "Onde fica a patela?", a: "joelho"}, {q: "Quantos rins temos?", a: "2"},
         {q: "Líquido que digere comida?", a: "suco gastrico"}, {q: "Onde fica o úmero?", a: "braco"},
-        {q: "Principal músculo da respiração?", a: "diafragma"}, {q: "Vértebras na coluna?", a: "33"},
+        {q: "Músculo da respiração?", a: "diafragma"}, {q: "Vértebras na coluna?", a: "33"},
         {q: "Órgão que filtra o sangue?", a: "rim"}, {q: "Onde ficam os alvéolos?", a: "pulmao"}
     ],
     capitais: [
         {p: "França", r: "paris"}, {p: "Japão", r: "toquio"}, {p: "Espanha", r: "madri"},
-        {p: "Itália", r: "roma"}, {p: "EUA", r: "washington"}, {p: "Portugal", r: "lisboa"},
-        {p: "China", r: "pequim"}, {p: "Rússia", r: "moscou"}, {p: "Canadá", r: "ottawa"},
-        {p: "Brasil", r: "brasilia"}, {p: "Alemanha", r: "berlim"}, {p: "Egito", r: "cairo"}
-    ]
-};
-
-// ==========================================
-// 1. VARIÁVEIS DE ESTADO E MEMÓRIA
-// ==========================================
-var modoJogo = false;
-var respostaCerta = "";
-var botNome = "Inforbot";
-var nomeUsuario = "Roberto";
-
-// ==========================================
-// 2. BANCOS DE DADOS INTERNOS (JOGOS E WIKIS)
-// ==========================================
-const dbJogos = {
-    anatomia: [
-        {q: "Maior osso do corpo?", a: "femur"}, {q: "Maior órgão?", a: "pele"},
-        {q: "Quantos ossos tem um adulto?", a: "206"}, {q: "Músculo mais forte?", a: "masseter"},
-        {q: "Menor osso do corpo?", a: "estribo"}, {q: "Onde fica o rádio?", a: "braco"},
-        {q: "Dentes de um adulto?", a: "32"}, {q: "Órgão que bombeia sangue?", a: "coracao"},
-        {q: "Principal músculo da respiração?", a: "diafragma"}, {q: "Vértebras na coluna?", a: "33"}
-    ],
-    capitais: [
-        {p: "França", r: "paris"}, {p: "Japão", r: "toquio"}, {p: "Espanha", r: "madri"},
         {p: "Itália", r: "roma"}, {p: "Brasil", r: "brasilia"}, {p: "EUA", r: "washington"},
-        {p: "Portugal", r: "lisboa"}, {p: "Alemanha", r: "berlim"}, {p: "Egito", r: "cairo"},
-        {p: "Rússia", r: "moscou"}
+        {p: "Portugal", r: "lisboa"}, {p: "Alemanha", r: "berlim"}, {p: "China", r: "pequim"}
     ]
 };
 
-// As 20 maiores Wikipédias do mundo
-const wikisLangs = ['pt', 'en', 'es', 'fr', 'de', 'it', 'ru', 'ja', 'zh', 'nl', 'pl', 'sv', 'vi', 'war', 'uk', 'ar', 'fa', 'ca', 'no', 'fi'];
-
 // ==========================================
-// 3. MOTOR DE ANÁLISE (ANALYZE)
+// 2. MOTOR DE ANÁLISE (ANALYZE)
 // ==========================================
 async function analyze(msg) {
     let raw = msg.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[?!.]/g, "");
 
-    // A. LÓGICA DE JOGO ATIVO (Bloqueio de contexto)
+    // A. LÓGICA DE JOGO ATIVO
     if (modoJogo) {
-        let userResp = raw.replace(/\s/g, "");
-        let compResp = String(respostaCerta).toLowerCase().replace(/\s/g, "");
+        let respLimpa = raw.replace(/\s/g, "");
+        let certaLimpa = String(respostaCerta).toLowerCase().replace(/\s/g, "");
 
-        if (userResp === compResp || raw.includes(compResp)) {
+        if (respLimpa === certaLimpa || raw.includes(certaLimpa)) {
             modoJogo = false;
             return botSay(`🎆 **ACERTOU!** Você é fera, ${nomeUsuario}!`, "acerto");
         } else if (raw === "parar") {
             modoJogo = false;
-            return botSay("Jogo encerrado. O que vamos pesquisar agora?");
+            return botSay("Jogo encerrado. O que vamos fazer agora?");
         } else {
-            // Dica numérica para Jogos A e B
-            let palpiteNum = parseInt(raw);
-            if (!isNaN(palpiteNum) && typeof respostaCerta === "number") {
-                let dica = palpiteNum < respostaCerta ? "MAIOR ⬆️" : "MENOR ⬇️";
-                return botSay(`❌ Errado! Dica: O número é **${dica}** que ${palpiteNum}.`, "erro");
+            if (!isNaN(parseInt(raw)) && typeof respostaCerta === "number") {
+                let dica = parseInt(raw) < respostaCerta ? "MAIOR ⬆️" : "MENOR ⬇️";
+                return botSay(`❌ Errado! Dica: O número é **${dica}** que ${raw}.`, "erro");
             }
             return botSay("❌ **ERRADO!** Tente de novo ou diga 'parar'.", "erro");
         }
     }
 
-    // B. COMANDOS DE ATIVAÇÃO
+    // B. COMANDOS DE JOGOS
     if (raw === "jogos" || raw === "jogo") return abrirMenuJogos();
     if (["a", "b", "c", "d", "e"].includes(raw)) return iniciarLogicaJogo(raw);
 
-    // C. MATEMÁTICA AVANÇADA (Math.js)
+    // C. MATEMÁTICA (Math.js)
     if (/[0-9]/.test(raw) && /[\+\-\*\/\^\(\)Vvx:]/.test(raw)) {
         try {
             let exp = raw.replace(/x/g, "*").replace(/:/g, "/").replace(/v/g, "sqrt").replace(/,/g, ".");
             let res = math.evaluate(exp);
-            return botSay(`${nomeUsuario}, a solução lógica é: **${res}**.`);
+            return botSay(`${nomeUsuario}, a solução é: **${res}**.`);
         } catch(e) {}
     }
 
@@ -2073,17 +2044,17 @@ async function analyze(msg) {
         }
     }
 
-    // E. PESQUISA NAS 20 WIKIPÉDIAS (Internacional)
-    if (raw.includes("o que e") || raw.includes("quem e") || raw.includes("sobre") || raw.split(" ").length <= 2) {
+    // E. 20 MAIORES WIKIPÉDIAS
+    if (raw.includes("o que e") || raw.includes("quem e") || raw.split(" ").length <= 2) {
         setLoading(true);
         let query = raw.replace(/o que e|quem e|sobre/g, "").trim();
+        const langs = ['pt', 'en', 'es', 'fr', 'de', 'it', 'ru', 'ja', 'zh', 'nl', 'pl', 'sv', 'vi', 'war', 'uk', 'ar', 'fa', 'ca', 'no', 'fi'];
         
-        for (let l of wikisLangs) {
+        for (let l of langs) {
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 2000);
+                const timeoutId = setTimeout(() => controller.abort(), 1500);
                 const r = await fetch(`https://${l}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}?origin=*`, { signal: controller.signal });
-                
                 if (r.ok) {
                     const d = await r.json();
                     setLoading(false);
@@ -2094,20 +2065,18 @@ async function analyze(msg) {
         }
         setLoading(false);
     }
-
-    botSay("Não encontrei informações exatas, mas estou analisando...");
+    botSay("Não encontrei nada nos registros, Roberto.");
 }
 
 // ==========================================
-// 4. FUNÇÕES DE INTERFACE E TEMAS
+// 3. FUNÇÕES DE INTERFACE (INTERFACE)
 // ==========================================
 function botSay(txt, tipo = "") {
     const chat = document.getElementById("chat");
     const d = document.createElement("div");
     d.className = "bot-msg" + (tipo ? " msg-" + tipo : "");
-    // O Símbolo e tempo de análise que você pediu
-    const analise = `<small style="opacity:0.5; display:block;">[Analisando... 0.003s ⚡]</small>`;
-    d.innerHTML = `<div class="bubble">${analise}${txt}</div>`;
+    const simbolo = "⚡ [0.002s]";
+    d.innerHTML = `<div class="bubble"><small style="opacity:0.5">${simbolo}</small><br>${txt}</div>`;
     chat.appendChild(d);
     chat.scrollTop = chat.scrollHeight;
 }
@@ -2130,51 +2099,43 @@ function send() {
 }
 
 function setMode(mode) {
-    const body = document.body;
     if (mode === 'light') {
-        body.classList.add('light-mode');
-        botSay("☀️ **MODO CLARO** ativado.");
+        document.body.classList.add('light-mode');
+        botSay("MODO CLARO ATIVADO");
     } else {
-        body.classList.remove('light-mode');
-        botSay("🌙 **MODO ESCURO** ativado.");
+        document.body.classList.remove('light-mode');
+        botSay("MODO ESCURO ATIVADO");
     }
 }
 
 function fast(type) {
     if (type === 'piada') {
-        userSay("🤡 Piada!");
-        if (typeof DATABASE !== 'undefined' && DATABASE.piadas) {
+        userSay("🤡 Piada");
+        if (typeof DATABASE !== 'undefined' && DATABASE.piadas) 
             botSay(DATABASE.piadas[Math.floor(Math.random() * DATABASE.piadas.length)]);
-        }
-    } else if (type === 'curiosidade') {
-        userSay("💡 Curiosidade!");
-        if (typeof DATABASE !== 'undefined' && DATABASE.curiosidades) {
+    } else {
+        userSay("💡 Curiosidade");
+        if (typeof DATABASE !== 'undefined' && DATABASE.curiosidades) 
             botSay(DATABASE.curiosidades[Math.floor(Math.random() * DATABASE.curiosidades.length)]);
-        }
     }
 }
 
 // ==========================================
-// 5. LÓGICA DOS JOGOS (A, B, C, D, E)
+// 4. LÓGICA DOS JOGOS (A, B, C, D, E)
 // ==========================================
 function abrirMenuJogos() {
-    botSay(`🎮 **MENU DE JOGOS ${botNome}**<br><br>` +
-           "🅰️ **A** - Sorte (1-50)<br>" +
-           "🅱️ **B** - Matemática<br>" +
-           "🅲 **C** - Anatomia<br>" +
-           "🅳 **D** - Capitais<br>" +
-           "🅴 **E** - Invertido");
+    botSay("🎮 **MENU DE JOGOS**<br>Escolha: A, B, C, D ou E");
 }
 
 function iniciarLogicaJogo(letra) {
     modoJogo = true;
     if (letra === "a") {
         respostaCerta = Math.floor(Math.random() * 50) + 1;
-        botSay("🎰 Pensei em um número de **1 a 50**. Qual seu palpite?");
+        botSay("🎰 Pensei em um número de 1 a 50. Qual seu palpite?");
     } else if (letra === "b") {
         let n1 = Math.floor(Math.random() * 100), n2 = Math.floor(Math.random() * 100);
         respostaCerta = n1 + n2;
-        botSay(`🧮 ${nomeUsuario}, quanto é **${n1} + ${n2}**?`);
+        botSay(`🧮 Roberto, quanto é **${n1} + ${n2}**?`);
     } else if (letra === "c") {
         let p = dbJogos.anatomia[Math.floor(Math.random() * dbJogos.anatomia.length)];
         respostaCerta = p.a;
@@ -2184,23 +2145,23 @@ function iniciarLogicaJogo(letra) {
         respostaCerta = c.r;
         botSay(`🌍 Qual a capital de **${c.p}**?`);
     } else if (letra === "e") {
-        const palavras = ["computador", "inforbot", "anatomia", "algoritmo", "roberto"];
+        const palavras = ["roberto", "inforbot", "algoritmo", "computador"];
         let p = palavras[Math.floor(Math.random() * palavras.length)];
         respostaCerta = p;
-        botSay(`🔄 Palavra invertida: **${p.split('').reverse().join('')}**. O que é?`);
+        botSay(`🔄 O que é a palavra: **${p.split('').reverse().join('')}**?`);
     }
 }
 
 // ==========================================
-// 6. INICIALIZAÇÃO E EVENTOS
+// 5. INICIALIZAÇÃO
 // ==========================================
 document.getElementById("userInput").addEventListener("keypress", (e) => {
     if (e.key === "Enter") send();
 });
 
 function setLoading(show) {
-    const loader = document.getElementById("loading");
-    if(loader) loader.style.display = show ? "flex" : "none";
+    const l = document.getElementById("loading");
+    if(l) l.style.display = show ? "flex" : "none";
 }
     
 </script>
