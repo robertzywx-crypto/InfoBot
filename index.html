@@ -87,187 +87,123 @@
     </div>
 </div>
 
-<script>
-    // ============================================================
-// 🤖 INFORBOT ELITE V2026 - SISTEMA COMPLETO POR ROBERTO
-// ============================================================
-
-const DATABASE = {
-    treino: {
-        "oi": "E aí Roberto! Sou o Inforbot, seu braço direito tecnológico.",
-        "quem e voce": "Sou o Inforbot, uma inteligência avançada criada pelo mestre Roberto.",
-        "roberto": "O mestre criador! Sempre pronto para suas ordens.",
-        "ajuda": "Posso pesquisar em 20 Wikis, calcular matemática complexa ou jogar 5 tipos de games!",
-        "bora": "Bora, Roberto! O que temos para hoje?",
-        "vambora": "Vambora! Circuitos em 100%!",
-        "te amo": "Eu também te amo, Roberto! Você é o melhor programador."
-    },
-    anatomia: [
-        {q: "Qual o maior osso do corpo humano?", a: "femur"},
-        {q: "Qual o maior órgão do corpo humano?", a: "pele"},
-        {q: "Quantos ossos tem um adulto?", a: "206"},
-        {q: "Qual o músculo mais forte do corpo (pressão)?", a: "masseter"},
-        {q: "Qual o menor osso do corpo humano?", a: "estribo"}
-    ],
-    geografia: [
-        {q: "Qual a capital do Brasil?", a: "brasilia"},
-        {q: "Qual a capital da França?", a: "paris"},
-        {q: "Qual a capital do Japão?", a: "toquio"},
-        {q: "Qual a capital da Itália?", a: "roma"},
-        {q: "Qual a capital de Portugal?", a: "lisboa"}
-    ]
-};
-
+<script
+    // --- VARIÁVEIS DE CONTROLE ---
 let modoJogo = false;
 let respostaCerta = "";
 
-// --- 1. FUNÇÃO DO BOTÃO JOGOS (GATILHO AUTOMÁTICO) ---
+// --- 1. FUNÇÃO DO BOTÃO JOGOS ---
 function abrirMenuJogos() {
-    // Escreve automaticamente no chat como se o Roberto tivesse digitado
+    // Escreve automaticamente no chat
     userSay("JOGOS");
     
     setTimeout(() => {
-        botSay("🎮 **MENU DE JOGOS DO INFORBOT**<br><br>" +
-               "Escolha uma opção digitando a letra ou clicando:<br><br>" +
-               "🅰️ **Digite A** - Jogo da Sorte (1 a 10)<br>" +
-               "🅱️ **Digite B** - Desafio de Matemática<br>" +
-               "🅲 **Digite C** - Quiz de Anatomia<br>" +
-               "🅳 **Digite D** - Quiz de Capitais<br>" +
-               "🅴 **Digite E** - Palavra Invertida<br><br>" +
-               "**Digite 'parar'** para sair a qualquer momento.");
-    }, 600);
+        botSay("🎮 **MENU DE JOGOS**<br><br>" +
+               "Escolha uma letra para começar:<br>" +
+               "A - Sorte | B - Matemática | C - Anatomia<br><br>" +
+               "<button class='game-btn anim' onclick='iniciarJogo(\"a\")'>A</button> " +
+               "<button class='game-btn anim' onclick='iniciarJogo(\"b\")'>B</button> " +
+               "<button class='game-btn anim' onclick='iniciarJogo(\"c\")'>C</button>");
+    }, 500);
 }
 
-// --- 2. MOTOR DE ANÁLISE (ANALYZE) ---
-async function analyze(msg) {
+// --- 2. INICIAR JOGOS ---
+function iniciarJogo(letra) {
+    modoJogo = true;
+    let l = letra.toLowerCase();
+    
+    if (l === "a") {
+        respostaCerta = Math.floor(Math.random() * 10) + 1;
+        botSay("🎰 **SORTE:** Pensei em um número de **1 a 10**. Qual o seu palpite?");
+    } else if (l === "b") {
+        let n1 = Math.floor(Math.random() * 20), n2 = Math.floor(Math.random() * 20);
+        respostaCerta = n1 + n2;
+        botSay(`🧮 **MATH:** Roberto, quanto é **${n1} + ${n2}**?`);
+    } else if (l === "c") {
+        const perguntas = [
+            {q: "Qual o maior osso do corpo?", a: "femur"},
+            {q: "Qual o maior órgão do corpo?", a: "pele"}
+        ];
+        let p = perguntas[Math.floor(Math.random() * perguntas.length)];
+        respostaCerta = p.a;
+        botSay(`🧬 **ANATOMIA:** ${p.q}`);
+    }
+}
+
+// --- 3. FUNÇÃO DE ENVIO (SIMPLIFICADA PARA NÃO DAR ERRO) ---
+function send() {
+    const input = document.getElementById("userInput");
+    if (!input) return;
+    const v = input.value.trim();
+    if (v === "") return;
+
+    userSay(v);
+    input.value = "";
+    
+    // ANALISA A RESPOSTA
+    analyze(v);
+}
+
+// --- 4. MOTOR DE ANÁLISE ---
+function analyze(msg) {
     let raw = msg.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-    // A: PRIORIDADE MÁXIMA - MODO JOGO ATIVO
+    // SE ESTIVER NO JOGO
     if (modoJogo) {
         if (raw.includes(respostaCerta.toString().toLowerCase())) {
             modoJogo = false;
-            return botSayAnim("🎆 **ACERTOU!** Você é imparável, Roberto!", "acerto");
-        } else if (raw === "parar" || raw === "sair") {
+            return botSayAnim("🎆 **ACERTOU!** Boa, Roberto!", "acerto");
+        } else if (raw === "parar") {
             modoJogo = false;
-            return botSay("Jogo encerrado. O que vamos pesquisar?");
+            return botSay("Jogo encerrado.");
         } else {
-            return botSayAnim("❌ **ERROU!** Tente de novo ou diga 'parar'.", "erro");
+            return botSayAnim("❌ **ERROU!** Tente de novo ou 'parar'.", "erro");
         }
     }
 
-    // B: COMANDOS DE ATIVAÇÃO DO MENU
+    // COMANDO JOGOS
     if (raw === "jogos" || raw === "jogo") {
-        return mostrarInstrucoesJogos(); // Apenas mostra se for digitado
+        return abrirMenuJogos();
     }
-
-    // C: SE DIGITAR A LETRA PARA COMEÇAR O JOGO
-    if (["a", "b", "c", "d", "e"].includes(raw)) {
+    
+    // ATALHO DE LETRAS
+    if (["a", "b", "c"].includes(raw)) {
         return iniciarJogo(raw);
     }
 
-    // D: MATEMÁTICA AVANÇADA
-    if (/[0-9]/.test(raw) && /[\+\-\*\/\^vx:]/.test(raw)) {
-        try {
-            let exp = raw.replace(/x/g, "*").replace(/:/g, "/").replace(/v/g, "sqrt").replace(/,/g, ".");
-            return botSay(`Roberto, o resultado é: **${math.evaluate(exp)}**.`);
-        } catch(e) {}
-    }
-
-    // E: BANCO DE DADOS DE TREINO (CONVERSA)
-    for (let key in DATABASE.treino) {
-        if (raw.includes(key)) return botSay(DATABASE.treino[key]);
-    }
-
-    // F: PESQUISA NAS 20 MAIORES WIKIPEDIAS
-    if (raw.includes("o que e") || raw.includes("quem e") || raw.split(" ").length <= 2) {
-        setLoading(true);
-        const wikis = ['en','pt','es','fr','de','it','ru','ja','zh','nl','sv','ceb','vi','war','uk','ar','fa','ca','sr','id'];
-        let query = raw.replace(/o que e|quem e|sobre/g, "").trim();
-        
-        for (let l of wikis) {
-            try {
-                const r = await fetch(`https://${l}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}?origin=*`);
-                if (r.ok) {
-                    const d = await r.json();
-                    setLoading(false);
-                    return botSay(`**Wiki (${l.toUpperCase()}):** ${d.extract}`);
-                }
-            } catch(e){}
-        }
-        setLoading(false);
-        botSay("Não encontrei nas 20 maiores Wikis, Roberto. Tente outro termo.");
-    }
+    // RESPOSTA PADRÃO SE NÃO FOR JOGO
+    botSay("Você disse: " + msg + ". Digite **jogos** para brincar!");
 }
 
-// --- 3. LÓGICA INTERNA DOS 5 JOGOS ---
-function iniciarJogo(letra) {
-    modoJogo = true;
-    if (letra === "a") {
-        respostaCerta = Math.floor(Math.random() * 10) + 1;
-        botSay("🎰 **SORTE:** Pensei em um número de **1 a 10**. Qual seu palpite?");
-    } else if (letra === "b") {
-        let n1 = Math.floor(Math.random() * 100), n2 = Math.floor(Math.random() * 100);
-        respostaCerta = n1 + n2;
-        botSay(`🧮 **MATH:** Roberto, quanto é **${n1} + ${n2}**?`);
-    } else if (letra === "c") {
-        let p = DATABASE.anatomia[Math.floor(Math.random() * DATABASE.anatomia.length)];
-        respostaCerta = p.a;
-        botSay(`🧬 **ANATOMIA:** ${p.q}`);
-    } else if (letra === "d") {
-        let p = DATABASE.geografia[Math.floor(Math.random() * DATABASE.geografia.length)];
-        respostaCerta = p.a;
-        botSay(`🌍 **CAPITAIS:** ${p.q}`);
-    } else if (letra === "e") {
-        const pal = ["inforbot", "roberto", "ciencia", "tecnologia", "anatomia"];
-        let escolhida = pal[Math.floor(Math.random() * pal.length)];
-        respostaCerta = escolhida;
-        botSay(`🔄 **INVERTIDO:** Que palavra é esta: **${escolhida.split('').reverse().join('')}**?`);
-    }
-}
-
-// --- 4. FUNÇÕES DE INTERFACE (UI) ---
+// --- 5. FUNÇÕES DE INTERFACE ---
 function botSay(txt) {
     const chat = document.getElementById("chat");
-    chat.innerHTML += `<div class="bot-msg"><div class="bubble">${txt}</div></div>`;
-    chat.scrollTop = chat.scrollHeight;
+    if(chat) {
+        chat.innerHTML += `<div class="bot-msg"><div class="bubble">${txt}</div></div>`;
+        chat.scrollTop = chat.scrollHeight;
+    }
 }
 
 function botSayAnim(txt, tipo) {
     const chat = document.getElementById("chat");
     let cl = tipo === "acerto" ? "msg-acerto" : "msg-erro";
-    chat.innerHTML += `<div class="bot-msg"><div class="bubble ${cl}">${txt}</div></div>`;
-    chat.scrollTop = chat.scrollHeight;
+    if(chat) {
+        chat.innerHTML += `<div class="bot-msg"><div class="bubble ${cl}">${txt}</div></div>`;
+        chat.scrollTop = chat.scrollHeight;
+    }
 }
 
 function userSay(txt) {
     const chat = document.getElementById("chat");
-    chat.innerHTML += `<div class="user-msg"><div class="bubble">${txt}</div></div>`;
-    chat.scrollTop = chat.scrollHeight;
+    if(chat) {
+        chat.innerHTML += `<div class="user-msg"><div class="bubble">${txt}</div></div>`;
+        chat.scrollTop = chat.scrollHeight;
+    }
 }
 
-function send() {
-    const input = document.getElementById("userInput");
-    if (!input.value) return;
-    let v = input.value;
-    userSay(v);
-    analyze(v);
-    input.value = "";
-}
-
-function setLoading(show) {
-    const loader = document.getElementById("loading");
-    if(loader) loader.style.display = show ? "flex" : "none";
-}
-
-// --- 5. INICIALIZAÇÃO ---
+// EVENTO ENTER
 document.addEventListener("DOMContentLoaded", () => {
     const input = document.getElementById("userInput");
-    if(input) {
-        input.addEventListener("keypress", (e) => {
-            if (e.key === "Enter") send();
-        });
-    }
-});
 // BANCO DE DADOS MASSIVO - 800+ ENTRADAS REAIS
 const DATABASE = {
     treino: {
