@@ -1968,40 +1968,59 @@ const DATABASE = {
         "Por que o vácuo é ruim de papo? Porque não tem som. Explicação: Física acústica."
     ]
 };
+// 1. VARIÁVEIS GLOBAIS
 var modoJogo = false;
 var respostaCerta = "";
 
-// Banco de dados de Anatomia para o jogo C
+// 2. BANCO DE DADOS INTERNO DE JOGOS
 const dbJogos = {
     anatomia: [
-        {q: "Qual o maior osso do corpo humano?", a: "femur"},
-        {q: "Qual o maior órgão do corpo humano?", a: "pele"},
-        {q: "Quantos ossos tem um adulto?", a: "206"},
-        {q: "Qual o músculo mais forte do corpo?", a: "masseter"}
+        {q: "Maior osso do corpo?", a: "femur"}, {q: "Maior órgão?", a: "pele"},
+        {q: "Quantos ossos tem um adulto?", a: "206"}, {q: "Músculo mais forte?", a: "masseter"},
+        {q: "Menor osso do corpo?", a: "estribo"}, {q: "Onde fica o rádio?", a: "braco"},
+        {q: "Dentes de um adulto?", a: "32"}, {q: "Órgão que bombeia sangue?", a: "coracao"},
+        {q: "Litros de sangue (média)?", a: "5"}, {q: "Osso da testa?", a: "frontal"},
+        {q: "Quantas costelas temos?", a: "24"}, {q: "Maior artéria?", a: "aorta"},
+        {q: "Onde fica a patela?", a: "joelho"}, {q: "Quantos rins temos?", a: "2"},
+        {q: "Líquido que digere comida?", a: "suco gastrico"}, {q: "Onde fica o úmero?", a: "braco"},
+        {q: "Principal músculo da respiração?", a: "diafragma"}, {q: "Vértebras na coluna?", a: "33"},
+        {q: "Órgão que filtra o sangue?", a: "rim"}, {q: "Onde ficam os alvéolos?", a: "pulmao"}
+    ],
+    capitais: [
+        {p: "França", r: "paris"}, {p: "Japão", r: "toquio"}, {p: "Espanha", r: "madri"},
+        {p: "Itália", r: "roma"}, {p: "EUA", r: "washington"}, {p: "Portugal", r: "lisboa"},
+        {p: "China", r: "pequim"}, {p: "Rússia", r: "moscou"}, {p: "Canadá", r: "ottawa"},
+        {p: "Brasil", r: "brasilia"}, {p: "Alemanha", r: "berlim"}, {p: "Egito", r: "cairo"}
     ]
 };
 
+// 3. FUNÇÃO PRINCIPAL DE ANÁLISE
 async function analyze(msg) {
     let raw = msg.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[?!.]/g, "");
 
-    // 1. SE ESTIVER NO JOGO (Bloqueia tudo até acertar ou parar)
+    // A. LÓGICA DE JOGO ATIVO
     if (modoJogo) {
+        let palpiteNum = parseInt(raw);
         if (raw.includes(String(respostaCerta).toLowerCase())) {
             modoJogo = false;
-            return botSay("🎆 **ACERTOU!** Você é fera, Roberto!");
+            return botSay("🎆 **ACERTOU!** Você é fera, Roberto!", "acerto");
         } else if (raw === "parar") {
             modoJogo = false;
             return botSay("Jogo encerrado. O que vamos pesquisar?");
         } else {
-            return botSay("❌ **ERRADO!** Tente de novo ou diga 'parar'.");
+            if (!isNaN(palpiteNum) && typeof respostaCerta === "number") {
+                let dica = palpiteNum < respostaCerta ? "MAIOR ⬆️" : "MENOR ⬇️";
+                return botSay(`❌ Errado! Dica: O número é **${dica}** que ${palpiteNum}.`, "erro");
+            }
+            return botSay("❌ **ERRADO!** Tente de novo ou diga 'parar'.", "erro");
         }
     }
 
-    // 2. ATIVAÇÃO DOS JOGOS (Isso aqui faltava no seu!)
+    // B. COMANDOS DE ATIVAÇÃO DE JOGOS
     if (raw === "jogos" || raw === "jogo") return abrirMenuJogos();
     if (["a", "b", "c", "d", "e"].includes(raw)) return iniciarLogicaJogo(raw);
 
-    // 3. MATEMÁTICA GÊNIO
+    // C. MATEMÁTICA AVANÇADA
     if (/[0-9]/.test(raw) && /[\+\-\*\/\^\(\)Vvx:]/.test(raw)) {
         try {
             let exp = raw.replace(/x/g, "*").replace(/:/g, "/").replace(/v/g, "sqrt").replace(/,/g, ".");
@@ -2010,40 +2029,44 @@ async function analyze(msg) {
         } catch(e) {}
     }
 
-    // 4. BUSCA NO TREINO (DATABASE)
+    // D. BUSCA NO TREINO (DATABASE LOCAL - Prioridade antes da Wiki)
     if (typeof DATABASE !== 'undefined' && DATABASE.treino) {
         for (let key in DATABASE.treino) {
             if (raw.includes(key)) return botSay(DATABASE.treino[key]);
         }
     }
 
-    // 5. PESQUISA WIKIPEDIA (Só entra aqui se NÃO for jogo)
+    // E. PESQUISA NAS 20 MAIORES WIKIPÉDIAS
     if (raw.includes("o que e") || raw.includes("quem e") || raw.includes("sobre") || raw.split(" ").length <= 2) {
         setLoading(true);
         let query = raw.replace(/o que e|quem e|sobre/g, "").trim();
-        const langs = ['pt', 'en', 'es', 'fr', 'de', 'it', 'ru', 'ja', 'zh', 'nl', 'pl'];
+        const langs = ['pt', 'en', 'es', 'fr', 'de', 'it', 'ru', 'ja', 'zh', 'nl', 'pl', 'sv', 'vi', 'war', 'uk', 'ar', 'fa', 'ca', 'no', 'fi'];
+
         for (let l of langs) {
             try {
-                const r = await fetch(`https://${l}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}?origin=*`);
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 2000);
+                const r = await fetch(`https://${l}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}?origin=*`, { signal: controller.signal });
+                
                 if (r.ok) {
                     const d = await r.json();
                     setLoading(false);
+                    clearTimeout(timeoutId);
                     return botSay(`**Inforbot Wiki (${l.toUpperCase()}):** ${d.extract}`);
                 }
-            } catch(e){}
+            } catch(e){ continue; }
         }
         setLoading(false);
     }
 
-    botSay("Procurei. Mas ainda está escondido de mim, Roberto.");
+    botSay("Procurei. mas ainda está escondido.");
 }
 
-// --- FUNÇÕES DE INTERFACE ---
-
-function botSay(txt) {
+// 4. FUNÇÕES DE INTERFACE
+function botSay(txt, tipo = "") {
     const chat = document.getElementById("chat");
     const d = document.createElement("div");
-    d.className = "bot-msg";
+    d.className = "bot-msg" + (tipo ? " msg-" + tipo : "");
     d.innerHTML = `<div class="bubble">${txt}</div>`;
     chat.appendChild(d);
     chat.scrollTop = chat.scrollHeight;
@@ -2066,72 +2089,70 @@ function send() {
     input.value = "";
 }
 
+// 5. BOTÕES RÁPIDOS (PIADA/CURIOSIDADE)
 function fast(type) {
     if (type === 'piada') {
-        userSay("🤡 me conte uma piada");
-        setTimeout(() => botSay(DATABASE.piadas[Math.floor(Math.random() * DATABASE.piadas.length)]), 600);
+        userSay("🤡 Me conte uma piada");
+        if (typeof DATABASE !== 'undefined' && DATABASE.piadas) {
+            let p = DATABASE.piadas[Math.floor(Math.random() * DATABASE.piadas.length)];
+            setTimeout(() => botSay(p), 600);
+        }
     } else {
-        userSay("💡 me conte uma curiosidade");
-        setTimeout(() => botSay(DATABASE.curiosidades[Math.floor(Math.random() * DATABASE.curiosidades.length)]), 600);
+        userSay("💡 Me conte uma curiosidade");
+        if (typeof DATABASE !== 'undefined' && DATABASE.curiosidades) {
+            let c = DATABASE.curiosidades[Math.floor(Math.random() * DATABASE.curiosidades.length)];
+            setTimeout(() => botSay(c), 600);
+        }
     }
 }
 
-function setMode(mode) {
-    if (mode === 'light') document.body.classList.add('light-mode');
-    else document.body.classList.remove('light-mode');
-}
-
-function setLoading(show) {
-    document.getElementById("loading").style.display = show ? "flex" : "none";
-}
-
-function listen() {
-    const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    rec.lang = 'pt-BR';
-    rec.start();
-    rec.onresult = (e) => {
-        document.getElementById("userInput").value = e.results[0][0].transcript;
-        send();
-    };
-}
-
-// --- LÓGICA DOS JOGOS ---
-
+// 6. LÓGICA DOS JOGOS
 function abrirMenuJogos() {
-    userSay("JOGOS");
-    setTimeout(() => {
-        botSay("🎮 **MENU DE JOGOS DO INFORBOT**<br><br>" +
-               "Roberto, escolha uma letra:<br>" +
-               "🅰️ **A** - Jogo da Sorte<br>" +
-               "🅱️ **B** - Matemática<br>" +
-               "🅲 **C** - Anatomia<br>" +
-               "🅳 **D** - Capitais<br>" +
-               "🅴 **E** - Invertido");
-    }, 600);
+    botSay("🎮 **MENU DE JOGOS INFORBOT V2.0**<br><br>" +
+           "🅰️ **A** - Sorte (1-50 com Dicas)<br>" +
+           "🅱️ **B** - Matemática (Escolha o Nível)<br>" +
+           "🅲 **C** - Anatomia (20 Questões)<br>" +
+           "🅳 **D** - Capitais do Mundo<br>" +
+           "🅴 **E** - Palavra Invertida");
 }
 
 function iniciarLogicaJogo(letra) {
     modoJogo = true;
     if (letra === "a") {
-        respostaCerta = Math.floor(Math.random() * 10) + 1;
-        botSay("🎰 Pensei em um número de **1 a 10**. Qual seu palpite?");
+        respostaCerta = Math.floor(Math.random() * 50) + 1;
+        botSay("🎰 Pensei em um número de **1 a 50**. Qual seu palpite?");
     } else if (letra === "b") {
-        let n1 = Math.floor(Math.random() * 30), n2 = Math.floor(Math.random() * 30);
+        let nivel = prompt("Nível: 1 (Fácil), 2 (Médio), 3 (Hard)");
+        let max = nivel == "3" ? 500 : (nivel == "2" ? 100 : 20);
+        let n1 = Math.floor(Math.random() * max), n2 = Math.floor(Math.random() * max);
         respostaCerta = n1 + n2;
-        botSay(`🧮 Roberto, quanto é **${n1} + ${n2}**?`);
+        botSay(`🧮 [Nível ${nivel}] Quanto é **${n1} + ${n2}**?`);
     } else if (letra === "c") {
         let p = dbJogos.anatomia[Math.floor(Math.random() * dbJogos.anatomia.length)];
         respostaCerta = p.a;
         botSay(`🧬 **ANATOMIA:** ${p.q}`);
     } else if (letra === "d") {
-        respostaCerta = "brasilia";
-        botSay("🌍 Qual a capital do Brasil?");
+        let c = dbJogos.capitais[Math.floor(Math.random() * dbJogos.capitais.length)];
+        respostaCerta = c.r;
+        botSay(`🌍 Qual a capital de: **${c.p}**?`);
     } else if (letra === "e") {
-        respostaCerta = "roberto";
-        botSay("🔄 Palavra invertida: **otrebor**. O que é?");
+        const palavras = ["roberto", "inforbot", "javascript", "computador"];
+        let p = palavras[Math.floor(Math.random() * palavras.length)];
+        respostaCerta = p;
+        botSay(`🔄 O que é: **${p.split('').reverse().join('')}**?`);
     }
 }
 
+// 7. EVENTOS E AUXILIARES
+document.getElementById("userInput").addEventListener("keypress", (e) => {
+    if (e.key === "Enter") send();
+});
+
+function setLoading(show) {
+    const l = document.getElementById("loading");
+    if(l) l.style.display = show ? "flex" : "none";
+}
+    
 </script>
 </body>
 </html>
