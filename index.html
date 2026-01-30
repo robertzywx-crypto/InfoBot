@@ -88,28 +88,18 @@
 </div>
 
 <script>
-let modoJogo = false;
-let respostaCerta = "";
+var modoJogo = false;
+var respostaCerta = "";
 
-// Banco de dados de Anatomia (como você pediu)
-const anatomyQuiz = [
-    {q: "Qual o maior osso do corpo humano?", a: "femur"},
-    {q: "Qual o maior órgão do corpo humano?", a: "pele"},
-    {q: "Quantos ossos tem um adulto?", a: "206"},
-    {q: "Qual o músculo mais forte do corpo?", a: "masseter"},
-    {q: "Qual o menor osso do corpo humano?", a: "estribo"}
-];
-    function abrirMenuJogos() {
-    userSay("JOGOS"); 
-    setTimeout(() => {
-        botSay("🎮 **MENU DE JOGOS DO INFORBOT**<br><br>" +
-               "Roberto, digite a letra para começar:<br>" +
-               "🅰️ **A** - Jogo da Sorte (1 a 10)<br>" +
-               "🅱️ **B** - Matemática Rápida<br>" +
-               "🅲 **C** - Quiz de Anatomia<br><br>" +
-               "Diga **'parar'** para sair do jogo.");
-    }, 600);
-}
+const databaseJogos = {
+    anatomia: [
+        {q: "Qual o maior osso do corpo humano?", a: "femur"},
+        {q: "Qual o maior órgão do corpo humano?", a: "pele"},
+        {q: "Quantos ossos tem um adulto?", a: "206"},
+        {q: "Qual o músculo mais forte do corpo?", a: "masseter"},
+        {q: "Qual o menor osso do corpo humano?", a: "estribo"}
+    ]
+};
 // BANCO DE DADOS MASSIVO - 800+ ENTRADAS REAIS
 const DATABASE = {
     treino: {
@@ -1995,43 +1985,32 @@ async function analyze(msg) {
     let raw = msg.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[?!.]/g, "");
     async function analyze(msg) {
     let raw = msg.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-    // --- PARTE DOS JOGOS (COLE AQUI) ---
+// --- BLOCO NOVO DOS JOGOS (COLE AQUI) ---
     if (modoJogo) {
         if (raw.includes(respostaCerta.toString().toLowerCase())) {
             modoJogo = false;
-            return botSay("🎆 **ACERTOU!** Você é fera, Roberto!");
+            botSay("🎆 **ACERTOU!** Você é fera, Roberto!");
+            return; // Bloqueia a Wikipedia
         } else if (raw === "parar") {
             modoJogo = false;
-            return botSay("Jogo encerrado. O que vamos fazer agora?");
+            botSay("Jogo encerrado.");
+            return; // Bloqueia a Wikipedia
         } else {
-            return botSay("❌ **ERRADO!** Tente de novo ou diga 'parar'.");
+            botSay("❌ **ERRADO!** Tente de novo ou diga 'parar'.");
+            return; // Bloqueia a Wikipedia
         }
     }
 
-    if (raw === "jogos" || raw === "jogo") return abrirMenuJogos();
+    if (raw === "jogos" || raw === "jogo") {
+        abrirMenuJogos();
+        return;
+    }
 
-    if (raw === "a") {
-        modoJogo = true;
-        respostaCerta = Math.floor(Math.random() * 10) + 1;
-        return botSay("🎰 Pensei em um número de 1 a 10. Qual seu palpite?");
+    if (raw === "a" || raw === "b" || raw === "c" || raw === "d" || raw === "e") {
+        iniciarLogicaJogo(raw);
+        return;
     }
-    if (raw === "b") {
-        modoJogo = true;
-        let n1 = Math.floor(Math.random() * 20), n2 = Math.floor(Math.random() * 20);
-        respostaCerta = n1 + n2;
-        return botSay(`🧮 Roberto, quanto é ${n1} + ${n2}?`);
-    }
-    if (raw === "c") {
-        modoJogo = true;
-        let p = anatomyQuiz[Math.floor(Math.random() * anatomyQuiz.length)];
-        respostaCerta = p.a;
-        return botSay(`🧬 **ANATOMIA:** ${p.q}`);
-    }
-    // --- FIM DA PARTE DOS JOGOS ---
-
-    // Daqui para baixo continua o seu código original...
-}
+    // --- FIM DO BLOCO ---
     // 1. MATEMÁTICA GÊNIO (Entende x e :)
     if (/[0-9]/.test(raw) && /[\+\-\*\/\^\(\)Vvx:]/.test(raw)) {
         try {
@@ -2130,6 +2109,40 @@ function listen() {
 document.getElementById("userInput").addEventListener("keypress", (e) => {
     if (e.key === "Enter") send();
 });
+    function abrirMenuJogos() {
+    userSay("JOGOS");
+    setTimeout(() => {
+        botSay("🎮 **MENU DE JOGOS DO INFORBOT**<br><br>" +
+               "Escolha uma letra:<br>" +
+               "🅰️ **A** - Jogo da Sorte (1-10)<br>" +
+               "🅱️ **B** - Matemática<br>" +
+               "🅲 **C** - Anatomia<br>" +
+               "🅳 **D** - Capitais<br>" +
+               "🅴 **E** - Invertido");
+    }, 600);
+}
+
+function iniciarLogicaJogo(letra) {
+    modoJogo = true;
+    if (letra === "a") {
+        respostaCerta = Math.floor(Math.random() * 10) + 1;
+        botSay("🎰 Pensei em um número de **1 a 10**. Qual seu palpite?");
+    } else if (letra === "b") {
+        let n1 = Math.floor(Math.random() * 50), n2 = Math.floor(Math.random() * 50);
+        respostaCerta = n1 + n2;
+        botSay(`🧮 Roberto, quanto é **${n1} + ${n2}**?`);
+    } else if (letra === "c") {
+        let p = databaseJogos.anatomia[Math.floor(Math.random() * databaseJogos.anatomia.length)];
+        respostaCerta = p.a;
+        botSay(`🧬 **ANATOMIA:** ${p.q}`);
+    } else if (letra === "d") {
+        respostaCerta = "brasilia";
+        botSay("🌍 Qual a capital do Brasil?");
+    } else if (letra === "e") {
+        respostaCerta = "roberto";
+        botSay("🔄 Palavra invertida: **otrebor**. O que é?");
+    }
+}
 </script>
 </body>
 </html>
