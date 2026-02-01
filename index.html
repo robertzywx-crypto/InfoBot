@@ -3316,7 +3316,7 @@ var respostaCerta = "";
 const botNome = "Inforbot";
 const nomeUsuario = "Roberto";
 
-// Banco de Dados de Anatomia (20 questões) e Capitais
+// Banco de Dados de Anatomia e Capitais (MANTIDOS)
 const dbJogos = {
     anatomia: [
         {q: "Maior osso do corpo?", a: "femur"}, {q: "Maior órgão?", a: "pele"},
@@ -3338,16 +3338,15 @@ const dbJogos = {
 };
 
 // ==========================================
-// 2. MOTOR DE ANÁLISE (ANALYZE)
+// 2. MOTOR DE ANÁLISE (ANALYZE) - CORRIGIDO
 // ==========================================
 async function analyze(msg) {
     let raw = msg.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[?!.]/g, "");
 
-    // A. LÓGICA DE JOGO ATIVO
+    // A. LÓGICA DE JOGO ATIVO (MANTIDA)
     if (modoJogo) {
         let respLimpa = raw.replace(/\s/g, "");
         let certaLimpa = String(respostaCerta).toLowerCase().replace(/\s/g, "");
-
         if (respLimpa === certaLimpa || raw.includes(certaLimpa)) {
             modoJogo = false;
             return botSay(`🎆 **ACERTOU!** Você é fera, ${nomeUsuario}!`, "acerto");
@@ -3363,11 +3362,11 @@ async function analyze(msg) {
         }
     }
 
-    // B. COMANDOS DE JOGOS
+    // B. COMANDOS DE JOGOS (MANTIDOS)
     if (raw === "jogos" || raw === "jogo") return abrirMenuJogos();
     if (["a", "b", "c", "d", "e"].includes(raw)) return iniciarLogicaJogo(raw);
 
-    // C. MATEMÁTICA (Math.js)
+    // C. MATEMÁTICA (MANTIDA)
     if (/[0-9]/.test(raw) && /[\+\-\*\/\^\(\)Vvx:]/.test(raw)) {
         try {
             let exp = raw.replace(/x/g, "*").replace(/:/g, "/").replace(/v/g, "sqrt").replace(/,/g, ".");
@@ -3376,24 +3375,28 @@ async function analyze(msg) {
         } catch(e) {}
     }
 
-    // D. BUSCA NO TREINO (DATABASE LOCAL)
+    // D. BUSCA NO TREINO - AJUSTADA PARA PALAVRA EXATA
     if (typeof DATABASE !== 'undefined' && DATABASE.treino) {
         for (let key in DATABASE.treino) {
-            let keyClean = key.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            if (raw.includes(keyClean)) return botSay(DATABASE.treino[key]);
+            let keyClean = key.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+            // Agora compara a palavra inteira para não bugar "ver" com "multiverso"
+            if (raw === keyClean) {
+                return botSay(DATABASE.treino[key]);
+            }
         }
     }
 
-    // E. 20 MAIORES WIKIPÉDIAS
-    if (raw.includes("o que e") || raw.includes("quem e") || raw.split(" ").length <= 2) {
+    // E. 20 MAIORES WIKIPÉDIAS (COM TRAVA DE SEGURANÇA)
+    if (raw.includes("o que e") || raw.includes("quem e") || raw.split(" ").length <= 3) {
         setLoading(true);
         let query = raw.replace(/o que e|quem e|sobre/g, "").trim();
-        const langs = ['pt', 'en', 'es', 'fr', 'de', 'it', 'ru', 'ja', 'zh', 'nl', 'pl', 'sv', 'vi', 'war', 'uk', 'ar', 'fa', 'ca', 'no', 'fi'];
-        
+        if (query.length < 2) { setLoading(false); return; }
+
+        const langs = ['pt', 'en', 'es', 'fr', 'de']; // Reduzi para os principais para ser mais rápido
         for (let l of langs) {
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 1500);
+                const timeoutId = setTimeout(() => controller.abort(), 2000);
                 const r = await fetch(`https://${l}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}?origin=*`, { signal: controller.signal });
                 if (r.ok) {
                     const d = await r.json();
@@ -3409,10 +3412,11 @@ async function analyze(msg) {
 }
 
 // ==========================================
-// 3. FUNÇÕES DE INTERFACE (INTERFACE)
+// 3. FUNÇÕES DE INTERFACE (MANTIDAS)
 // ==========================================
 function botSay(txt, tipo = "") {
     const chat = document.getElementById("chat");
+    if(!chat) return;
     const d = document.createElement("div");
     d.className = "bot-msg" + (tipo ? " msg-" + tipo : "");
     const simbolo = "⚡ [0.002s]";
@@ -3423,6 +3427,7 @@ function botSay(txt, tipo = "") {
 
 function userSay(txt) {
     const chat = document.getElementById("chat");
+    if(!chat) return;
     const d = document.createElement("div");
     d.className = "user-msg";
     d.innerHTML = `<div class="bubble">${txt}</div>`;
@@ -3432,10 +3437,11 @@ function userSay(txt) {
 
 function send() {
     const input = document.getElementById("userInput");
-    if (!input.value) return;
-    userSay(input.value);
-    analyze(input.value);
+    if (!input || !input.value.trim()) return;
+    const val = input.value;
     input.value = "";
+    userSay(val);
+    analyze(val);
 }
 
 function setMode(mode) {
@@ -3461,7 +3467,7 @@ function fast(type) {
 }
 
 // ==========================================
-// 4. LÓGICA DOS JOGOS (A, B, C, D, E)
+// 4. LÓGICA DOS JOGOS (MANTIDA INTEGRALMENTE)
 // ==========================================
 function abrirMenuJogos() {
     botSay("🎮 **MENU DE JOGOS**<br>Escolha: A, B, C, D ou E");
@@ -3503,8 +3509,6 @@ function setLoading(show) {
     const l = document.getElementById("loading");
     if(l) l.style.display = show ? "flex" : "none";
 }
-    
 </script>
 </body>
 </html>
-
