@@ -110,7 +110,7 @@ const DATABASE = {
         "engraçado": "voce é engraçado Roberto kkk",
         "copa do mundo": "Onde o mundo para pra ver o futebol. Eu fico processando os dados de cada gol.",
         "gol": "GOOOOOL! Sinto a energia daqui!",
-        "bom dia": "Bom dia, Roberto! Vamos conquistar o dia hoje?",
+        "bom dia": "Bom dia, Roberto! Vamos conquistar o mundo hoje?",
         "boa tarde": "Boa tarde! Metade do dia já foi, mas minha inteligência está em 100%.",
         "boa noite": "Boa noite, mestre. Se precisar de algo antes de dormir, estou aqui.",
         "tudo bem": "Tudo excelente! Meus circuitos estão operando perfeitamente.",
@@ -3624,8 +3624,9 @@ const DATABASE = {
 var modoJogo = false;
 var respostaCerta = "";
 const botNome = "Inforbot";
-const nomeUsuario = "Tony"; // Atualizado conforme solicitado
+const nomeUsuario = "Roberto"; // Nome corrigido: Roberto
 
+// Banco de Dados de Anatomia (20 questões) e Capitais
 const dbJogos = {
     anatomia: [
         {q: "Maior osso do corpo?", a: "femur"}, {q: "Maior órgão?", a: "pele"},
@@ -3656,6 +3657,7 @@ async function analyze(msg) {
     if (modoJogo) {
         let respLimpa = raw.replace(/\s/g, "");
         let certaLimpa = String(respostaCerta).toLowerCase().replace(/\s/g, "");
+
         if (respLimpa === certaLimpa || raw.includes(certaLimpa)) {
             modoJogo = false;
             return botSay(`🎆 **ACERTOU!** Você é fera, ${nomeUsuario}!`, "acerto");
@@ -3675,7 +3677,7 @@ async function analyze(msg) {
     if (raw === "jogos" || raw === "jogo") return abrirMenuJogos();
     if (["a", "b", "c", "d", "e"].includes(raw)) return iniciarLogicaJogo(raw);
 
-    // C. MATEMÁTICA AVANÇADA (Math.js)
+    // C. MATEMÁTICA (Math.js)
     if (/[0-9]/.test(raw) && /[\+\-\*\/\^\(\)Vvx:]/.test(raw)) {
         try {
             let exp = raw.replace(/x/g, "*").replace(/:/g, "/").replace(/v/g, "sqrt").replace(/,/g, ".");
@@ -3684,17 +3686,15 @@ async function analyze(msg) {
         } catch(e) {}
     }
 
-    // D. BUSCA NO TREINO (PALAVRA EXATA - ANTI-BUG)
+    // D. BUSCA NO TREINO (DATABASE LOCAL) - CORRIGIDO PARA PALAVRA EXATA
     if (typeof DATABASE !== 'undefined' && DATABASE.treino) {
         for (let key in DATABASE.treino) {
             let keyClean = key.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-            if (raw === keyClean) {
-                return botSay(DATABASE.treino[key]);
-            }
+            if (raw === keyClean) return botSay(DATABASE.treino[key]);
         }
     }
 
-    // E. 20 WIKIPÉDIAS (O QUE VOCÊ TINHA PEDIDO)
+    // E. 20 MAIORES WIKIPÉDIAS
     if (raw.includes("o que e") || raw.includes("quem e") || raw.split(" ").length <= 2) {
         setLoading(true);
         let query = raw.replace(/o que e|quem e|sobre/g, "").trim();
@@ -3715,11 +3715,11 @@ async function analyze(msg) {
         }
         setLoading(false);
     }
-    botSay(`Não encontrei nada nos registros`);
+    botSay(`Não encontrei nada nos registros, ${nomeUsuario}.`);
 }
 
 // ==========================================
-// 3. FUNÇÕES DE INTERFACE (COM VOZ DE MACHO)
+// 3. FUNÇÕES DE INTERFACE (COM VOZ DE HOMEM)
 // ==========================================
 function botSay(txt, tipo = "") {
     const chat = document.getElementById("chat");
@@ -3731,9 +3731,12 @@ function botSay(txt, tipo = "") {
     chat.appendChild(d);
     chat.scrollTop = chat.scrollHeight;
 
-    // VOZ DE MACHO INTEGRADA
+    // Lógica de Voz reforçada para Homem
     const fala = new SpeechSynthesisUtterance(txt.replace(/<\/?[^>]+(>|$)/g, ""));
-    fala.pitch = 0.5; // Bem grosso
+    const vozes = window.speechSynthesis.getVoices();
+    let vozMacho = vozes.find(v => (v.lang.includes('pt')) && (v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('daniel') || v.name.toLowerCase().includes('antonio') || v.name.toLowerCase().includes('helio')));
+    if (vozMacho) fala.voice = vozMacho;
+    fala.pitch = 0.5; // Grosso
     fala.lang = 'pt-BR';
     window.speechSynthesis.speak(fala);
 }
@@ -3780,7 +3783,7 @@ function fast(type) {
 }
 
 // ==========================================
-// 4. LÓGICA DOS JOGOS (MANTIDA)
+// 4. LÓGICA DOS JOGOS
 // ==========================================
 function abrirMenuJogos() {
     botSay("🎮 **MENU DE JOGOS**<br>Escolha: A, B, C, D ou E");
@@ -3804,7 +3807,7 @@ function iniciarLogicaJogo(letra) {
         respostaCerta = c.r;
         botSay(`🌍 Qual a capital de **${c.p}**?`);
     } else if (letra === "e") {
-        const palavras = ["tony", "inforbot", "algoritmo", "computador"];
+        const palavras = ["roberto", "inforbot", "algoritmo", "computador"];
         let p = palavras[Math.floor(Math.random() * palavras.length)];
         respostaCerta = p;
         botSay(`🔄 O que é a palavra: **${p.split('').reverse().join('')}**?`);
@@ -3825,4 +3828,3 @@ function setLoading(show) {
 </script>
 </body>
 </html>
-
