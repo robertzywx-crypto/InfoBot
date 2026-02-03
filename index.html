@@ -7,184 +7,184 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
 <style>
 /* ============================================================ 
-   🚀 INFORBOT SUPREME V5 - THE ROBERTO EDITION (FULL)
+   🤖 INFORBOT MASTER CSS - REVISÃO TOTAL ROBERTO 2026
    ============================================================ */
 
 :root { 
-    --bg: #000205; 
-    --app: rgba(10, 12, 16, 0.95); 
-    --text: #e6edf3; 
-    --accent: #1f6feb; 
-    --led-blue: 0 0 25px rgba(31, 111, 235, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.3);
-    --border: rgba(255, 255, 255, 0.08); 
-    --bubble-bot: #161b22; 
-    --success: #2ecc71;
-    --danger: #e74c3c;
+    --bg: #010409; --app: #0d1117; --text: #c9d1d9; --accent: #1f6feb; --border: #30363d; 
+    --bubble-bot: #161b22; --text-bot: #e6edf3; 
 }
 
-/* Reset Ultra-Smooth */
-* { 
-    margin: 0; padding: 0; box-sizing: border-box; 
-    font-family: 'Inter', 'Segoe UI', sans-serif; 
-    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1); 
+.light-mode { 
+    --bg: #f0f2f5; --app: #ffffff; --text: #1c1e21; --border: #dddfe2; 
+    --bubble-bot: #f8f9fa; --text-bot: #050505; 
 }
+
+/* Reset e Suavidade */
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; transition: background 0.3s, color 0.3s; }
 
 body { 
-    height: 100vh; background: var(--bg);
-    background-image: 
-        radial-gradient(circle at 10% 20%, rgba(31, 111, 235, 0.1) 0%, transparent 40%),
-        radial-gradient(circle at 90% 80%, rgba(31, 111, 235, 0.1) 0%, transparent 40%),
-        radial-gradient(circle at 50% 50%, #001a3d 0%, #000205 100%);
-    display: flex; align-items: center; justify-content: center; overflow: hidden; 
+    height: 100vh; background: var(--bg); 
+    display: flex; align-items: center; justify-content: center; 
+    overflow: hidden; 
 }
 
-/* CONTAINER PRINCIPAL - CURVATURA DE LUXO */
+/* CONTAINER DO APP */
 .app { 
-    width: 95%; max-width: 1300px; height: 92vh; 
-    background: var(--app); backdrop-filter: blur(30px);
-    border-radius: 50px; display: flex; flex-direction: column; 
-    border: 1px solid var(--border); box-shadow: 0 40px 100px rgba(0,0,0,0.8);
-    position: relative;
+    width: 98%; max-width: 1400px; height: 98vh; background: var(--app); 
+    border-radius: 45px; display: flex; flex-direction: column; 
+    border: 2px solid var(--border); box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    overflow: hidden; position: relative;
 }
 
-/* HEADER SLIM & NEON */
+/* HEADER COMPACTO */
 .header { 
-    background: linear-gradient(180deg, rgba(0, 78, 146, 0.2) 0%, transparent 100%);
-    padding: 18px 30px; text-align: center; 
-    border-bottom: 2px solid var(--accent);
-    border-radius: 50px 50px 0 0; z-index: 100;
+    background: linear-gradient(135deg, #000428, #004e92, #000000); 
+    padding: 12px; text-align: center; color: white; 
+    border-bottom: 2px solid var(--accent); border-radius: 43px 43px 0 0; 
 }
 
 .title { 
-    font-size: 32px; font-weight: 900; letter-spacing: 12px; 
-    text-transform: uppercase; color: #fff; margin-bottom: 12px;
-    filter: drop-shadow(0 0 15px var(--accent));
+    font-size: 32px; font-weight: 900; letter-spacing: 8px; 
+    text-transform: uppercase; margin-bottom: 8px;
+    animation: glowTitle 2s infinite alternate;
 }
 
-.btn-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+@keyframes glowTitle {
+    from { text-shadow: 0 0 10px var(--accent); }
+    to { text-shadow: 0 0 20px #fff; }
+}
+
+/* ÁREA DE BOTÕES DO TOPO (MODO CLARO/ESCURO, PIADAS, ETC) */
+.btn-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
 
 .btn-ui { 
-    background: rgba(255,255,255,0.05); border: 1.5px solid #fff; color: white; 
-    padding: 10px 24px; border-radius: 50px; cursor: pointer; 
-    font-size: 12px; font-weight: 800; text-transform: uppercase;
-    backdrop-filter: blur(10px);
+    background: rgba(255,255,255,0.1); border: 2px solid #fff; color: white; 
+    padding: 8px 16px; border-radius: 50px; cursor: pointer; 
+    font-size: 12px; font-weight: bold; text-transform: uppercase;
 }
 
+/* ANIMAÇÃO DE AUMENTAR NO HOVER */
 .anim:hover { 
-    transform: scale(1.1) translateY(-3px); 
-    background: #fff !important; color: var(--accent) !important; 
-    box-shadow: 0 10px 20px rgba(255,255,255,0.3); 
+    transform: scale(1.25); 
+    background: var(--accent) !important; 
+    box-shadow: 0 0 15px #fff;
+    z-index: 10;
 }
 
-/* CHAT - FLUXO DE MENSAGENS */
+/* CHAT - AREA DE MENSAGENS */
 .chat { 
-    flex: 1; padding: 30px; overflow-y: auto; 
-    display: flex; flex-direction: column; gap: 20px; 
-    background: radial-gradient(circle at center, rgba(31, 111, 235, 0.02) 0%, transparent 100%);
+    flex: 1; padding: 20px; overflow-y: auto; 
+    display: flex; flex-direction: column; gap: 15px; 
+    background: var(--bg);
 }
 
-/* BOLHAS 100% CÁPSULA (Zero quinas quadradas) */
+/* BOLHAS DE CONVERSA - 100% ARREDONDADAS (FIM DO QUADRADO) */
 .bubble { 
-    padding: 18px 28px; border-radius: 40px !important; 
-    font-size: 17px; max-width: 75%; line-height: 1.6; 
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    animation: messageIn 0.5s ease-out forwards;
-}
-
-@keyframes messageIn {
-    from { opacity: 0; transform: translateY(20px) scale(0.9); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
+    padding: 15px 22px; border-radius: 35px !important; 
+    font-size: 16px; line-height: 1.5; max-width: 80%;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
 .bot-msg { 
-    align-self: flex-start; background: var(--bubble-bot); color: #fff; 
-    border: 1px solid var(--accent); border-bottom-left-radius: 5px !important; 
+    align-self: flex-start; background: var(--bubble-bot); 
+    color: var(--text-bot); border: 1.5px solid var(--accent); 
+    border-bottom-left-radius: 4px !important; 
 }
 
 .user-msg { 
-    align-self: flex-end; background: var(--accent); color: white; 
-    background: linear-gradient(135deg, var(--accent) 0%, #004e92 100%);
-    border-bottom-right-radius: 5px !important; 
+    align-self: flex-end; background: var(--accent); 
+    color: white; border-bottom-right-radius: 4px !important; 
 }
 
-/* ÁREA DE ENTRADA - DESIGN CÁPSULA */
+/* MATEMÁTICA AVANÇADA E CURIOSIDADES (ESTILO ESPECIAL) */
+.math-card { background: #000; border: 1px dashed var(--accent); padding: 10px; border-radius: 15px; font-family: 'Courier New', monospace; color: #00ff00; }
+
+/* ÁREA DE INPUT - CÁPSULA ARREDONDADA */
 .input-area { 
-    padding: 25px 45px; background: rgba(0,0,0,0.2); 
-    display: flex; align-items: center; gap: 20px; 
-    border-top: 1px solid var(--border); border-radius: 0 0 50px 50px;
+    padding: 15px 25px; background: var(--app); 
+    display: flex; align-items: center; gap: 10px; 
+    border-top: 1px solid var(--border); border-radius: 0 0 45px 45px;
 }
 
-.input-box { 
-    flex: 1; padding: 18px 35px; border-radius: 50px; 
-    border: 2px solid var(--border); background: rgba(10, 12, 16, 0.8); 
-    color: white; outline: none; font-size: 17px;
+input { 
+    flex: 1; padding: 12px 25px; border-radius: 50px; 
+    border: 2px solid var(--border); background: var(--bg); 
+    color: var(--text); outline: none; font-size: 16px;
 }
 
-.input-box:focus { border-color: var(--accent); box-shadow: 0 0 20px rgba(31, 111, 235, 0.2); }
-
-/* BOTÕES CIRCULARES COM LED PULSANTE */
+/* BOTÕES CIRCULARES COM LED AZUL (MICROFONE E ENVIAR) */
 .btn-circle {
-    width: 60px; height: 60px; 
-    border-radius: 50% !important; 
-    border: none; background: var(--accent); 
-    color: white; cursor: pointer;
+    width: 50px; height: 50px; border-radius: 50% !important; 
+    border: none; background: var(--accent); color: white; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    box-shadow: var(--led-blue); 
-    font-size: 22px; position: relative;
-    animation: ledPulse 2s infinite;
+    box-shadow: 0 0 15px var(--accent); /* LED AZUL */
+    font-size: 18px;
 }
 
-@keyframes ledPulse {
-    0%, 100% { box-shadow: 0 0 20px rgba(31, 111, 235, 0.8); }
-    50% { box-shadow: 0 0 35px rgba(31, 111, 235, 1); }
+.btn-circle:hover { 
+    transform: scale(1.15); 
+    filter: brightness(1.3);
+    box-shadow: 0 0 25px var(--accent);
 }
 
-.btn-circle:hover { transform: scale(1.1) rotate(10deg); filter: brightness(1.2); }
-
-/* BOTÕES DE JOGO ESTILO GAMER (A, B, C, D, E) */
-.game-btn {
-    background: transparent; border: 2px solid var(--accent);
-    color: #fff; padding: 12px 25px; margin: 8px;
-    border-radius: 50px; font-weight: 900; cursor: pointer;
-    text-transform: uppercase; overflow: hidden; position: relative;
+/* STATUS ANALISANDO COM SÍMBOLO (CORRIGIDO) */
+#status-container { 
+    display: none; /* Só aparece quando pesquisar */
+    padding: 5px 25px; color: var(--accent); font-weight: bold; 
+    font-size: 13px; align-items: center; gap: 8px; 
 }
 
-.game-btn:hover {
-    background: var(--accent);
-    box-shadow: 0 0 20px var(--accent);
-    transform: translateY(-3px);
+.loader-spin { 
+    width: 14px; height: 14px; border: 2px solid var(--accent); 
+    border-top-color: #fff; border-radius: 50%; 
+    animation: spin-anim 0.8s linear infinite; 
 }
 
-/* STATUS PESQUISANDO - FIX */
-#loading { 
-    display: none; justify-content: center; padding: 10px; 
-    color: var(--accent); font-weight: bold; font-size: 14px;
+@keyframes spin-anim { to { transform: rotate(360deg); } }
+
+/* ANIMAÇÕES DE JOGOS (ACERTO E ERRO) */
+@keyframes acertoFeedback {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); box-shadow: 0 0 30px #2ecc71; }
+    100% { transform: scale(1); }
 }
 
-.spin { 
-    width: 20px; height: 20px; border: 3px solid var(--accent); 
-    border-top-color: #fff; border-radius: 50%; animation: rot 0.8s linear infinite; 
+@keyframes erroTremer {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
 }
 
-@keyframes rot { to { transform: rotate(360deg); } }
-
-/* EFEITO DE VITÓRIA (CONFETES PREPARO) */
-#confetti-canvas {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    pointer-events: none; z-index: 1000;
+.msg-acerto { 
+    animation: acertoFeedback 0.6s ease; 
+    border: 3px solid #2ecc71 !important; 
+    color: #2ecc71 !important;
 }
 
-/* SCROLLBAR MODERNA */
+.msg-erro { 
+    animation: erroTremer 0.4s ease; 
+    border: 3px solid #e74c3c !important; 
+    color: #e74c3c !important;
+}
+
+/* BOTÕES DE RESPOSTA DOS JOGOS (A, B, C, D, E) */
+.game-btn { 
+    background: #1f6feb; color: white; border: 1.5px solid #fff; 
+    padding: 10px 20px; margin: 5px; border-radius: 50px; 
+    cursor: pointer; font-weight: bold; font-size: 16px; /* Texto aumentado */
+    display: inline-block;
+}
+
+/* CANVAS DE CONFETES NO MEIO DA TELA */
+#canvas-confetti {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    pointer-events: none; z-index: 9999;
+}
+
+/* SCROLLBAR */
 ::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
-
-/* ANIMAÇÃO DE ERRO E ACERTO NAS BOLHAS */
-.msg-acerto { border: 3px solid var(--success) !important; background: rgba(46, 204, 113, 0.1) !important; animation: successHit 0.6s ease; }
-.msg-erro { border: 3px solid var(--danger) !important; background: rgba(231, 76, 60, 0.1) !important; animation: shakeError 0.4s ease; }
-
-@keyframes successHit { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
-@keyframes shakeError { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-10px); } 80% { transform: translateX(10px); } }
 
 </style>
 </head>
@@ -4419,6 +4419,7 @@ function setLoading(show) {
 </script>
 </body>
 </html>
+
 
 
 
