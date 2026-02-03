@@ -7,221 +7,184 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
 <style>
 /* ============================================================ 
-   🚀 INFORBOT SUPREME CSS - ARREDONDAMENTO TOTAL & LUXO
+   🚀 INFORBOT SUPREME V5 - THE ROBERTO EDITION (FULL)
    ============================================================ */
 
 :root { 
-    /* Paleta Dark Industrial */
     --bg: #000205; 
-    --app: rgba(10, 12, 16, 0.98); 
+    --app: rgba(10, 12, 16, 0.95); 
     --text: #e6edf3; 
     --accent: #1f6feb; 
-    --accent-glow: rgba(31, 111, 235, 0.3);
+    --led-blue: 0 0 25px rgba(31, 111, 235, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.3);
     --border: rgba(255, 255, 255, 0.08); 
     --bubble-bot: #161b22; 
-    --text-bot: #f0f6fc; 
-    --header-gradient: linear-gradient(135deg, #000428, #002d54, #000000);
+    --success: #2ecc71;
+    --danger: #e74c3c;
 }
 
-.light-mode { 
-    --bg: #f0f2f5; 
-    --app: #ffffff; 
-    --text: #1c1e21; 
-    --border: #dddfe2; 
-    --bubble-bot: #f0f2f5; 
-    --text-bot: #050505; 
-    --header-gradient: linear-gradient(135deg, #0061ff, #60efff); 
-}
-
-/* Reset de Alta Performance */
+/* Reset Ultra-Smooth */
 * { 
     margin: 0; padding: 0; box-sizing: border-box; 
-    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: 'Inter', 'Segoe UI', sans-serif; 
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1); 
 }
 
 body { 
     height: 100vh; background: var(--bg);
-    background-image: radial-gradient(circle at 50% 50%, #001a3d 0%, #000205 100%);
-    display: flex; align-items: center; justify-content: center; 
-    overflow: hidden; 
+    background-image: 
+        radial-gradient(circle at 10% 20%, rgba(31, 111, 235, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(31, 111, 235, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, #001a3d 0%, #000205 100%);
+    display: flex; align-items: center; justify-content: center; overflow: hidden; 
 }
 
-/* CONTAINER PRINCIPAL - ARREDONDAMENTO DE 50PX */
+/* CONTAINER PRINCIPAL - CURVATURA DE LUXO */
 .app { 
-    width: 95%; max-width: 1300px; height: 95vh; 
-    background: var(--app); 
-    backdrop-filter: blur(25px);
-    border-radius: 50px; /* Como você pediu: bem arredondado */
-    display: flex; flex-direction: column; 
-    border: 1px solid var(--border); 
-    box-shadow: 0 0 60px rgba(0,0,0,0.7), 0 0 30px var(--accent-glow);
-    overflow: hidden;
+    width: 95%; max-width: 1300px; height: 92vh; 
+    background: var(--app); backdrop-filter: blur(30px);
+    border-radius: 50px; display: flex; flex-direction: column; 
+    border: 1px solid var(--border); box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+    position: relative;
 }
 
-/* HEADER COMPACTO - NÃO EXAGERADO */
+/* HEADER SLIM & NEON */
 .header { 
-    background: var(--header-gradient); 
-    padding: 15px 25px; /* Compactado para sobrar espaço pro chat */
-    text-align: center; color: white; 
+    background: linear-gradient(180deg, rgba(0, 78, 146, 0.2) 0%, transparent 100%);
+    padding: 18px 30px; text-align: center; 
     border-bottom: 2px solid var(--accent);
-    border-radius: 48px 48px 0 0;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    border-radius: 50px 50px 0 0; z-index: 100;
 }
 
 .title { 
-    font-size: 34px; /* Tamanho médio e elegante */
-    font-weight: 900; letter-spacing: 10px; 
-    text-transform: uppercase; margin-bottom: 12px;
-    background: linear-gradient(to bottom, #fff, var(--accent));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 0 8px var(--accent));
+    font-size: 32px; font-weight: 900; letter-spacing: 12px; 
+    text-transform: uppercase; color: #fff; margin-bottom: 12px;
+    filter: drop-shadow(0 0 15px var(--accent));
 }
 
-.ui-box { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.btn-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
-/* BOTÕES UI - ESTILO CÁPSULA */
 .btn-ui { 
-    background: rgba(255,255,255,0.06); 
-    border: 2px solid #fff; 
-    color: white; 
-    padding: 10px 22px; 
-    border-radius: 50px; 
-    cursor: pointer; 
-    font-size: 13px; /* Tamanho equilibrado */
-    font-weight: 800; 
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    background: rgba(255,255,255,0.05); border: 1.5px solid #fff; color: white; 
+    padding: 10px 24px; border-radius: 50px; cursor: pointer; 
+    font-size: 12px; font-weight: 800; text-transform: uppercase;
+    backdrop-filter: blur(10px);
 }
 
-/* ANIMAÇÃO DE AUMENTAR NO HOVER (SOMENTE ONDE PEDIDO) */
 .anim:hover { 
-    transform: scale(1.15) translateY(-3px); 
-    background: #fff !important; 
-    color: var(--accent) !important;
-    box-shadow: 0 0 25px #fff;
+    transform: scale(1.1) translateY(-3px); 
+    background: #fff !important; color: var(--accent) !important; 
+    box-shadow: 0 10px 20px rgba(255,255,255,0.3); 
 }
 
-/* ÁREA DE CONVERSA */
+/* CHAT - FLUXO DE MENSAGENS */
 .chat { 
-    flex: 1; padding: 25px; 
-    overflow-y: auto; 
+    flex: 1; padding: 30px; overflow-y: auto; 
     display: flex; flex-direction: column; gap: 20px; 
-    background: transparent;
+    background: radial-gradient(circle at center, rgba(31, 111, 235, 0.02) 0%, transparent 100%);
 }
 
-/* BOLHAS 100% ARREDONDADAS - SEM CONTORNO QUADRADO */
+/* BOLHAS 100% CÁPSULA (Zero quinas quadradas) */
 .bubble { 
-    padding: 18px 28px; 
-    border-radius: 40px !important; /* Arredondamento total */
-    font-size: 17px; 
-    line-height: 1.5; 
-    max-width: 80%;
-    position: relative;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-    border: 1px solid transparent;
+    padding: 18px 28px; border-radius: 40px !important; 
+    font-size: 17px; max-width: 75%; line-height: 1.6; 
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    animation: messageIn 0.5s ease-out forwards;
 }
 
-/* Estilo específico Inforbot */
+@keyframes messageIn {
+    from { opacity: 0; transform: translateY(20px) scale(0.9); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .bot-msg { 
-    align-self: flex-start; 
-    background: var(--bubble-bot); 
-    color: var(--text-bot); 
-    border: 1px solid var(--accent);
-    border-bottom-left-radius: 10px !important; /* Pequeno detalhe de balão */
+    align-self: flex-start; background: var(--bubble-bot); color: #fff; 
+    border: 1px solid var(--accent); border-bottom-left-radius: 5px !important; 
 }
 
-/* Estilo específico Roberto */
 .user-msg { 
-    align-self: flex-end; 
-    background: var(--accent); 
-    color: white; 
-    background: linear-gradient(135deg, var(--accent), #004e92);
-    border-bottom-right-radius: 10px !important;
+    align-self: flex-end; background: var(--accent); color: white; 
+    background: linear-gradient(135deg, var(--accent) 0%, #004e92 100%);
+    border-bottom-right-radius: 5px !important; 
 }
 
-/* ============================================================ 
-   🎮 SISTEMA DE ANIMAÇÃO DE JOGOS (ACERTO/ERRO)
-   ============================================================ */
-
-@keyframes acertoBrilho {
-    0% { transform: scale(1); box-shadow: 0 0 0px #2ecc71; border-color: #2ecc71; }
-    50% { transform: scale(1.06); box-shadow: 0 0 30px #2ecc71; border-color: #2ecc71; }
-    100% { transform: scale(1); box-shadow: 0 0 10px #2ecc71; border-color: #2ecc71; }
-}
-
-@keyframes erroTremer {
-    0%, 100% { transform: translateX(0); border-color: #e74c3c; }
-    20%, 60% { transform: translateX(-12px); }
-    40%, 80% { transform: translateX(12px); }
-}
-
-.msg-acerto { 
-    animation: acertoBrilho 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-    border: 3px solid #2ecc71 !important; 
-    background: rgba(46, 204, 113, 0.2) !important; 
-    color: #2ecc71 !important;
-}
-
-.msg-erro { 
-    animation: erroTremer 0.5s ease-in-out; 
-    border: 3px solid #e74c3c !important; 
-    background: rgba(231, 76, 60, 0.2) !important; 
-    color: #e74c3c !important; 
-}
-
-/* BOTÕES DE JOGO DENTRO DO CHAT (A, B, C...) */
-.game-btn { 
-    background: var(--accent); color: white; border: 2px solid #fff; 
-    padding: 12px 24px; margin: 6px; border-radius: 50px; 
-    cursor: pointer; font-weight: 800; font-size: 16px;
-}
-
-.game-btn.anim:hover { 
-    transform: scale(1.25); background: #388bfd; 
-    box-shadow: 0 0 20px var(--accent); 
-}
-
-/* INPUT E RODAPÉ */
+/* ÁREA DE ENTRADA - DESIGN CÁPSULA */
 .input-area { 
-    padding: 20px 40px; background: var(--app); 
-    display: flex; gap: 15px; 
-    border-radius: 0 0 50px 50px;
-    border-top: 1px solid var(--border);
+    padding: 25px 45px; background: rgba(0,0,0,0.2); 
+    display: flex; align-items: center; gap: 20px; 
+    border-top: 1px solid var(--border); border-radius: 0 0 50px 50px;
 }
 
-input { 
-    flex: 1; padding: 16px 30px; border-radius: 50px; 
-    border: 2px solid var(--border); 
-    background: rgba(0,0,0,0.3); 
-    color: var(--text); outline: none; font-size: 16px;
+.input-box { 
+    flex: 1; padding: 18px 35px; border-radius: 50px; 
+    border: 2px solid var(--border); background: rgba(10, 12, 16, 0.8); 
+    color: white; outline: none; font-size: 17px;
 }
 
-input:focus { border-color: var(--accent); box-shadow: 0 0 15px var(--accent-glow); }
+.input-box:focus { border-color: var(--accent); box-shadow: 0 0 20px rgba(31, 111, 235, 0.2); }
 
-/* STATUS E SIMBOLOS */
-.status { 
-    padding: 5px 40px; color: var(--accent); 
-    font-weight: 900; font-size: 13px; 
-    display: flex; align-items: center; gap: 10px; 
+/* BOTÕES CIRCULARES COM LED PULSANTE */
+.btn-circle {
+    width: 60px; height: 60px; 
+    border-radius: 50% !important; 
+    border: none; background: var(--accent); 
+    color: white; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: var(--led-blue); 
+    font-size: 22px; position: relative;
+    animation: ledPulse 2s infinite;
+}
+
+@keyframes ledPulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(31, 111, 235, 0.8); }
+    50% { box-shadow: 0 0 35px rgba(31, 111, 235, 1); }
+}
+
+.btn-circle:hover { transform: scale(1.1) rotate(10deg); filter: brightness(1.2); }
+
+/* BOTÕES DE JOGO ESTILO GAMER (A, B, C, D, E) */
+.game-btn {
+    background: transparent; border: 2px solid var(--accent);
+    color: #fff; padding: 12px 25px; margin: 8px;
+    border-radius: 50px; font-weight: 900; cursor: pointer;
+    text-transform: uppercase; overflow: hidden; position: relative;
+}
+
+.game-btn:hover {
+    background: var(--accent);
+    box-shadow: 0 0 20px var(--accent);
+    transform: translateY(-3px);
+}
+
+/* STATUS PESQUISANDO - FIX */
+#loading { 
+    display: none; justify-content: center; padding: 10px; 
+    color: var(--accent); font-weight: bold; font-size: 14px;
 }
 
 .spin { 
-    width: 18px; height: 18px; 
-    border: 3px solid var(--accent); 
-    border-top-color: #fff; 
-    border-radius: 50%; 
-    animation: rot 0.8s linear infinite; 
+    width: 20px; height: 20px; border: 3px solid var(--accent); 
+    border-top-color: #fff; border-radius: 50%; animation: rot 0.8s linear infinite; 
 }
 
 @keyframes rot { to { transform: rotate(360deg); } }
 
-/* Scrollbar Customizada */
+/* EFEITO DE VITÓRIA (CONFETES PREPARO) */
+#confetti-canvas {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 1000;
+}
+
+/* SCROLLBAR MODERNA */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+
+/* ANIMAÇÃO DE ERRO E ACERTO NAS BOLHAS */
+.msg-acerto { border: 3px solid var(--success) !important; background: rgba(46, 204, 113, 0.1) !important; animation: successHit 0.6s ease; }
+.msg-erro { border: 3px solid var(--danger) !important; background: rgba(231, 76, 60, 0.1) !important; animation: shakeError 0.4s ease; }
+
+@keyframes successHit { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+@keyframes shakeError { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-10px); } 80% { transform: translateX(10px); } }
 
 </style>
 </head>
@@ -4217,6 +4180,7 @@ const DATABASE = {
         "Qual o animal mais antigo? A zebra, porque está em preto e branco. Explicação: Cores vintage.",
         "O que o café disse para a xícara? Me sinto preenchido. Explicação: Sentimento matinal.",
         "Por que o vácuo é ruim de papo? Porque não tem som. Explicação: Física acústica."
+        "bob alarme"
     ]
 };
 // ==========================================
@@ -4455,5 +4419,6 @@ function setLoading(show) {
 </script>
 </body>
 </html>
+
 
 
