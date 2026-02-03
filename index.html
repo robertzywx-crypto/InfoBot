@@ -5,222 +5,221 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🤖 InforBot</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
- <style>
+<style>
 /* ============================================================ 
-   🚀 INFORBOT ULTIMATE INTERFACE - BY ROBERTO 
+   🚀 INFORBOT SUPREME CSS - ARREDONDAMENTO TOTAL & LUXO
    ============================================================ */
+
 :root { 
-    /* Cores Deep Dark & Hyper Blue */
+    /* Paleta Dark Industrial */
     --bg: #000205; 
-    --app: rgba(13, 17, 23, 0.95); 
+    --app: rgba(10, 12, 16, 0.98); 
     --text: #e6edf3; 
     --accent: #1f6feb; 
-    --accent-glow: rgba(31, 111, 235, 0.6);
-    --border: rgba(255, 255, 255, 0.1); 
+    --accent-glow: rgba(31, 111, 235, 0.3);
+    --border: rgba(255, 255, 255, 0.08); 
     --bubble-bot: #161b22; 
     --text-bot: #f0f6fc; 
-    --header-gradient: linear-gradient(135deg, #000428, #004e92, #000000);
+    --header-gradient: linear-gradient(135deg, #000428, #002d54, #000000);
 }
 
 .light-mode { 
-    --bg: #f8f9fa; 
-    --app: rgba(255, 255, 255, 0.9); 
+    --bg: #f0f2f5; 
+    --app: #ffffff; 
     --text: #1c1e21; 
-    --border: rgba(0, 0, 0, 0.1); 
-    --bubble-bot: #ffffff; 
+    --border: #dddfe2; 
+    --bubble-bot: #f0f2f5; 
     --text-bot: #050505; 
     --header-gradient: linear-gradient(135deg, #0061ff, #60efff); 
 }
 
-/* Reset e Suavidade Total */
+/* Reset de Alta Performance */
 * { 
     margin: 0; padding: 0; box-sizing: border-box; 
     font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-    scroll-behavior: smooth;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 body { 
-    height: 100vh; 
-    background: var(--bg);
+    height: 100vh; background: var(--bg);
     background-image: radial-gradient(circle at 50% 50%, #001a3d 0%, #000205 100%);
     display: flex; align-items: center; justify-content: center; 
     overflow: hidden; 
 }
 
-/* CONTAINER PRINCIPAL - ARREDONDAMENTO MÁXIMO */
+/* CONTAINER PRINCIPAL - ARREDONDAMENTO DE 50PX */
 .app { 
-    width: 96%; max-width: 1500px; height: 96vh; 
+    width: 95%; max-width: 1300px; height: 95vh; 
     background: var(--app); 
-    backdrop-filter: blur(20px);
-    border-radius: 50px; /* Super arredondado */
+    backdrop-filter: blur(25px);
+    border-radius: 50px; /* Como você pediu: bem arredondado */
     display: flex; flex-direction: column; 
     border: 1px solid var(--border); 
-    box-shadow: 0 25px 80px rgba(0,0,0,0.8), 0 0 40px var(--accent-glow);
+    box-shadow: 0 0 60px rgba(0,0,0,0.7), 0 0 30px var(--accent-glow);
     overflow: hidden;
-    position: relative;
 }
 
-/* CAPA (HEADER) - EFEITO NEON E VIDRO */
+/* HEADER COMPACTO - NÃO EXAGERADO */
 .header { 
     background: var(--header-gradient); 
-    padding: 40px 20px; text-align: center; color: white; 
-    border-bottom: 3px solid var(--accent);
+    padding: 15px 25px; /* Compactado para sobrar espaço pro chat */
+    text-align: center; color: white; 
+    border-bottom: 2px solid var(--accent);
     border-radius: 48px 48px 0 0;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-    z-index: 10;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
 }
 
 .title { 
-    font-size: 60px; font-weight: 900; letter-spacing: 18px; 
-    text-transform: uppercase; margin-bottom: 25px;
-    background: linear-gradient(to bottom, #ffffff 30%, var(--accent) 100%);
+    font-size: 34px; /* Tamanho médio e elegante */
+    font-weight: 900; letter-spacing: 10px; 
+    text-transform: uppercase; margin-bottom: 12px;
+    background: linear-gradient(to bottom, #fff, var(--accent));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 0 15px var(--accent-glow));
-    animation: pulseTitle 3s infinite ease-in-out;
+    filter: drop-shadow(0 0 8px var(--accent));
 }
 
-@keyframes pulseTitle {
-    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px var(--accent-glow)); }
-    50% { transform: scale(1.02); filter: drop-shadow(0 0 30px var(--accent)); }
-}
+.ui-box { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 
-/* BOTÕES DA INTERFACE - TAMANHO AUMENTADO */
+/* BOTÕES UI - ESTILO CÁPSULA */
 .btn-ui { 
-    background: rgba(255,255,255,0.05); 
+    background: rgba(255,255,255,0.06); 
     border: 2px solid #fff; 
     color: white; 
-    padding: 16px 32px; /* Botões maiores como você pediu */
-    border-radius: 60px; /* Totalmente pílula */
+    padding: 10px 22px; 
+    border-radius: 50px; 
     cursor: pointer; 
-    font-size: 16px; /* Texto maior */
+    font-size: 13px; /* Tamanho equilibrado */
     font-weight: 800; 
     text-transform: uppercase;
-    letter-spacing: 2px;
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    outline: none;
+    letter-spacing: 1px;
 }
 
-/* ANIMAÇÃO HOVER - O MOUSE PASSA E TUDO MUDA */
+/* ANIMAÇÃO DE AUMENTAR NO HOVER (SOMENTE ONDE PEDIDO) */
 .anim:hover { 
-    transform: scale(1.2) translateY(-8px); 
+    transform: scale(1.15) translateY(-3px); 
     background: #fff !important; 
     color: var(--accent) !important;
-    box-shadow: 0 0 40px #fff, 0 20px 40px rgba(0,0,0,0.4);
-    z-index: 100;
+    box-shadow: 0 0 25px #fff;
 }
 
-/* ÁREA DO CHAT */
+/* ÁREA DE CONVERSA */
 .chat { 
-    flex: 1; padding: 40px; 
+    flex: 1; padding: 25px; 
     overflow-y: auto; 
-    background: transparent; 
-    display: flex; flex-direction: column; gap: 25px; 
+    display: flex; flex-direction: column; gap: 20px; 
+    background: transparent;
 }
 
-/* BOLHAS DE CONVERSA - ESTILO MODERNO */
+/* BOLHAS 100% ARREDONDADAS - SEM CONTORNO QUADRADO */
 .bubble { 
-    padding: 22px 35px; 
-    border-radius: 40px; 
-    font-size: 18px; 
-    line-height: 1.6; 
-    max-width: 75%;
+    padding: 18px 28px; 
+    border-radius: 40px !important; /* Arredondamento total */
+    font-size: 17px; 
+    line-height: 1.5; 
+    max-width: 80%;
     position: relative;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    border: 1px solid transparent;
 }
 
+/* Estilo específico Inforbot */
 .bot-msg { 
     align-self: flex-start; 
     background: var(--bubble-bot); 
     color: var(--text-bot); 
-    border-left: 5px solid var(--accent);
-    border-bottom-left-radius: 5px;
+    border: 1px solid var(--accent);
+    border-bottom-left-radius: 10px !important; /* Pequeno detalhe de balão */
 }
 
+/* Estilo específico Roberto */
 .user-msg { 
     align-self: flex-end; 
     background: var(--accent); 
     color: white; 
-    border-bottom-right-radius: 5px;
     background: linear-gradient(135deg, var(--accent), #004e92);
+    border-bottom-right-radius: 10px !important;
 }
 
 /* ============================================================ 
-   🎮 ANIMAÇÕES DE JOGOS (ACERTO E ERRO)
+   🎮 SISTEMA DE ANIMAÇÃO DE JOGOS (ACERTO/ERRO)
    ============================================================ */
+
 @keyframes acertoBrilho {
-    0% { transform: scale(1); box-shadow: 0 0 0px #2ecc71; }
-    50% { transform: scale(1.1); box-shadow: 0 0 50px #2ecc71, 0 0 100px rgba(46, 204, 113, 0.4); }
-    100% { transform: scale(1); box-shadow: 0 0 20px #2ecc71; }
+    0% { transform: scale(1); box-shadow: 0 0 0px #2ecc71; border-color: #2ecc71; }
+    50% { transform: scale(1.06); box-shadow: 0 0 30px #2ecc71; border-color: #2ecc71; }
+    100% { transform: scale(1); box-shadow: 0 0 10px #2ecc71; border-color: #2ecc71; }
 }
 
 @keyframes erroTremer {
-    0%, 100% { transform: translateX(0) rotate(0); }
-    15% { transform: translateX(-15px) rotate(-2deg); }
-    30% { transform: translateX(15px) rotate(2deg); }
-    45% { transform: translateX(-15px) rotate(-1deg); }
-    60% { transform: translateX(15px) rotate(1deg); }
+    0%, 100% { transform: translateX(0); border-color: #e74c3c; }
+    20%, 60% { transform: translateX(-12px); }
+    40%, 80% { transform: translateX(12px); }
 }
 
 .msg-acerto { 
-    animation: acertoBrilho 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards; 
-    border: 4px solid #2ecc71 !important; 
-    background: rgba(46, 204, 113, 0.25) !important; 
-    color: #2ecc71 !important; 
-    font-weight: 900;
+    animation: acertoBrilho 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+    border: 3px solid #2ecc71 !important; 
+    background: rgba(46, 204, 113, 0.2) !important; 
+    color: #2ecc71 !important;
 }
 
 .msg-erro { 
-    animation: erroTremer 0.6s ease-in-out; 
-    border: 4px solid #e74c3c !important; 
-    background: rgba(231, 76, 60, 0.25) !important; 
+    animation: erroTremer 0.5s ease-in-out; 
+    border: 3px solid #e74c3c !important; 
+    background: rgba(231, 76, 60, 0.2) !important; 
     color: #e74c3c !important; 
 }
 
-/* BOTÕES DE RESPOSTA DOS JOGOS (A, B, C...) */
+/* BOTÕES DE JOGO DENTRO DO CHAT (A, B, C...) */
 .game-btn { 
     background: var(--accent); color: white; border: 2px solid #fff; 
-    padding: 15px 30px; margin: 10px; border-radius: 50px; 
-    cursor: pointer; font-weight: 800; font-size: 18px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    padding: 12px 24px; margin: 6px; border-radius: 50px; 
+    cursor: pointer; font-weight: 800; font-size: 16px;
+}
+
+.game-btn.anim:hover { 
+    transform: scale(1.25); background: #388bfd; 
+    box-shadow: 0 0 20px var(--accent); 
 }
 
 /* INPUT E RODAPÉ */
 .input-area { 
-    padding: 30px 50px; background: var(--app); 
-    display: flex; gap: 20px; 
+    padding: 20px 40px; background: var(--app); 
+    display: flex; gap: 15px; 
     border-radius: 0 0 50px 50px;
     border-top: 1px solid var(--border);
 }
 
 input { 
-    flex: 1; padding: 20px 40px; border-radius: 60px; 
+    flex: 1; padding: 16px 30px; border-radius: 50px; 
     border: 2px solid var(--border); 
-    background: rgba(0,0,0,0.2); 
-    color: var(--text); outline: none; font-size: 18px;
+    background: rgba(0,0,0,0.3); 
+    color: var(--text); outline: none; font-size: 16px;
 }
 
-input:focus { border-color: var(--accent); box-shadow: 0 0 20px var(--accent-glow); }
+input:focus { border-color: var(--accent); box-shadow: 0 0 15px var(--accent-glow); }
 
-/* STATUS ANALISANDO COM SÍMBOLO */
+/* STATUS E SIMBOLOS */
 .status { 
-    padding: 10px 50px; color: var(--accent); 
-    font-weight: 900; font-size: 14px; 
-    display: flex; align-items: center; gap: 15px; 
+    padding: 5px 40px; color: var(--accent); 
+    font-weight: 900; font-size: 13px; 
+    display: flex; align-items: center; gap: 10px; 
 }
 
 .spin { 
-    width: 22px; height: 22px; 
-    border: 4px solid var(--accent); 
+    width: 18px; height: 18px; 
+    border: 3px solid var(--accent); 
     border-top-color: #fff; 
     border-radius: 50%; 
-    animation: rot 0.6s linear infinite; 
+    animation: rot 0.8s linear infinite; 
 }
 
 @keyframes rot { to { transform: rotate(360deg); } }
 
-/* SCROLLBAR ESTILIZADA */
-::-webkit-scrollbar { width: 8px; }
+/* Scrollbar Customizada */
+::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
 
@@ -4456,4 +4455,5 @@ function setLoading(show) {
 </script>
 </body>
 </html>
+
 
