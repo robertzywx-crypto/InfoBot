@@ -5,144 +5,224 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🤖 InforBot</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
-  <style>
+ <style>
 /* ============================================================ 
-   🎨 ESTILOS DE INTERFACE E CAPA - INFORBOT 
+   🚀 INFORBOT ULTIMATE INTERFACE - BY ROBERTO 
    ============================================================ */
 :root { 
-    --bg: #010409; --app: #0d1117; --text: #c9d1d9; --accent: #1f6feb; --border: #30363d; 
-    --bubble-bot: #161b22; --text-bot: #e6edf3; 
-    --header: linear-gradient(135deg, #000428, #004e92, #000000); 
+    /* Cores Deep Dark & Hyper Blue */
+    --bg: #000205; 
+    --app: rgba(13, 17, 23, 0.95); 
+    --text: #e6edf3; 
+    --accent: #1f6feb; 
+    --accent-glow: rgba(31, 111, 235, 0.6);
+    --border: rgba(255, 255, 255, 0.1); 
+    --bubble-bot: #161b22; 
+    --text-bot: #f0f6fc; 
+    --header-gradient: linear-gradient(135deg, #000428, #004e92, #000000);
 }
 
 .light-mode { 
-    --bg: #f0f2f5; --app: #ffffff; --text: #1c1e21; --border: #dddfe2; 
-    --bubble-bot: #f8f9fa; --text-bot: #050505; 
-    --header: linear-gradient(135deg, #0061ff, #60efff); 
+    --bg: #f8f9fa; 
+    --app: rgba(255, 255, 255, 0.9); 
+    --text: #1c1e21; 
+    --border: rgba(0, 0, 0, 0.1); 
+    --bubble-bot: #ffffff; 
+    --text-bot: #050505; 
+    --header-gradient: linear-gradient(135deg, #0061ff, #60efff); 
 }
 
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; transition: 0.3s; }
+/* Reset e Suavidade Total */
+* { 
+    margin: 0; padding: 0; box-sizing: border-box; 
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    scroll-behavior: smooth;
+}
 
-body { height: 100vh; background: var(--bg); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+body { 
+    height: 100vh; 
+    background: var(--bg);
+    background-image: radial-gradient(circle at 50% 50%, #001a3d 0%, #000205 100%);
+    display: flex; align-items: center; justify-content: center; 
+    overflow: hidden; 
+}
 
-/* CONTAINER DO APP (A CAPA BONITA) */
+/* CONTAINER PRINCIPAL - ARREDONDAMENTO MÁXIMO */
 .app { 
-    width: 98%; max-width: 1400px; height: 98vh; background: var(--app); 
-    border-radius: 30px; display: flex; flex-direction: column; 
-    border: 2px solid var(--border); 
-    box-shadow: 0 0 50px rgba(31, 111, 235, 0.25); /* Brilho azul de fundo */
+    width: 96%; max-width: 1500px; height: 96vh; 
+    background: var(--app); 
+    backdrop-filter: blur(20px);
+    border-radius: 50px; /* Super arredondado */
+    display: flex; flex-direction: column; 
+    border: 1px solid var(--border); 
+    box-shadow: 0 25px 80px rgba(0,0,0,0.8), 0 0 40px var(--accent-glow);
+    overflow: hidden;
+    position: relative;
 }
 
+/* CAPA (HEADER) - EFEITO NEON E VIDRO */
 .header { 
-    background: var(--header); padding: 25px; text-align: center; color: white; 
-    border-bottom: 3px solid var(--accent); border-radius: 28px 28px 0 0; 
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
-
-.title { 
-    font-size: 45px; font-weight: 900; letter-spacing: 12px; 
-    text-transform: uppercase; margin-bottom: 15px;
-    text-shadow: 0 0 15px var(--accent), 0 0 30px var(--accent); /* Efeito Neon */
-    animation: floating 3s ease-in-out infinite;
-}
-
-@keyframes floating {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-5px); }
-}
-
-.ui-box { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-.btn-row { display: flex; gap: 12px; }
-
-/* BOTÕES DA INTERFACE */
-.btn-ui { 
-    background: rgba(255,255,255,0.1); border: 2px solid white; color: white; 
-    padding: 10px 20px; border-radius: 12px; cursor: pointer; 
-    font-size: 11px; font-weight: 900; text-transform: uppercase;
-}
-
-/* ANIMAÇÃO DE AUMENTAR NO HOVER (Temas, Piadas, Curiosidades) */
-.anim:hover { 
-    transform: scale(1.3) !important; 
-    background: var(--accent) !important; 
-    box-shadow: 0 0 25px #fff !important; 
+    background: var(--header-gradient); 
+    padding: 40px 20px; text-align: center; color: white; 
+    border-bottom: 3px solid var(--accent);
+    border-radius: 48px 48px 0 0;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
     z-index: 10;
 }
 
-/* ============================================================ 
-   🎨 ESTILOS DE ANIMAÇÃO E JOGOS - INFORBOT 
-   ============================================================ */
-
-/* Animação para quando o Roberto ACERTAR */
-@keyframes acertoBrilho {
-    0% { transform: scale(1); box-shadow: 0 0 0px #2ecc71; border-color: #2ecc71; }
-    50% { transform: scale(1.05); box-shadow: 0 0 25px #2ecc71; border-color: #2ecc71; }
-    100% { transform: scale(1); box-shadow: 0 0 5px #2ecc71; border-color: #2ecc71; }
+.title { 
+    font-size: 60px; font-weight: 900; letter-spacing: 18px; 
+    text-transform: uppercase; margin-bottom: 25px;
+    background: linear-gradient(to bottom, #ffffff 30%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 15px var(--accent-glow));
+    animation: pulseTitle 3s infinite ease-in-out;
 }
 
-/* Animação para quando o Roberto ERRAR (Shake) */
-@keyframes erroTremer {
-    0%, 100% { transform: translateX(0); border-color: #e74c3c; }
-    20%, 60% { transform: translateX(-12px); }
-    40%, 80% { transform: translateX(12px); }
+@keyframes pulseTitle {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 15px var(--accent-glow)); }
+    50% { transform: scale(1.02); filter: drop-shadow(0 0 30px var(--accent)); }
 }
 
-/* Classe aplicada via JavaScript no ACERTO */
-.msg-acerto {
-    animation: acertoBrilho 0.6s ease-in-out forwards;
-    border: 3px solid #2ecc71 !important;
-    background: rgba(46, 204, 113, 0.15) !important;
-    color: #2ecc71 !important;
+/* BOTÕES DA INTERFACE - TAMANHO AUMENTADO */
+.btn-ui { 
+    background: rgba(255,255,255,0.05); 
+    border: 2px solid #fff; 
+    color: white; 
+    padding: 16px 32px; /* Botões maiores como você pediu */
+    border-radius: 60px; /* Totalmente pílula */
+    cursor: pointer; 
+    font-size: 16px; /* Texto maior */
+    font-weight: 800; 
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    outline: none;
 }
 
-/* Classe aplicada via JavaScript no ERRO */
-.msg-erro {
-    animation: erroTremer 0.5s linear forwards;
-    border: 3px solid #e74c3c !important;
-    background: rgba(231, 76, 60, 0.15) !important;
-    color: #e74c3c !important;
+/* ANIMAÇÃO HOVER - O MOUSE PASSA E TUDO MUDA */
+.anim:hover { 
+    transform: scale(1.2) translateY(-8px); 
+    background: #fff !important; 
+    color: var(--accent) !important;
+    box-shadow: 0 0 40px #fff, 0 20px 40px rgba(0,0,0,0.4);
+    z-index: 100;
 }
 
-/* Estilo dos Botões de Letras (A, B, C, D, E) */
-.game-btn {
-    background: #1f6feb;
-    color: white;
-    border: 1px solid #ffffff;
-    padding: 10px 20px;
-    margin: 5px;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: inline-block;
+/* ÁREA DO CHAT */
+.chat { 
+    flex: 1; padding: 40px; 
+    overflow-y: auto; 
+    background: transparent; 
+    display: flex; flex-direction: column; gap: 25px; 
 }
 
-/* Animação de aumentar no HOVER para botões de jogo */
-.game-btn.anim:hover {
-    transform: scale(1.25);
-    background: #388bfd;
-    box-shadow: 0 0 15px rgba(56, 139, 253, 0.6);
-}
-
-/* CHAT E BOLHAS */
-.chat { flex: 1; padding: 25px; overflow-y: auto; background: var(--bg); display: flex; flex-direction: column; gap: 15px; }
-
+/* BOLHAS DE CONVERSA - ESTILO MODERNO */
 .bubble { 
-    padding: 15px 22px; border-radius: 22px; font-size: 16px; 
-    line-height: 1.5; transition: all 0.3s ease; max-width: 80%;
+    padding: 22px 35px; 
+    border-radius: 40px; 
+    font-size: 18px; 
+    line-height: 1.6; 
+    max-width: 75%;
+    position: relative;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
 }
 
-.bot-msg { align-self: flex-start; background: var(--bubble-bot); color: var(--text-bot); border: 1px solid var(--accent); }
-.user-msg { align-self: flex-end; background: var(--accent); color: white; }
+.bot-msg { 
+    align-self: flex-start; 
+    background: var(--bubble-bot); 
+    color: var(--text-bot); 
+    border-left: 5px solid var(--accent);
+    border-bottom-left-radius: 5px;
+}
 
-/* STATUS ANALISANDO */
-.status { padding: 10px 25px; font-size: 14px; color: var(--accent); font-weight: bold; display: none; align-items: center; gap: 10px; }
-.spin { width: 16px; height: 16px; border: 3px solid var(--accent); border-top-color: transparent; border-radius: 50%; animation: rot 0.8s linear infinite; }
+.user-msg { 
+    align-self: flex-end; 
+    background: var(--accent); 
+    color: white; 
+    border-bottom-right-radius: 5px;
+    background: linear-gradient(135deg, var(--accent), #004e92);
+}
+
+/* ============================================================ 
+   🎮 ANIMAÇÕES DE JOGOS (ACERTO E ERRO)
+   ============================================================ */
+@keyframes acertoBrilho {
+    0% { transform: scale(1); box-shadow: 0 0 0px #2ecc71; }
+    50% { transform: scale(1.1); box-shadow: 0 0 50px #2ecc71, 0 0 100px rgba(46, 204, 113, 0.4); }
+    100% { transform: scale(1); box-shadow: 0 0 20px #2ecc71; }
+}
+
+@keyframes erroTremer {
+    0%, 100% { transform: translateX(0) rotate(0); }
+    15% { transform: translateX(-15px) rotate(-2deg); }
+    30% { transform: translateX(15px) rotate(2deg); }
+    45% { transform: translateX(-15px) rotate(-1deg); }
+    60% { transform: translateX(15px) rotate(1deg); }
+}
+
+.msg-acerto { 
+    animation: acertoBrilho 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards; 
+    border: 4px solid #2ecc71 !important; 
+    background: rgba(46, 204, 113, 0.25) !important; 
+    color: #2ecc71 !important; 
+    font-weight: 900;
+}
+
+.msg-erro { 
+    animation: erroTremer 0.6s ease-in-out; 
+    border: 4px solid #e74c3c !important; 
+    background: rgba(231, 76, 60, 0.25) !important; 
+    color: #e74c3c !important; 
+}
+
+/* BOTÕES DE RESPOSTA DOS JOGOS (A, B, C...) */
+.game-btn { 
+    background: var(--accent); color: white; border: 2px solid #fff; 
+    padding: 15px 30px; margin: 10px; border-radius: 50px; 
+    cursor: pointer; font-weight: 800; font-size: 18px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+/* INPUT E RODAPÉ */
+.input-area { 
+    padding: 30px 50px; background: var(--app); 
+    display: flex; gap: 20px; 
+    border-radius: 0 0 50px 50px;
+    border-top: 1px solid var(--border);
+}
+
+input { 
+    flex: 1; padding: 20px 40px; border-radius: 60px; 
+    border: 2px solid var(--border); 
+    background: rgba(0,0,0,0.2); 
+    color: var(--text); outline: none; font-size: 18px;
+}
+
+input:focus { border-color: var(--accent); box-shadow: 0 0 20px var(--accent-glow); }
+
+/* STATUS ANALISANDO COM SÍMBOLO */
+.status { 
+    padding: 10px 50px; color: var(--accent); 
+    font-weight: 900; font-size: 14px; 
+    display: flex; align-items: center; gap: 15px; 
+}
+
+.spin { 
+    width: 22px; height: 22px; 
+    border: 4px solid var(--accent); 
+    border-top-color: #fff; 
+    border-radius: 50%; 
+    animation: rot 0.6s linear infinite; 
+}
+
 @keyframes rot { to { transform: rotate(360deg); } }
 
-/* INPUT */
-.input-area { padding: 15px; background: var(--app); border-top: 1px solid var(--border); display: flex; gap: 12px; border-radius: 0 0 30px 30px; }
-input { flex: 1; padding: 14px 25px; border-radius: 35px; border: 1px solid var(--border); background: var(--bg); color: var(--text); outline: none; }
+/* SCROLLBAR ESTILIZADA */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
 
 </style>
 </head>
@@ -4376,3 +4456,4 @@ function setLoading(show) {
 </script>
 </body>
 </html>
+
