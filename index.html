@@ -290,7 +290,7 @@ input:focus {
                 <button class="btn-ui anim" onclick="abrirMenuJogos()">🎮 JOGOS</button>
                 <button class="btn-ui anim" onclick="fast('piada')">🤡 PIADA</button>
                 <button class="btn-ui anim" onclick="fast('curio')">💡 CURIOSIDADE</button>
-                <button class="btn-ui anim" onclick="fast()">🚨 NOTICIAS</button>
+               <button class="btn-ui anim" onclick="autoMessage('noticias')">🚨 NOTICIAS</button>
             </div>
         </div>
     </div>
@@ -4441,7 +4441,6 @@ const InforbotEngine = {
         }
     }
 };
-
 // --- 3. ANALYZE (CÉREBRO DO INFORBOT - 31 WIKIS + JOGOS + AUTO-SYNC CSS) ---
 async function analyze(msg) {
     let entradaBruta = msg.toLowerCase().trim();
@@ -4466,6 +4465,37 @@ async function analyze(msg) {
         }
     }
 
+    // 📰 LAYER 1: NOTÍCIAS (Mova para cima do database para não bugar)
+    if (entradaBruta.includes("noticias") || entradaBruta.includes("news") || entradaBruta.includes("aconteceu")) {
+        setLoading(true);
+        let busca = entradaBruta.replace(/noticias|news|sobre|agora|hoje|aconteceu|mundiais/g, "").trim();
+        let isGlobal = entradaBruta.includes("mundiais") || entradaBruta.includes("mundo");
+        let lang = isGlobal ? "en-US" : "pt-BR";
+        let geo = isGlobal ? "US" : "BR";
+        
+        if(!busca) busca = isGlobal ? "World" : "Brasil";
+
+        try {
+            const newsURL = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://news.google.com/rss/search?q=${busca}&hl=${lang}&gl=${geo}&ceid=${geo}:${isGlobal ? 'en' : 'pt-419'}`)}`;
+            const response = await fetch(newsURL);
+            const data = await response.json();
+            const parser = new DOMParser();
+            const xml = parser.parseFromString(data.contents, "text/xml");
+            const items = xml.querySelectorAll("item");
+            
+            let noticiasTxt = isGlobal ? `🌎 **GLOBAL NEWS - ${busca.toUpperCase()}:**<br><br>` : `🔔 **NOTÍCIAS - ${busca.toUpperCase()}:**<br><br>`;
+            for(let i = 0; i < 4; i++) {
+                if(items[i]) {
+                    let titulo = items[i].querySelector("title").innerHTML;
+                    noticiasTxt += `• ${titulo}<br><br>`;
+                }
+            }
+            setLoading(false);
+            return botSay(noticiasTxt);
+        } catch(e) { console.error(e); }
+        setLoading(false);
+    }
+
     // COMANDOS DE MENU E INTERAÇÃO AUTOMÁTICA
     if (entradaBruta === "jogos" || entradaBruta === "jogo") return abrirMenuJogos();
     if (entradaBruta === "piada") return fast('piada');
@@ -4483,53 +4513,13 @@ async function analyze(msg) {
             return botSay(`${nomeUsuario}, o resultado é: **${math.evaluate(exp)}**.`);
         } catch(e) {}
     }
-// 📰 LAYER 1: CÉREBRO EM TEMPO REAL GLOBAL (NOTÍCIAS MUNDIAIS)
-    if (entradaBruta.includes("noticias") || entradaBruta.includes("aconteceu") || entradaBruta.includes("news")) {
-        setLoading(true);
-        let busca = entradaBruta.replace(/noticias|news|sobre|agora|hoje|aconteceu|mundiais/g, "").trim();
-        
-        // Se o Roberto pedir "mundiais", o Inforbot muda a antena para o mundo (Inglês/Global)
-        let isGlobal = entradaBruta.includes("mundiais") || entradaBruta.includes("mundo");
-        let lang = isGlobal ? "en-US" : "pt-BR";
-        let geo = isGlobal ? "US" : "BR";
-        
-        if(!busca) busca = isGlobal ? "World" : "Brasil";
 
-        try {
-            const newsURL = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://news.google.com/rss/search?q=${busca}&hl=${lang}&gl=${geo}&ceid=${geo}:${isGlobal ? 'en' : 'pt-419'}`)}`;
-            const response = await fetch(newsURL);
-            const data = await response.json();
-            
-            const parser = new DOMParser();
-            const xml = parser.parseFromString(data.contents, "text/xml");
-            const items = xml.querySelectorAll("item");
-            
-            let noticiasTxt = isGlobal ? `🌎 **GLOBAL NEWS - ${busca.toUpperCase()}:**<br><br>` : `🔔 **NOTÍCIAS - ${busca.toUpperCase()}:**<br><br>`;
-            
-            for(let i = 0; i < 4; i++) { // Agora ele traz as 4 principais
-                if(items[i]) {
-                    let titulo = items[i].querySelector("title").innerHTML;
-                    noticiasTxt += `• ${titulo}<br><br>`;
-                }
-            }
-            
-            setLoading(false);
-            return botSay(noticiasTxt);
-        } catch(e) {
-            console.error("Erro Inforbot News:", e);
-        }
-        setLoading(false);
-    }
-// 🌐 ULTRA WIKIPÉDIA (TODAS AS 339 EDIÇÕES MUNDIAIS)
+    // 🌐 ULTRA WIKIPÉDIA
     if (entradaBruta.includes("o que e") || entradaBruta.includes("quem e") || entradaBruta.split(" ").length <= 3) {
         setLoading(true);
         let query = entradaBruta.replace(/o que e|quem e|sobre|me fale/g, "").trim();
-        
-        // Lista das Wikipédias (Principais + Extensão para todas as 339)
-        const langs = [
-            'en', 'ceb', 'de', 'sv', 'fr', 'nl', 'ru', 'es', 'it', 'arz', 'pl', 'ja', 'zh', 'vi', 'war', 'uk', 'ar', 'pt', 'fa', 'ca', 'sr', 'id', 'no', 'ko', 'fi', 'hu', 'cs', 'tr', 'ce', 'sh', 'ro', 'zh-min-nan', 'tt', 'eu', 'ms', 'eo', 'he', 'hy', 'bg', 'da', 'azb', 'sk', 'kk', 'min', 'et', 'be', 'hr', 'el', 'simple', 'lt', 'gl', 'az', 'sl', 'ur', 'nn', 'ka', 'hi', 'th', 'uz', 'la', 'cy', 'ta', 'vo', 'ast', 'mk', 'lv', 'tg', 'my', 'mg', 'af', 'tt', 'oc', 'bs', 'ky', 'sq', 'tl', 'new', 'zh-yue', 'bn', 'ml', 'pms', 'be-tarask', 'lb', 'jv', 'ht', 'sco', 'mr', 'sw', 'ga', 'ba', 'is', 'myv', 'fy', 'pnb', 'cv', 'sco', 'nds', 'ne', 'ku', 'ia', 'su', 'bar', 'scn', 'bpy', 'qu', 'am', 'kn', 'ckb', 'ia', 'gu', 'als', 'vec', 'sa', 'an', 'wa', 'gd', 'nap', 'yi', 'bug', 'si', 'hsb', 'bat-smg', 'fo', 'mzn', 'li', 'sah', 'or', 'vec', 'hif', 'mrj', 'mhr', 'ilo', 'pa', 'os', 'xmf', 'fiu-vro', 'ps', 'kv', 'pag', 'dv', 'zea', 'gv', 'tyv', 'ay', 'km', 'nap', 'diq', 'lez', 'nrm', 'koi', 'mwl', 'udm', 'stq', 'fur', 'mt', 'wuu', 'lij', 'ug', 'lad', 'pih', 'sc', 'bh', 'ksh', 'nov', 'ang', 'kw', 'nv', 'hak', 'frp', 'szl', 'ext', 'gan', 'ie', 'ln', 'gom', 'pcd', 'kab', 'sn', 'myv', 'sn', 'so', 'st', 'tn', 'ts', 'tum', 'tw', 'ty', 've', 'wo', 'xh', 'zu', 'as', 'gn', 'av', 'bm', 'ch', 'cr', 'ee', 'ff', 'fj', 'ha', 'ho', 'hz', 'ig', 'ii', 'ik', 'iu', 'kg', 'ki', 'kj', 'kr', 'ks', 'ku', 'kv', 'kw', 'ky', 'la', 'lb', 'lg', 'li', 'ln', 'lo', 'lt', 'lu', 'lv', 'mg', 'mh', 'mi', 'mk', 'ml', 'mn', 'mo', 'mr', 'ms', 'mt', 'my', 'na', 'nb', 'nd', 'ne', 'ng', 'nl', 'nn', 'no', 'nr', 'nv', 'ny', 'oc', 'oj', 'om', 'or', 'os', 'pa', 'pi', 'pl', 'ps', 'pt', 'qu', 'rm', 'rn', 'ro', 'ru', 'rw', 'sa', 'sc', 'sd', 'se', 'sg', 'si', 'sk', 'sl', 'sm', 'sn', 'so', 'sq', 'sr', 'ss', 'st', 'su', 'sv', 'sw', 'ta', 'te', 'tg', 'th', 'ti', 'tk', 'tl', 'tn', 'to', 'tr', 'ts', 'tt', 'tw', 'ty', 'ug', 'uk', 'ur', 'uz', 've', 'vi', 'vo', 'wa', 'wo', 'xh', 'yi', 'yo', 'za', 'zh', 'zu'
-        ];
-
+        const langs = ['en', 'ceb', 'de', 'sv', 'fr', 'nl', 'ru', 'es', 'it', 'arz', 'pl', 'ja', 'zh', 'vi', 'war', 'uk', 'ar', 'pt', 'fa', 'ca', 'sr', 'id', 'no', 'ko', 'fi', 'hu', 'cs', 'tr', 'ce', 'sh', 'ro', 'zh-min-nan', 'tt', 'eu', 'ms', 'eo', 'he', 'hy', 'bg', 'da', 'azb', 'sk', 'kk', 'min', 'et', 'be', 'hr', 'el', 'simple', 'lt', 'gl', 'az', 'sl', 'ur', 'nn', 'ka', 'hi', 'th', 'uz', 'la', 'cy', 'ta', 'vo', 'ast', 'mk', 'lv', 'tg', 'my', 'mg', 'af', 'tt', 'oc', 'bs', 'ky', 'sq', 'tl', 'new', 'zh-yue', 'bn', 'ml', 'pms', 'be-tarask', 'lb', 'jv', 'ht', 'sco', 'mr', 'sw', 'ga', 'ba', 'is', 'myv', 'fy', 'pnb', 'cv', 'sco', 'nds', 'ne', 'ku', 'ia', 'su', 'bar', 'scn', 'bpy', 'qu', 'am', 'kn', 'ckb', 'ia', 'gu', 'als', 'vec', 'sa', 'an', 'wa', 'gd', 'nap', 'yi', 'bug', 'si', 'hsb', 'bat-smg', 'fo', 'mzn', 'li', 'sah', 'or', 'vec', 'hif', 'mrj', 'mhr', 'ilo', 'pa', 'os', 'xmf', 'fiu-vro', 'ps', 'kv', 'pag', 'dv', 'zea', 'gv', 'tyv', 'ay', 'km', 'nap', 'diq', 'lez', 'nrm', 'koi', 'mwl', 'udm', 'stq', 'fur', 'mt', 'wuu', 'lij', 'ug', 'lad', 'pih', 'sc', 'bh', 'ksh', 'nov', 'ang', 'kw', 'nv', 'hak', 'frp', 'szl', 'ext', 'gan', 'ie', 'ln', 'gom', 'pcd', 'kab', 'sn', 'myv', 'sn', 'so', 'st', 'tn', 'ts', 'tum', 'tw', 'ty', 've', 'wo', 'xh', 'zu', 'as', 'gn', 'av', 'bm', 'ch', 'cr', 'ee', 'ff', 'fj', 'ha', 'ho', 'hz', 'ig', 'ii', 'ik', 'iu', 'kg', 'ki', 'kj', 'kr', 'ks', 'ku', 'kv', 'kw', 'ky', 'la', 'lb', 'lg', 'li', 'ln', 'lo', 'lt', 'lu', 'lv', 'mg', 'mh', 'mi', 'mk', 'ml', 'mn', 'mo', 'mr', 'ms', 'mt', 'my', 'na', 'nb', 'nd', 'ne', 'ng', 'nl', 'nn', 'no', 'nr', 'nv', 'ny', 'oc', 'oj', 'om', 'or', 'os', 'pa', 'pi', 'pl', 'ps', 'pt', 'qu', 'rm', 'rn', 'ro', 'ru', 'rw', 'sa', 'sc', 'sd', 'se', 'sg', 'si', 'sk', 'sl', 'sm', 'sn', 'so', 'sq', 'sr', 'ss', 'st', 'su', 'sv', 'sw', 'ta', 'te', 'tg', 'th', 'ti', 'tk', 'tl', 'tn', 'to', 'tr', 'ts', 'tt', 'tw', 'ty', 'ug', 'uk', 'ur', 'uz', 've', 'vi', 'vo', 'wa', 'wo', 'xh', 'yi', 'yo', 'za', 'zh', 'zu'
+        ]; // Principais primeiro para velocidade
         for (let l of langs) {
             try {
                 const r = await fetch(`https://${l}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}?origin=*`);
@@ -4547,23 +4537,28 @@ async function analyze(msg) {
     botSay(`Não encontrei nada, ${nomeUsuario}. Tente 'jogos' ou 'piada'.`);
 }
 
-// --- 4. FUNÇÕES DE INTERFACE (INTEGRADO AO SEU CSS) ---
+// --- 4. FUNÇÕES DE INTERFACE ---
+
+// FUNÇÃO ESSENCIAL PARA O BOTÃO FUNCIONAR
+function autoMessage(texto) {
+    const i = document.getElementById("userInput");
+    i.value = texto;
+    send();
+}
 
 function setMode(m) {
     const body = document.body;
     const chat = document.getElementById("chat");
-    
-    // Cria o balão de fala do usuário para o histórico
     const d = document.createElement("div"); 
     d.className = "user-msg";
     d.innerHTML = `<div class="bubble">Modo ${m.toUpperCase()}</div>`;
     chat.appendChild(d);
 
     if (m === 'claro') {
-        body.classList.add('light-mode'); // 🔥 Ativa o seu CSS Claro
+        body.classList.add('light-mode');
         botSay("☀️ **MODO CLARO ATIVADO**");
     } else {
-        body.classList.remove('light-mode'); // 🔥 Volta para o seu CSS Dark/Neon
+        body.classList.remove('light-mode');
         botSay("🌙 **MODO ESCURO ATIVADO**");
     }
     chat.scrollTop = chat.scrollHeight;
@@ -4572,14 +4567,8 @@ function setMode(m) {
 function botSay(txt, tipo = "") {
     const chat = document.getElementById("chat");
     const container = document.createElement("div");
-    // Usa as classes msg-acerto e msg-erro do seu CSS
-    container.className = "bot-msg bubble" + (tipo ? " msg-" + tipo : "");
-    
-    // Adicionei a classe "anim" para usar o seu hover de escala 1.25
-    container.classList.add("anim"); 
-
+    container.className = "bot-msg bubble anim" + (tipo ? " msg-" + tipo : "");
     container.innerHTML = `<small style="opacity:0.5; font-size: 10px;">⚡ [0.002s]</small><br>${txt}`;
-    
     chat.appendChild(container);
     chat.scrollTop = chat.scrollHeight;
 
@@ -4593,25 +4582,21 @@ function send() {
     const i = document.getElementById("userInput");
     if (!i.value.trim()) return;
     const val = i.value; i.value = "";
-    
     const chat = document.getElementById("chat");
     const d = document.createElement("div"); 
-    d.className = "user-msg bubble"; // Usa suas classes de bolha do usuário
+    d.className = "user-msg bubble";
     d.innerHTML = val;
     chat.appendChild(d);
     chat.scrollTop = chat.scrollHeight;
-    
     analyze(val);
 }
 
 function abrirMenuJogos() {
-    // Balão do usuário
     const chat = document.getElementById("chat");
     const d = document.createElement("div"); 
     d.className = "user-msg bubble";
     d.innerHTML = "Jogos";
     chat.appendChild(d);
-
     botSay(`🎮 **MENU DE JOGOS**<br><br><b>A</b> - Adivinhação<br><b>B</b> - Matemática<br><b>C</b> - Anatomia<br><b>D</b> - Capitais<br><b>E</b> - Inversão`);
 }
 
@@ -4662,7 +4647,7 @@ window.onload = () => {
         if (e.key === "Enter") send(); 
     });
 };
-</script>
+</script>  
 </body>
 </html>
 
