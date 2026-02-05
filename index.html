@@ -7,12 +7,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
   <style>
 /* ============================================================
-   🤖 INFOBOT — CSS COMPLETO ULTRA (ANDROID / iOS STYLE)
-   Mesmas cores • Responsivo • Animado • Premium
+   🔵 INFORBOT — CSS COMPLETO NEON + RESPONSIVO
    ============================================================ */
 
-/* ================== VARIÁVEIS ================== */
-:root { 
+/* ================= VARIÁVEIS ================= */
+:root {
     --bg: #010409;
     --app: #0d1117;
     --text: #c9d1d9;
@@ -22,202 +21,127 @@
     --bubble-bot: #161b22;
     --text-bot: #e6edf3;
 
+    --neon: 0 0 12px #1f6feb, 0 0 25px #1f6feb;
     --header: linear-gradient(135deg, #000428, #004e92, #000000);
 }
 
-.light-mode { 
-    --bg: #f0f2f5;
+/* ================= MODO CLARO (CORRIGIDO) ================= */
+.light-mode {
+    --bg: #eef2f7;
     --app: #ffffff;
-    --text: #1c1e21;
-    --border: #dddfe2;
+    --text: #111827;
+    --border: #cfd6e0;
 
-    --bubble-bot: #f8f9fa;
-    --text-bot: #050505;
+    --bubble-bot: #f4f6f9;
+    --text-bot: #111827;
 
-    --header: linear-gradient(135deg, #0061ff, #60efff);
+    --neon: 0 0 10px #2563eb, 0 0 20px #60a5fa;
+    --header: linear-gradient(135deg, #3b82f6, #93c5fd);
 }
 
-/* ================== RESET GLOBAL ================== */
+/* ================= RESET ================= */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    -webkit-tap-highlight-color: transparent;
+    font-family: 'Segoe UI', sans-serif;
     transition: all 0.25s ease;
 }
 
-/* ================== BODY ================== */
 body {
     height: 100vh;
-    background: radial-gradient(circle at top, #020a18, var(--bg));
+    background: var(--bg);
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
 }
 
-/* ================== APP (CARD MOBILE) ================== */
+/* ================= APP ================= */
 .app {
-    width: 100%;
-    max-width: 420px;               /* aparência de app mobile */
-    height: 100vh;
-    background: linear-gradient(180deg, #0d1117, #05080f);
+    width: 95%;
+    max-width: 1500px;
+    height: 95vh;
+    background: var(--app);
+    border-radius: 28px;
     display: flex;
     flex-direction: column;
-    border-radius: 28px;
-    border: 1px solid var(--border);
-    box-shadow:
-        0 25px 60px rgba(0,0,0,0.7),
-        0 0 40px rgba(31,111,235,0.25);
+    border: 2px solid var(--border);
+    box-shadow: var(--neon);
     overflow: hidden;
 }
 
-/* ================== HEADER (APP BAR) ================== */
+/* ================= HEADER ================= */
 .header {
     background: var(--header);
-    padding: 20px;
+    padding: 22px;
     text-align: center;
     color: white;
     border-bottom: 2px solid var(--accent);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-    animation: headerGlow 6s ease-in-out infinite;
+    box-shadow: var(--neon);
 }
 
 .title {
-    font-size: 26px;
+    font-size: 42px;
     font-weight: 900;
-    letter-spacing: 6px;
+    letter-spacing: 10px;
     text-transform: uppercase;
-    margin-bottom: 12px;
-    text-shadow:
-        0 0 10px var(--accent),
-        0 0 30px rgba(31,111,235,0.7);
-    animation: floating 3s ease-in-out infinite;
+    text-shadow: var(--neon);
+    animation: float 3s ease-in-out infinite;
 }
 
-/* ================== ANIMAÇÕES HEADER ================== */
-@keyframes floating {
+@keyframes float {
     0%,100% { transform: translateY(0); }
-    50% { transform: translateY(-4px); }
+    50% { transform: translateY(-6px); }
 }
 
-@keyframes headerGlow {
-    0%,100% { box-shadow: 0 0 25px rgba(31,111,235,0.4); }
-    50% { box-shadow: 0 0 45px rgba(31,111,235,0.9); }
-}
-
-/* ================== BOTÕES SUPERIORES ================== */
-.ui-box {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-}
-
-.btn-row {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-
-.btn-ui {
-    background: rgba(255,255,255,0.08);
-    border: 1.5px solid rgba(255,255,255,0.6);
-    color: white;
-    padding: 10px 16px;
-    border-radius: 14px;
-    cursor: pointer;
-    font-size: 10px;
-    font-weight: 900;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    backdrop-filter: blur(8px);
-    box-shadow: 0 6px 14px rgba(0,0,0,0.35);
-}
-
-.btn-ui:hover {
-    background: var(--accent);
-    transform: translateY(-2px) scale(1.08);
-    box-shadow:
-        0 0 20px #fff,
-        0 0 30px var(--accent);
-}
-
-.btn-ui:active {
-    transform: scale(0.92);
-}
-
-/* ================== CHAT ================== */
+/* ================= CHAT ================= */
 .chat {
     flex: 1;
-    padding: 16px;
+    padding: 22px;
     overflow-y: auto;
-    background: linear-gradient(180deg, #010409, #020b18);
+    background: var(--bg);
     display: flex;
     flex-direction: column;
     gap: 14px;
 }
 
-/* ================== BOLHAS ================== */
+/* ================= BOLHAS ================= */
 .bubble {
-    padding: 14px 18px;
+    padding: 14px 20px;
     border-radius: 22px;
-    font-size: 15px;
+    font-size: 16px;
+    max-width: 80%;
     line-height: 1.5;
-    max-width: 88%;
-    box-shadow:
-        0 6px 16px rgba(0,0,0,0.35);
-    animation: msgIn 0.35s ease-out;
-}
-
-/* Entrada suave tipo iOS */
-@keyframes msgIn {
-    from {
-        opacity: 0;
-        transform: translateY(12px) scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
 }
 
 .bot-msg {
-    align-self: flex-start;
     background: var(--bubble-bot);
     color: var(--text-bot);
     border: 1px solid var(--accent);
+    box-shadow: 0 0 10px rgba(31,111,235,.4);
 }
 
 .user-msg {
     align-self: flex-end;
-    background: linear-gradient(135deg, var(--accent), #388bfd);
+    background: var(--accent);
     color: white;
+    box-shadow: var(--neon);
 }
 
-/* ================== STATUS IA ================== */
+/* ================= STATUS ================= */
 .status {
-    padding: 8px 16px;
-    font-size: 13px;
-    color: var(--accent);
-    font-weight: bold;
     display: none;
     align-items: center;
     gap: 8px;
-    animation: pulseStatus 1.4s ease-in-out infinite;
-}
-
-@keyframes pulseStatus {
-    0% { opacity: 0.4; }
-    50% { opacity: 1; }
-    100% { opacity: 0.4; }
+    color: var(--accent);
+    font-weight: bold;
+    padding: 10px 20px;
 }
 
 .spin {
-    width: 14px;
-    height: 14px;
+    width: 16px;
+    height: 16px;
     border: 3px solid var(--accent);
     border-top-color: transparent;
     border-radius: 50%;
@@ -228,96 +152,128 @@ body {
     to { transform: rotate(360deg); }
 }
 
-/* ================== JOGO / QUIZ ================== */
-.game-btn {
-    background: linear-gradient(135deg, #1f6feb, #388bfd);
-    color: white;
-    border: none;
-    padding: 14px;
-    margin: 6px 0;
-    border-radius: 14px;
-    font-weight: bold;
-    font-size: 15px;
-    cursor: pointer;
-    width: 100%;
-    box-shadow: 0 6px 16px rgba(31,111,235,0.6);
-}
-
-.game-btn:hover {
-    transform: scale(1.05);
-    box-shadow: 0 0 25px rgba(56,139,253,0.9);
-}
-
-.game-btn:active {
-    transform: scale(0.94);
-}
-
-/* ACERTO / ERRO */
-@keyframes acertoBrilho {
-    0% { box-shadow: 0 0 0 #2ecc71; }
-    50% { box-shadow: 0 0 30px #2ecc71; }
-    100% { box-shadow: 0 0 8px #2ecc71; }
-}
-
-@keyframes erroTremer {
-    0%,100% { transform: translateX(0); }
-    25% { transform: translateX(-12px); }
-    50% { transform: translateX(12px); }
-}
-
-.msg-acerto {
-    animation: acertoBrilho 0.6s ease-in-out;
-    border: 2px solid #2ecc71 !important;
-    color: #2ecc71 !important;
-}
-
-.msg-erro {
-    animation: erroTremer 0.5s ease-in-out;
-    border: 2px solid #e74c3c !important;
-    color: #e74c3c !important;
-}
-
-/* ================== INPUT (ANDROID / iOS) ================== */
+/* ================= INPUT ================= */
 .input-area {
-    padding: 12px;
-    background: linear-gradient(180deg, #0d1117, #06080f);
+    padding: 14px;
+    background: var(--app);
     border-top: 1px solid var(--border);
     display: flex;
     gap: 10px;
+    align-items: center;
 }
 
 input {
     flex: 1;
-    padding: 14px 18px;
-    border-radius: 24px;
+    padding: 14px 22px;
+    border-radius: 30px;
     border: 1px solid var(--border);
     background: var(--bg);
     color: var(--text);
     outline: none;
-    font-size: 15px;
-    box-shadow: inset 0 0 8px rgba(0,0,0,0.6);
-    animation: breathe 4s ease-in-out infinite;
-}
-
-@keyframes breathe {
-    0%,100% { box-shadow: inset 0 0 8px rgba(0,0,0,0.6); }
-    50% { box-shadow: inset 0 0 14px rgba(31,111,235,0.6); }
 }
 
 input:focus {
     border-color: var(--accent);
-    box-shadow: 0 0 12px rgba(31,111,235,0.8);
+    box-shadow: var(--neon);
 }
 
-/* ================== DESKTOP (CENTRALIZADO) ================== */
-@media (min-width: 900px) {
+/* ================= BOTÕES ================= */
+.btn-ui,
+.game-btn,
+.send-btn,
+.mic-btn {
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    cursor: pointer;
+    padding: 10px;
+    box-shadow: 0 0 0 transparent;
+}
+
+.btn-ui:hover,
+.game-btn:hover,
+.send-btn:hover,
+.mic-btn:hover {
+    box-shadow: var(--neon);
+    transform: scale(1.15);
+}
+
+/* Bolinha neon no microfone e enviar */
+.mic-btn:active,
+.send-btn:active {
+    box-shadow: 0 0 0 6px rgba(31,111,235,0.3), var(--neon);
+}
+
+/* ================= JOGO ================= */
+.game-btn {
+    border-radius: 14px;
+    padding: 10px 18px;
+    font-weight: bold;
+}
+
+/* ================= ANIMAÇÕES ================= */
+@keyframes acerto {
+    0% { box-shadow: 0 0 0 #2ecc71; }
+    50% { box-shadow: 0 0 30px #2ecc71; }
+    100% { box-shadow: 0 0 10px #2ecc71; }
+}
+
+@keyframes erro {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+}
+
+.msg-acerto { animation: acerto 0.6s; }
+.msg-erro { animation: erro 0.5s; }
+
+/* ================= DESKTOP ================= */
+@media (min-width: 1024px) {
     .app {
-        max-width: 460px;
-        height: 95vh;
-        border-radius: 32px;
+        flex-direction: row;
+    }
+
+    .header {
+        width: 280px;
+        height: 100%;
+        border-bottom: none;
+        border-right: 2px solid var(--accent);
+    }
+
+    .chat {
+        padding: 30px;
     }
 }
 
+/* ================= CELULAR ================= */
+@media (max-width: 768px) {
+    .app {
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+    }
+
+    .title {
+        font-size: 28px;
+        letter-spacing: 6px;
+    }
+
+    .input-area {
+        padding-bottom: 24px; /* evita sobreposição */
+    }
+}
+
+/* ================= IPHONE ================= */
+@media (max-width: 430px) {
+    .title {
+        font-size: 24px;
+    }
+
+    input {
+        padding: 12px 18px;
+    }
+}
 
 </style>
 </head>
