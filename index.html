@@ -4441,7 +4441,7 @@ const InforbotEngine = {
     }
 };
 
-// --- 3. ANALYZE (CÉREBRO DO INFORBOT COM 31 WIKIPÉDIAS) ---
+// --- 3. ANALYZE (CÉREBRO DO INFORBOT - 31 WIKIS + JOGOS + AUTO-SYNC CSS) ---
 async function analyze(msg) {
     let entradaBruta = msg.toLowerCase().trim();
 
@@ -4471,11 +4471,11 @@ async function analyze(msg) {
     if (entradaBruta === "curiosidade") return fast('curiosidade');
     if (/^[a-e]$/.test(entradaBruta)) return iniciarLogicaJogo(entradaBruta);
 
-    // MOTOR DE INTELIGÊNCIA (DATABASE LOCAL)
+    // MOTOR DE INTELIGÊNCIA (DATABASE)
     let resDb = buscarMelhorResposta(msg);
     if (resDb) return botSay(resDb);
 
-    // MATEMÁTICA AVANÇADA
+    // MATEMÁTICA
     if (/[0-9]/.test(entradaBruta) && /[\+\-\*\/\^\(\)Vvx:]/.test(entradaBruta)) {
         try {
             let exp = entradaBruta.replace(/x/g, "*").replace(/:/g, "/").replace(/v/g, "sqrt").replace(/V/g, "sqrt").replace(/,/g, ".");
@@ -4483,17 +4483,11 @@ async function analyze(msg) {
         } catch(e) {}
     }
 
-    // 🌐 SUPER WIKIPÉDIA (AS 31 MAIORES DO MUNDO)
+    // 🌐 SUPER WIKIPÉDIA (31 MAIORES)
     if (entradaBruta.includes("o que e") || entradaBruta.includes("quem e") || entradaBruta.split(" ").length <= 3) {
         setLoading(true);
         let query = entradaBruta.replace(/o que e|quem e|sobre|me fale/g, "").trim();
-        
-        // As 31 maiores Wikipédias por volume de artigos
-        const langs = [
-            'pt', 'en', 'ceb', 'de', 'sv', 'fr', 'nl', 'ru', 'es', 'it', 'arz', 'pl', 
-            'ja', 'zh', 'vi', 'war', 'uk', 'ar', 'fa', 'ca', 'sr', 'id', 'no', 'ko', 
-            'fi', 'hu', 'cs', 'tr', 'sh', 'ro', 'zh-min-nan'
-        ];
+        const langs = ['pt', 'en', 'ceb', 'de', 'sv', 'fr', 'nl', 'ru', 'es', 'it', 'arz', 'pl', 'ja', 'zh', 'vi', 'war', 'uk', 'ar', 'fa', 'ca', 'sr', 'id', 'no', 'ko', 'fi', 'hu', 'cs', 'tr', 'sh', 'ro', 'zh-min-nan'];
 
         for (let l of langs) {
             try {
@@ -4509,34 +4503,43 @@ async function analyze(msg) {
         }
         setLoading(false);
     }
-    botSay(`Não encontrei nada sobre isso nas 31 Wikipédias, ${nomeUsuario}.`);
+    botSay(`Não encontrei nada, ${nomeUsuario}. Tente 'jogos' ou 'piada'.`);
 }
 
-// --- 4. INTERFACE, MODOS E AUTO-MESSAGE ---
+// --- 4. FUNÇÕES DE INTERFACE (INTEGRADO AO SEU CSS) ---
 
 function setMode(m) {
     const body = document.body;
     const chat = document.getElementById("chat");
+    
+    // Cria o balão de fala do usuário para o histórico
     const d = document.createElement("div"); 
     d.className = "user-msg";
     d.innerHTML = `<div class="bubble">Modo ${m.toUpperCase()}</div>`;
     chat.appendChild(d);
 
     if (m === 'claro') {
-        body.classList.add('light-mode');
+        body.classList.add('light-mode'); // 🔥 Ativa o seu CSS Claro
         botSay("☀️ **MODO CLARO ATIVADO**");
     } else {
-        body.classList.remove('light-mode');
+        body.classList.remove('light-mode'); // 🔥 Volta para o seu CSS Dark/Neon
         botSay("🌙 **MODO ESCURO ATIVADO**");
     }
+    chat.scrollTop = chat.scrollHeight;
 }
 
 function botSay(txt, tipo = "") {
     const chat = document.getElementById("chat");
-    const d = document.createElement("div");
-    d.className = "bot-msg" + (tipo ? " msg-" + tipo : "");
-    d.innerHTML = `<div class="bubble scale-hover"><small style="opacity:0.5">⚡ [0.002s]</small><br>${txt}</div>`;
-    chat.appendChild(d);
+    const container = document.createElement("div");
+    // Usa as classes msg-acerto e msg-erro do seu CSS
+    container.className = "bot-msg bubble" + (tipo ? " msg-" + tipo : "");
+    
+    // Adicionei a classe "anim" para usar o seu hover de escala 1.25
+    container.classList.add("anim"); 
+
+    container.innerHTML = `<small style="opacity:0.5; font-size: 10px;">⚡ [0.002s]</small><br>${txt}`;
+    
+    chat.appendChild(container);
     chat.scrollTop = chat.scrollHeight;
 
     window.speechSynthesis.cancel();
@@ -4549,28 +4552,33 @@ function send() {
     const i = document.getElementById("userInput");
     if (!i.value.trim()) return;
     const val = i.value; i.value = "";
-    const d = document.createElement("div"); d.className = "user-msg";
-    d.innerHTML = `<div class="bubble">${val}</div>`;
-    document.getElementById("chat").appendChild(d);
-    document.getElementById("chat").scrollTop = document.getElementById("chat").scrollHeight;
+    
+    const chat = document.getElementById("chat");
+    const d = document.createElement("div"); 
+    d.className = "user-msg bubble"; // Usa suas classes de bolha do usuário
+    d.innerHTML = val;
+    chat.appendChild(d);
+    chat.scrollTop = chat.scrollHeight;
+    
     analyze(val);
 }
 
 function abrirMenuJogos() {
+    // Balão do usuário
     const chat = document.getElementById("chat");
     const d = document.createElement("div"); 
-    d.className = "user-msg";
-    d.innerHTML = `<div class="bubble">Jogos</div>`;
+    d.className = "user-msg bubble";
+    d.innerHTML = "Jogos";
     chat.appendChild(d);
 
-    botSay(`🎮 **MENU DE JOGOS DO ${botNome.toUpperCase()}**<br><br>Escolha uma letra:<br><b>A</b> - Adivinhação (1-50)<br><b>B</b> - Matemática Rápida<br><b>C</b> - Anatomia<br><b>D</b> - Capitais<br><b>E</b> - Inversão de Palavras`);
+    botSay(`🎮 **MENU DE JOGOS**<br><br><b>A</b> - Adivinhação<br><b>B</b> - Matemática<br><b>C</b> - Anatomia<br><b>D</b> - Capitais<br><b>E</b> - Inversão`);
 }
 
 function iniciarLogicaJogo(letra) {
     modoJogo = true;
     if (letra === "a") {
         respostaCerta = Math.floor(Math.random() * 50) + 1;
-        botSay("🎰 Pensei em um número de 1 a 50. Qual seu palpite?");
+        botSay("🎰 Qual o número de 1 a 50?");
     } else if (letra === "b") {
         let n1 = Math.floor(Math.random() * 80), n2 = Math.floor(Math.random() * 80);
         respostaCerta = n1 + n2;
@@ -4582,12 +4590,12 @@ function iniciarLogicaJogo(letra) {
     } else if (letra === "d") {
         let c = dbJogos.capitais[Math.floor(Math.random() * dbJogos.capitais.length)];
         respostaCerta = c.r;
-        botSay(`🌍 Qual a capital de **${c.p}**?`);
+        botSay(`🌍 Capital de **${c.p}**?`);
     } else if (letra === "e") {
-        const pal = ["roberto", "inforbot", "algoritmo", "computador", "anatomia"];
+        const pal = ["roberto", "inforbot", "algoritmo", "computador"];
         let p = pal[Math.floor(Math.random() * pal.length)];
         respostaCerta = p;
-        botSay(`🔄 O que é a palavra invertida: **${p.split('').reverse().join('')}**?`);
+        botSay(`🔄 Inverta: **${p.split('').reverse().join('')}**`);
     }
 }
 
@@ -4595,21 +4603,17 @@ function fast(type) {
     if (typeof DATABASE === 'undefined') return;
     const chat = document.getElementById("chat");
     const d = document.createElement("div"); 
-    d.className = "user-msg";
-    d.innerHTML = `<div class="bubble">${type.charAt(0).toUpperCase() + type.slice(1)}</div>`;
+    d.className = "user-msg bubble";
+    d.innerHTML = type.charAt(0).toUpperCase() + type.slice(1);
     chat.appendChild(d);
 
     let lista = type === 'piada' ? DATABASE.piadas : DATABASE.curiosidades;
-    if (lista && lista.length > 0) {
-        botSay(lista[Math.floor(Math.random() * lista.length)]);
-    } else {
-        botSay("Meu banco de dados está vazio!");
-    }
+    if (lista) botSay(lista[Math.floor(Math.random() * lista.length)]);
 }
 
 function setLoading(s) { 
-    const loader = document.getElementById("loading");
-    if (loader) loader.style.display = s ? "flex" : "none"; 
+    const st = document.querySelector(".status");
+    if(st) st.style.display = s ? "flex" : "none"; 
 }
 
 window.onload = () => {
