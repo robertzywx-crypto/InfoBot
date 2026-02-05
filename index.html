@@ -4547,18 +4547,24 @@ function autoMessage(texto) {
 }
 
 function setMode(m) {
-    // Pegamos o 'body' pois no seu CSS o .light-mode altera as variáveis globais
-    const element = document.body;
+    const body = document.body;
 
     if (m === 'claro') {
-        element.classList.add('light-mode');
-        // Balão de feedback com o seu estilo de acerto
-        botSay("☀️ **MODO CLARO ATIVADO**", "acerto");
+        body.classList.add('light-mode');
     } else {
-        element.classList.remove('light-mode');
-        botSay("🌙 **MODO ESCURO ATIVADO**");
+        body.classList.remove('light-mode');
+    }
+
+    // feedback seguro (não quebra)
+    if (typeof botSay === "function") {
+        if (m === 'claro') {
+            botSay("☀️ MODO CLARO ATIVADO", "acerto");
+        } else {
+            botSay("🌙 MODO ESCURO ATIVADO");
+        }
     }
 }
+
 function botSay(txt, tipo = "") {
     const chat = document.getElementById("chat");
     const container = document.createElement("div");
