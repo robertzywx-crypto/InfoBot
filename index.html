@@ -4482,7 +4482,43 @@ async function analyze(msg) {
             return botSay(`${nomeUsuario}, o resultado é: **${math.evaluate(exp)}**.`);
         } catch(e) {}
     }
+// 📰 LAYER 1: CÉREBRO EM TEMPO REAL GLOBAL (NOTÍCIAS MUNDIAIS)
+    if (entradaBruta.includes("noticias") || entradaBruta.includes("aconteceu") || entradaBruta.includes("news")) {
+        setLoading(true);
+        let busca = entradaBruta.replace(/noticias|news|sobre|agora|hoje|aconteceu|mundiais/g, "").trim();
+        
+        // Se o Roberto pedir "mundiais", o Inforbot muda a antena para o mundo (Inglês/Global)
+        let isGlobal = entradaBruta.includes("mundiais") || entradaBruta.includes("mundo");
+        let lang = isGlobal ? "en-US" : "pt-BR";
+        let geo = isGlobal ? "US" : "BR";
+        
+        if(!busca) busca = isGlobal ? "World" : "Brasil";
 
+        try {
+            const newsURL = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://news.google.com/rss/search?q=${busca}&hl=${lang}&gl=${geo}&ceid=${geo}:${isGlobal ? 'en' : 'pt-419'}`)}`;
+            const response = await fetch(newsURL);
+            const data = await response.json();
+            
+            const parser = new DOMParser();
+            const xml = parser.parseFromString(data.contents, "text/xml");
+            const items = xml.querySelectorAll("item");
+            
+            let noticiasTxt = isGlobal ? `🌎 **GLOBAL NEWS - ${busca.toUpperCase()}:**<br><br>` : `🔔 **NOTÍCIAS - ${busca.toUpperCase()}:**<br><br>`;
+            
+            for(let i = 0; i < 4; i++) { // Agora ele traz as 4 principais
+                if(items[i]) {
+                    let titulo = items[i].querySelector("title").innerHTML;
+                    noticiasTxt += `• ${titulo}<br><br>`;
+                }
+            }
+            
+            setLoading(false);
+            return botSay(noticiasTxt);
+        } catch(e) {
+            console.error("Erro Inforbot News:", e);
+        }
+        setLoading(false);
+    }
 // 🌐 ULTRA WIKIPÉDIA (TODAS AS 339 EDIÇÕES MUNDIAIS)
     if (entradaBruta.includes("o que e") || entradaBruta.includes("quem e") || entradaBruta.split(" ").length <= 3) {
         setLoading(true);
