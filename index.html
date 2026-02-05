@@ -4270,15 +4270,19 @@ const DATABASE = {
         "Por que o vácuo é ruim de papo? Porque não tem som. Explicação: Física acústica."
     ]
 };
-// ==========================================
-// 1. CONFIGURAÇÕES E MEMÓRIA DO INFORBOT
-// ==========================================
+/**
+ * ============================================================
+ * 🤖 MOTOR INFORBOT SUPREME - TODOS OS JOGOS + INTELIGÊNCIA
+ * PROJETO: ROBERTO | NOME: INFORBOT
+ * ============================================================
+ */
+
+// --- 1. CONFIGURAÇÕES E MEMÓRIA ---
 var modoJogo = false;
 var respostaCerta = "";
 const botNome = "Inforbot";
-const nomeUsuario = "Roberto"; 
+const nomeUsuario = "Roberto";
 
-// Banco de Dados de Anatomia (20 questões) e Capitais
 const dbJogos = {
     anatomia: [
         {q: "Maior osso do corpo?", a: "femur"}, {q: "Maior órgão?", a: "pele"},
@@ -4299,167 +4303,115 @@ const dbJogos = {
     ]
 };
 
-// ==========================================
-// 2. MOTOR DE ANÁLISE (ANALYZE)
-// ==========================================
-async function analyze(msg) {
-    let raw = msg.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[?!.]/g, "");
+// --- 2. MOTOR DE LIMPEZA E PRIORIDADE ---
+function limparTexto(t) {
+    return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[?!.]/g, "").replace(/(k|h|j){2,}/g, "").trim();
+}
 
-    // A. LÓGICA DE JOGO ATIVO (Com ativação das suas animações CSS)
+function buscarMelhorResposta(msg) {
+    if (typeof DATABASE === 'undefined' || !DATABASE.treino) return null;
+    let msgLimpa = limparTexto(msg);
+    let melhorMatch = null; let maiorTamanho = 0;
+    for (let chave in DATABASE.treino) {
+        let chaveLimpa = limparTexto(chave);
+        if (msgLimpa.includes(chaveLimpa)) {
+            if (chaveLimpa.length > maiorTamanho) {
+                maiorTamanho = chaveLimpa.length;
+                melhorMatch = DATABASE.treino[chave];
+            }
+        }
+    }
+    return melhorMatch;
+}
+
+// --- 3. ANALYZE (CÉREBRO) ---
+async function analyze(msg) {
+    let raw = limparTexto(msg);
+
+    // LÓGICA DE JOGO ATIVO
     if (modoJogo) {
         let respLimpa = raw.replace(/\s/g, "");
         let certaLimpa = String(respostaCerta).toLowerCase().replace(/\s/g, "");
-
         if (respLimpa === certaLimpa || raw.includes(certaLimpa)) {
             modoJogo = false;
             return botSay(`🎆 **ACERTOU!** Você é fera, ${nomeUsuario}!`, "acerto");
         } else if (raw === "parar") {
             modoJogo = false;
-            return botSay("Jogo encerrado. O que vamos fazer agora?");
+            return botSay("Jogo encerrado.");
         } else {
+            // Dica para jogo de números
             if (!isNaN(parseInt(raw)) && typeof respostaCerta === "number") {
                 let dica = parseInt(raw) < respostaCerta ? "MAIOR ⬆️" : "MENOR ⬇️";
-                return botSay(`❌ Errado! Dica: O número é **${dica}** que ${raw}.`, "erro");
+                return botSay(`❌ Dica: O número é **${dica}** que ${raw}.`, "erro");
             }
             return botSay("❌ **ERRADO!** Tente de novo ou diga 'parar'.", "erro");
         }
     }
 
-    // B. COMANDOS DE JOGOS
+    // COMANDOS DE MENU/BOTÕES
     if (raw === "jogos" || raw === "jogo") return abrirMenuJogos();
-    if (["a", "b", "c", "d", "e"].includes(raw)) return iniciarLogicaJogo(raw);
+    if (raw === "piada") return fast('piada');
+    if (raw === "curiosidade") return fast('curiosidade');
+    if (["a", "b", "c", "d", "e"].includes(raw) && msg.length === 1) return iniciarLogicaJogo(raw);
 
-    // C. MATEMÁTICA AVANÇADA (Tratando símbolos: +, -, *, /, ^, (), V, v, x, :)
+    // PRIORIDADE DATABASE (FRASES LONGAS)
+    let resDb = buscarMelhorResposta(msg);
+    if (resDb) return botSay(resDb);
+
+    // MATEMÁTICA
     if (/[0-9]/.test(raw) && /[\+\-\*\/\^\(\)Vvx:]/.test(raw)) {
         try {
-            // Substituição de símbolos para o motor math.js
-            let exp = raw.replace(/x/g, "*")
-                         .replace(/:/g, "/")
-                         .replace(/v/g, "sqrt")
-                         .replace(/V/g, "sqrt")
-                         .replace(/,/g, ".");
-            let res = math.evaluate(exp);
-            return botSay(`${nomeUsuario}, a solução matemática é: **${res}**.`);
-        } catch(e) {
-            // Se falhar a conta, segue para as outras buscas
-        }
+            let exp = raw.replace(/x/g, "*").replace(/:/g, "/").replace(/v/g, "sqrt").replace(/V/g, "sqrt").replace(/,/g, ".");
+            return botSay(`${nomeUsuario}, o resultado é: **${math.evaluate(exp)}**.`);
+        } catch(e) {}
     }
 
-    // D. BUSCA NO TREINO (DATABASE LOCAL)
-    if (typeof DATABASE !== 'undefined' && DATABASE.treino) {
-        for (let key in DATABASE.treino) {
-            let keyClean = key.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-            if (raw === keyClean) return botSay(DATABASE.treino[key]);
-        }
-    }
-
-    // E. 20 MAIORES WIKIPÉDIAS (Incluindo Brasil/PT e as mundiais)
+    // WIKIPÉDIAS
     if (raw.includes("o que e") || raw.includes("quem e") || raw.split(" ").length <= 2) {
         setLoading(true);
         let query = raw.replace(/o que e|quem e|sobre/g, "").trim();
-        // As 20 línguas solicitadas
         const langs = ['pt', 'en', 'es', 'fr', 'de', 'it', 'ru', 'ja', 'zh', 'nl', 'pl', 'sv', 'vi', 'war', 'uk', 'ar', 'fa', 'ca', 'no', 'fi'];
-        
         for (let l of langs) {
             try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 1500);
-                const r = await fetch(`https://${l}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}?origin=*`, { signal: controller.signal });
-                
+                const r = await fetch(`https://${l}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}?origin=*`);
                 if (r.ok) {
                     const d = await r.json();
                     setLoading(false);
-                    clearTimeout(timeoutId);
                     return botSay(`**${botNome} Wiki (${l.toUpperCase()}):** ${d.extract}`);
                 }
             } catch(e){ continue; }
         }
         setLoading(false);
     }
-    botSay(`Não encontrei nada nos registros, ${nomeUsuario}.`);
+    botSay(`Não encontrei nada sobre isso, ${nomeUsuario}.`);
 }
 
-// ==========================================
-// 3. FUNÇÕES DE INTERFACE (VOZ DE HOMEM E SÍMBOLOS)
-// ==========================================
+// --- 4. INTERFACE E TODOS OS JOGOS ---
 function botSay(txt, tipo = "") {
     const chat = document.getElementById("chat");
-    if(!chat) return;
-    
     const d = document.createElement("div");
-    // d.className ativa as classes msg-acerto ou msg-erro do seu CSS
     d.className = "bot-msg" + (tipo ? " msg-" + tipo : "");
-    
-    // O seu pequeno símbolo de tempo de análise
-    const simbolo = "⚡ [0.002s]";
-    d.innerHTML = `<div class="bubble"><small style="opacity:0.5">${simbolo}</small><br>${txt}</div>`;
-    
+    d.innerHTML = `<div class="bubble"><small style="opacity:0.5">⚡ [0.002s]</small><br>${txt}</div>`;
     chat.appendChild(d);
     chat.scrollTop = chat.scrollHeight;
-
-    // Lógica de Voz de Homem (Pitch Grosso)
-    const fala = new SpeechSynthesisUtterance(txt.replace(/<\/?[^>]+(>|$)/g, ""));
-    const vozes = window.speechSynthesis.getVoices();
-    let vozMacho = vozes.find(v => (v.lang.includes('pt')) && (v.name.toLowerCase().includes('male') || v.name.toLowerCase().includes('daniel') || v.name.toLowerCase().includes('antonio') || v.name.toLowerCase().includes('helio')));
-    
-    if (vozMacho) fala.voice = vozMacho;
-    fala.pitch = 0.5; // Deixa a voz grossa
-    fala.lang = 'pt-BR';
-    window.speechSynthesis.speak(fala);
-}
-
-function userSay(txt) {
-    const chat = document.getElementById("chat");
-    if(!chat) return;
-    const d = document.createElement("div");
-    d.className = "user-msg";
-    d.innerHTML = `<div class="bubble">${txt}</div>`;
-    chat.appendChild(d);
-    chat.scrollTop = chat.scrollHeight;
+    window.speechSynthesis.cancel();
+    const f = new SpeechSynthesisUtterance(txt.replace(/<\/?[^>]+(>|$)/g, ""));
+    f.pitch = 0.5; f.lang = 'pt-BR';
+    window.speechSynthesis.speak(f);
 }
 
 function send() {
-    const input = document.getElementById("userInput");
-    if (!input || !input.value.trim()) return;
-    const val = input.value;
-    input.value = "";
-    userSay(val);
+    const i = document.getElementById("userInput");
+    if (!i.value.trim()) return;
+    const val = i.value; i.value = "";
+    const d = document.createElement("div"); d.className = "user-msg";
+    d.innerHTML = `<div class="bubble">${val}</div>`;
+    document.getElementById("chat").appendChild(d);
     analyze(val);
 }
 
-// Botões de Modo Claro e Escuro
-function setMode(mode) {
-    if (mode === 'light') {
-        document.body.classList.add('light-mode');
-        botSay("MODO CLARO ATIVADO");
-    } else {
-        document.body.classList.remove('light-mode');
-        botSay("MODO ESCURO ATIVADO");
-    }
-}
-
-// Botões rápidos de Piadas e Curiosidades
-function fast(type) {
-    if (type === 'piada') {
-        userSay("🤡 Piada");
-        if (typeof DATABASE !== 'undefined' && DATABASE.piadas) {
-            let p = DATABASE.piadas[Math.floor(Math.random() * DATABASE.piadas.length)];
-            botSay(p);
-        }
-    } else {
-        userSay("💡 Curiosidade");
-        if (typeof DATABASE !== 'undefined' && DATABASE.curiosidades) {
-            let c = DATABASE.curiosidades[Math.floor(Math.random() * DATABASE.curiosidades.length)];
-            botSay(c);
-        }
-    }
-}
-
-// ==========================================
-// 4. LÓGICA DOS JOGOS (A, B, C, D, E)
-// ==========================================
 function abrirMenuJogos() {
-    botSay("🎮 **MENU DE JOGOS**<br>Escolha uma letra:<br>A - Adivinhação<br>B - Matemática<br>C - Anatomia<br>D - Capitais<br>E - Inversão");
+    botSay("🎮 **MENU DE JOGOS**<br>A - Adivinhação (1-50)<br>B - Matemática Rápida<br>C - Anatomia<br>D - Capitais<br>E - Inversão de Palavras");
 }
 
 function iniciarLogicaJogo(letra) {
@@ -4480,29 +4432,30 @@ function iniciarLogicaJogo(letra) {
         respostaCerta = c.r;
         botSay(`🌍 Qual a capital de **${c.p}**?`);
     } else if (letra === "e") {
-        const palavras = ["roberto", "inforbot", "algoritmo", "computador", "farmacia"];
-        let p = palavras[Math.floor(Math.random() * palavras.length)];
+        const pal = ["roberto", "inforbot", "algoritmo", "computador", "celular"];
+        let p = pal[Math.floor(Math.random() * pal.length)];
         respostaCerta = p;
-        botSay(`🔄 O que é a palavra: **${p.split('').reverse().join('')}**?`);
+        botSay(`🔄 O que é a palavra invertida: **${p.split('').reverse().join('')}**?`);
     }
 }
 
-// ==========================================
-// 5. INICIALIZAÇÃO E EVENTOS
-// ==========================================
-window.addEventListener("load", () => {
-    const input = document.getElementById("userInput");
-    if(input) {
-        input.addEventListener("keypress", (e) => {
-            if (e.key === "Enter") send();
-        });
-    }
-});
-
-function setLoading(show) {
-    const l = document.getElementById("loading");
-    if(l) l.style.display = show ? "flex" : "none";
+function fast(type) {
+    if (typeof DATABASE === 'undefined') return;
+    let lista = type === 'piada' ? DATABASE.piadas : DATABASE.curiosidades;
+    if (lista) botSay(lista[Math.floor(Math.random() * lista.length)]);
 }
+
+function setMode(m) {
+    if (m === 'light') document.body.classList.add('light-mode');
+    else document.body.classList.remove('light-mode');
+    botSay("MODO " + m.toUpperCase() + " ATIVADO");
+}
+
+function setLoading(s) { document.getElementById("loading").style.display = s ? "flex" : "none"; }
+
+window.onload = () => {
+    document.getElementById("userInput").addEventListener("keypress", (e) => { if (e.key === "Enter") send(); });
+};
 </script>
 </body>
 </html>
