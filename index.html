@@ -4476,7 +4476,7 @@ async function analyze(msg) {
         if(!busca) busca = isGlobal ? "World" : "Brasil";
 
         try {
-            const newsURL = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://news.google.com/rss/search?q=${busca}&hl=${lang}&gl=${geo}&ceid=${geo}:${isGlobal ? 'en' : 'pt-419'}`)}`;
+            const newsURL = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://news.google.com/rss/search?q=${busca}&hl=${lang}&gl=${geo}&ceid=${geo}:${isGlobal ? 'en' : 'pt-419'}`)}&nocache=${Date.now()}`;
             const response = await fetch(newsURL);
             const data = await response.json();
             const parser = new DOMParser();
