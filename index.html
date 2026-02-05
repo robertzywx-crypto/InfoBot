@@ -4305,16 +4305,26 @@ const dbJogos = {
 
 // --- 2. MOTOR DE LIMPEZA E PRIORIDADE ---
 function limparTexto(t) {
-    return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[?!.]/g, "").replace(/(k|h|j){2,}/g, "").trim();
+    return t.toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "") // Remove acentos
+        .replace(/[?!.]/g, "")           // Remove pontuação
+        .replace(/\b[kas]{2,}\b/g, "")   // Ignora risadas (ka, ks, kk) isoladas
+        .replace(/(k|a|s){2,}/g, "")     // Ignora risadas grudadas em palavras
+        .replace(/\s+/g, " ")            // Remove espaços duplos
+        .trim();
 }
 
 function buscarMelhorResposta(msg) {
     if (typeof DATABASE === 'undefined' || !DATABASE.treino) return null;
     let msgLimpa = limparTexto(msg);
-    let melhorMatch = null; let maiorTamanho = 0;
+    let melhorMatch = null; 
+    let maiorTamanho = 0;
+    
     for (let chave in DATABASE.treino) {
         let chaveLimpa = limparTexto(chave);
         if (msgLimpa.includes(chaveLimpa)) {
+            // Prioriza a frase mais longa (mais inteligente)
             if (chaveLimpa.length > maiorTamanho) {
                 maiorTamanho = chaveLimpa.length;
                 melhorMatch = DATABASE.treino[chave];
@@ -4323,7 +4333,6 @@ function buscarMelhorResposta(msg) {
     }
     return melhorMatch;
 }
-
 // --- 3. ANALYZE (CÉREBRO) ---
 async function analyze(msg) {
     let raw = limparTexto(msg);
