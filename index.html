@@ -276,7 +276,7 @@ input:focus {
 
 </style>
 </head>
-<body class="dark-mode">
+<body>
 
 <div class="app">
     <div class="header">
@@ -4549,21 +4549,15 @@ function autoMessage(texto) {
 function setMode(m) {
     const body = document.body;
 
-    if (m === 'claro') {
+    if (m === 'light') {
         body.classList.add('light-mode');
+        botSay("☀️ MODO CLARO ATIVADO", "acerto");
     } else {
         body.classList.remove('light-mode');
-    }
-
-    // feedback seguro (não quebra)
-    if (typeof botSay === "function") {
-        if (m === 'claro') {
-            botSay("☀️ MODO CLARO ATIVADO", "acerto");
-        } else {
-            botSay("🌙 MODO ESCURO ATIVADO");
-        }
+        botSay("🌙 MODO ESCURO ATIVADO");
     }
 }
+
 
 function botSay(txt, tipo = "") {
     const chat = document.getElementById("chat");
@@ -4648,6 +4642,8 @@ window.onload = () => {
         if (e.key === "Enter") send(); 
     });
 };
+    console.log("JS carregou");
+
 </script>  
 </body>
 </html>
