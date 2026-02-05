@@ -4441,53 +4441,64 @@ const InforbotEngine = {
     }
 };
 
-// --- 3. ANALYZE (CÉREBRO) ---
-async function analyze(msg) {
-    let raw = limparTexto(msg);
+// =============================================================================
+// 🧠 MOTOR DE RESPOSTAS E JOGOS (VERSÃO CORRIGIDA PARA ROBERTO)
+// =============================================================================
 
-    // LÓGICA DE JOGO ATIVO
+async function analyze(msg) {
+    // 1. PEGA A MENSAGEM BRUTA PARA OS JOGOS (Sem limpar as letras de opção)
+    let entradaBruta = msg.toLowerCase().trim();
+
+    // 2. LÓGICA DE JOGO ATIVO (Checa antes de limpar para não bugar as letras)
     if (modoJogo) {
-        let respLimpa = raw.replace(/\s/g, "");
-        let certaLimpa = String(respostaCerta).toLowerCase().replace(/\s/g, "");
-        if (respLimpa === certaLimpa || raw.includes(certaLimpa)) {
+        let respLimpa = entradaBruta.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s/g, "");
+        let certaLimpa = String(respostaCerta).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s/g, "");
+        
+        if (respLimpa === certaLimpa || respLimpa.includes(certaLimpa)) {
             modoJogo = false;
             return botSay(`🎆 **ACERTOU!** Você é fera, ${nomeUsuario}!`, "acerto");
-        } else if (raw === "parar") {
+        } else if (respLimpa === "parar") {
             modoJogo = false;
             return botSay("Jogo encerrado.");
         } else {
             // Dica para jogo de números
-            if (!isNaN(parseInt(raw)) && typeof respostaCerta === "number") {
-                let dica = parseInt(raw) < respostaCerta ? "MAIOR ⬆️" : "MENOR ⬇️";
-                return botSay(`❌ Dica: O número é **${dica}** que ${raw}.`, "erro");
+            if (!isNaN(parseInt(respLimpa)) && typeof respostaCerta === "number") {
+                let dica = parseInt(respLimpa) < respostaCerta ? "MAIOR ⬆️" : "MENOR ⬇️";
+                return botSay(`❌ Dica: O número é **${dica}** que ${respLimpa}.`, "erro");
             }
             return botSay("❌ **ERRADO!** Tente de novo ou diga 'parar'.", "erro");
         }
     }
 
-    // COMANDOS DE MENU/BOTÕES
-    if (raw === "jogos" || raw === "jogo") return abrirMenuJogos();
-    if (raw === "piada") return fast('piada');
-    if (raw === "curiosidade") return fast('curiosidade');
-    if (["a", "b", "c", "d", "e"].includes(raw) && msg.length === 1) return iniciarLogicaJogo(raw);
+    // 3. COMANDOS DE MENU (Letras A, B, C, D, E sozinhas)
+    if (entradaBruta === "jogos" || entradaBruta === "jogo") return abrirMenuJogos();
+    if (entradaBruta === "piada") return fast('piada');
+    if (entradaBruta === "curiosidade") return fast('curiosidade');
+    
+    // IMPORTANTE: Checa as letras de menu ANTES de passar pelo filtro de risadas
+    if (/^[a-e]$/.test(entradaBruta)) {
+        return iniciarLogicaJogo(entradaBruta);
+    }
 
-    // PRIORIDADE DATABASE (FRASES LONGAS)
+    // 4. AGORA SIM, PASSA PELO FILTRO DE INTELIGÊNCIA PARA PERGUNTAS GERAIS
     let resDb = buscarMelhorResposta(msg);
     if (resDb) return botSay(resDb);
 
-    // MATEMÁTICA
-    if (/[0-9]/.test(raw) && /[\+\-\*\/\^\(\)Vvx:]/.test(raw)) {
+    // 5. MATEMÁTICA AVANÇADA
+    if (/[0-9]/.test(entradaBruta) && /[\+\-\*\/\^\(\)Vvx:]/.test(entradaBruta)) {
         try {
-            let exp = raw.replace(/x/g, "*").replace(/:/g, "/").replace(/v/g, "sqrt").replace(/V/g, "sqrt").replace(/,/g, ".");
-            return botSay(`${nomeUsuario}, o resultado é: **${math.evaluate(exp)}**.`);
+            let exp = entradaBruta.replace(/x/g, "*").replace(/:/g, "/").replace(/v/g, "sqrt").replace(/V/g, "sqrt").replace(/,/g, ".");
+            let resultadoMath = math.evaluate(exp);
+            return botSay(`${nomeUsuario}, o resultado é: **${resultadoMath}**.`);
         } catch(e) {}
     }
 
-    // WIKIPÉDIAS
-    if (raw.includes("o que e") || raw.includes("quem e") || raw.split(" ").length <= 2) {
+    // 6. WIKIPÉDIAS (BUSCA INTERNACIONAL)
+    let msgParaWiki = entradaBruta;
+    if (msgParaWiki.includes("o que e") || msgParaWiki.includes("quem e") || msgParaWiki.split(" ").length <= 2) {
         setLoading(true);
-        let query = raw.replace(/o que e|quem e|sobre/g, "").trim();
-        const langs = ['pt', 'en', 'es', 'fr', 'de', 'it', 'ru', 'ja', 'zh', 'nl', 'pl', 'sv', 'vi', 'war', 'uk', 'ar', 'fa', 'ca', 'no', 'fi'];
+        let query = msgParaWiki.replace(/o que e|quem e|sobre/g, "").trim();
+        const langs = ['pt', 'en', 'es', 'fr', 'de', 'it', 'ru', 'ja'];
         for (let l of langs) {
             try {
                 const r = await fetch(`https://${l}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}?origin=*`);
@@ -4500,7 +4511,8 @@ async function analyze(msg) {
         }
         setLoading(false);
     }
-    botSay(`Não encontrei nada sobre isso, ${nomeUsuario}.`);
+
+    botSay(`Não encontrei nada no meu banco de dados, ${nomeUsuario}. Quer tentar um jogo?`);
 }
 
 // --- 4. INTERFACE E TODOS OS JOGOS ---
@@ -4508,27 +4520,34 @@ function botSay(txt, tipo = "") {
     const chat = document.getElementById("chat");
     const d = document.createElement("div");
     d.className = "bot-msg" + (tipo ? " msg-" + tipo : "");
+    // O Inforbot exibe o tempo de análise fixo conforme pedido
     d.innerHTML = `<div class="bubble"><small style="opacity:0.5">⚡ [0.002s]</small><br>${txt}</div>`;
     chat.appendChild(d);
     chat.scrollTop = chat.scrollHeight;
+    
     window.speechSynthesis.cancel();
     const f = new SpeechSynthesisUtterance(txt.replace(/<\/?[^>]+(>|$)/g, ""));
-    f.pitch = 0.5; f.lang = 'pt-BR';
+    f.pitch = 0.8; f.lang = 'pt-BR';
     window.speechSynthesis.speak(f);
 }
 
 function send() {
     const i = document.getElementById("userInput");
     if (!i.value.trim()) return;
-    const val = i.value; i.value = "";
-    const d = document.createElement("div"); d.className = "user-msg";
+    const val = i.value; 
+    i.value = "";
+    
+    const d = document.createElement("div"); 
+    d.className = "user-msg";
     d.innerHTML = `<div class="bubble">${val}</div>`;
     document.getElementById("chat").appendChild(d);
+    document.getElementById("chat").scrollTop = document.getElementById("chat").scrollHeight;
+    
     analyze(val);
 }
 
 function abrirMenuJogos() {
-    botSay("🎮 **MENU DE JOGOS**<br>A - Adivinhação (1-50)<br>B - Matemática Rápida<br>C - Anatomia<br>D - Capitais<br>E - Inversão de Palavras");
+    botSay(`🎮 **MENU DE JOGOS DO ${botNome.toUpperCase()}**<br><br>Escolha uma letra:<br><b>A</b> - Adivinhação (1-50)<br><b>B</b> - Matemática Rápida<br><b>C</b> - Anatomia<br><b>D</b> - Capitais<br><b>E</b> - Inversão de Palavras`);
 }
 
 function iniciarLogicaJogo(letra) {
@@ -4549,7 +4568,7 @@ function iniciarLogicaJogo(letra) {
         respostaCerta = c.r;
         botSay(`🌍 Qual a capital de **${c.p}**?`);
     } else if (letra === "e") {
-        const pal = ["roberto", "inforbot", "algoritmo", "computador", "celular"];
+        const pal = ["roberto", "inforbot", "algoritmo", "computador", "celular", "anatomia", "internet"];
         let p = pal[Math.floor(Math.random() * pal.length)];
         respostaCerta = p;
         botSay(`🔄 O que é a palavra invertida: **${p.split('').reverse().join('')}**?`);
@@ -4559,19 +4578,22 @@ function iniciarLogicaJogo(letra) {
 function fast(type) {
     if (typeof DATABASE === 'undefined') return;
     let lista = type === 'piada' ? DATABASE.piadas : DATABASE.curiosidades;
-    if (lista) botSay(lista[Math.floor(Math.random() * lista.length)]);
+    if (lista && lista.length > 0) {
+        botSay(lista[Math.floor(Math.random() * lista.length)]);
+    } else {
+        botSay("Ainda não tenho piadas ou curiosidades no meu banco.");
+    }
 }
 
-function setMode(m) {
-    if (m === 'light') document.body.classList.add('light-mode');
-    else document.body.classList.remove('light-mode');
-    botSay("MODO " + m.toUpperCase() + " ATIVADO");
+function setLoading(s) { 
+    const loader = document.getElementById("loading");
+    if(loader) loader.style.display = s ? "flex" : "none"; 
 }
-
-function setLoading(s) { document.getElementById("loading").style.display = s ? "flex" : "none"; }
 
 window.onload = () => {
-    document.getElementById("userInput").addEventListener("keypress", (e) => { if (e.key === "Enter") send(); });
+    document.getElementById("userInput").addEventListener("keypress", (e) => { 
+        if (e.key === "Enter") send(); 
+    });
 };
 </script>
 </body>
