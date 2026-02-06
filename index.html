@@ -4326,11 +4326,14 @@ function limparTexto(t) {
 }
 
 /**
- * 🛡️ LAYER 2: MOTOR DE RELEVÂNCIA NEURAL
+ * 🛡️ LAYER 2: MOTOR DE RELEVÂNCIA NEURAL (AJUSTADO)
  */
 function buscarMelhorResposta(mensagem) {
     if (typeof DATABASE === 'undefined' || !DATABASE.treino) return null;
+    
     const msgLimpa = limparTexto(mensagem);
+    
+    // Se a mensagem sumir após a limpeza (risadas ou lixo), retorna null direto
     if (!msgLimpa || msgLimpa.length < 2) return null;
 
     let melhorMatch = null;
@@ -4340,24 +4343,36 @@ function buscarMelhorResposta(mensagem) {
         let chaveLimpa = limparTexto(chaveOriginal);
         let pontos = 0;
 
+        // Match Identico (Peso Máximo)
         if (msgLimpa === chaveLimpa) pontos += 10000;
 
         let pTreino = chaveLimpa.split(" ");
+        let palavrasEncontradas = 0;
+
         pTreino.forEach(termo => {
-            if (msgLimpa.includes(termo)) pontos += (termo.length * 50);
+            if (msgLimpa.includes(termo)) {
+                palavrasEncontradas++;
+                pontos += (termo.length * 60); // Aumentamos o peso por letra
+            }
         });
 
-        if (msgLimpa.startsWith(chaveLimpa)) pontos += 1000;
-        pontos += (chaveLimpa.length * 10);
+        // Bônus por precisão de frase
+        if (palavrasEncontradas >= pTreino.length && pTreino.length > 0) pontos += 2000;
+        
+        // Penalidade de Ruído: Se o que o usuário digitou for MUITO maior que a chave do treino
+        let diffTamanho = Math.abs(msgLimpa.length - chaveLimpa.length);
+        pontos -= (diffTamanho * 10); 
 
         if (pontos > maiorPontuacao) {
             maiorPontuacao = pontos;
             melhorMatch = DATABASE.treino[chaveOriginal];
         }
     }
-    return (maiorPontuacao > 30) ? melhorMatch : null;
-}
 
+    // 🔥 FILTRO DE RIGOR: Se o score for menor que 100, o Inforbot assume que não entendeu.
+    // Isso impede que letras aleatórias ativem respostas prontas como "Sou o Inforbot".
+    return (maiorPontuacao > 100) ? melhorMatch : null;
+}
 /**
  * 🛡️ LAYER 3: ANALYZE (CONTROLADOR GERAL)
  */
