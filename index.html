@@ -4478,9 +4478,24 @@ function botSay(txt, tipo = "") {
     container.innerHTML = `<small style="opacity:0.5; font-size: 10px;">⚡ [Analysing...]</small><br>${txt}`;
     chat.appendChild(container);
     chat.scrollTop = chat.scrollHeight;
+
     window.speechSynthesis.cancel();
-    const f = new SpeechSynthesisUtterance(txt.replace(/<\/?[^>]+(>|$)/g, ""));
-    f.lang = 'pt-BR'; window.speechSynthesis.speak(f);
+
+    // --- LIMPEZA SUPREME PARA A FALA ---
+    let falaFiltro = txt
+        .replace(/<\/?[^>]+(>|$)/g, "") // Remove tags HTML como <br>
+        .replace(/\*/g, "")              // Mata os asteriscos (asterístico nunca mais!)
+        .replace(/#/g, "")               // Remove hashtags
+        .replace(/(\d+)\s*([\+\-\*\/])\s*(\d+)/g, "$1 $2 $3"); // Dá espaço em contas matemáticas
+
+    const f = new SpeechSynthesisUtterance(falaFiltro);
+    
+    // --- AJUSTE DE VOZ ---
+    f.lang = 'pt-BR';
+    f.rate = 1.0;  // Velocidade normal ajuda a falar números grandes melhor
+    f.pitch = 1.0; 
+
+    window.speechSynthesis.speak(f);
 }
 
 function send() {
