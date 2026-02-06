@@ -4273,7 +4273,7 @@ const DATABASE = {
 };
 /**
  * ============================================================
- * 🤖 MOTOR INFORBOT SUPREME - TODOS OS JOGOS + INTELIGÊNCIA
+ * 🤖 MOTOR INFORBOT SUPREME - INDUSTRIAL INTEGRADO
  * PROJETO: ROBERTO | NOME: INFORBOT
  * ============================================================
  */
@@ -4292,7 +4292,7 @@ const dbJogos = {
         {q: "Dentes de um adulto?", a: "32"}, {q: "Órgão que bombeia sangue?", a: "coracao"},
         {q: "Litros de sangue (média)?", a: "5"}, {q: "Osso da testa?", a: "frontal"},
         {q: "Quantas costelas temos?", a: "24"}, {q: "Maior artéria?", a: "aorta"},
-        {q: "Onde fica a patela?", a: "joelho"}, {q: "Quantos rins temos?", a: "2"},
+        {q: "Onde fica la patela?", a: "joelho"}, {q: "Quantos rins temos?", a: "2"},
         {q: "Líquido que digere comida?", a: "suco gastrico"}, {q: "Onde fica o úmero?", a: "braco"},
         {q: "Músculo da respiração?", a: "diafragma"}, {q: "Vértebras na coluna?", a: "33"},
         {q: "Órgão que filtra o sangue?", a: "rim"}, {q: "Onde ficam os alvéolos?", a: "pulmao"}
@@ -4303,229 +4303,75 @@ const dbJogos = {
         {p: "Portugal", r: "lisboa"}, {p: "Alemanha", r: "berlim"}, {p: "China", r: "pequim"}
     ]
 };
-  // ================= MATEMÁTICA COMPLETA INFOBOT =================
-let texto = entradaBruta.toLowerCase().trim();
-
-// ====== MATEMÁTICA POR ESCRITO ======
-texto = texto
-    .replace(/quanto é/g, "")
-    .replace(/calcule/g, "")
-    .replace(/mais/g, "+")
-    .replace(/menos/g, "-")
-    .replace(/vezes/g, "*")
-    .replace(/multiplicado por/g, "*")
-    .replace(/dividido por/g, "/")
-    .replace(/elevado a/g, "^")
-    .replace(/ao quadrado/g, "^2")
-    .replace(/ao cubo/g, "^3")
-    .replace(/raiz de (\d+(\.\d+)?)/g, "sqrt($1)")
-    .replace(/por cento/g, "%");
-
-// ====== SINAIS E ATALHOS ======
-texto = texto
-    .replace(/x/g, "*")
-    .replace(/:/g, "/")
-    .replace(/,/g, ".")
-    .replace(/√(\d+(\.\d+)?)/g, "sqrt($1)")
-    .replace(/v(\d+(\.\d+)?)/g, "sqrt($1)");
-
-// ====== PORCENTAGEM ======
-texto = texto.replace(/(\d+(\.\d+)?)%/g, "($1/100)");
-
-// ====== DETECÇÃO DE CONTA ======
-if (/[0-9]/.test(texto) && /[\+\-\*\/\^]/.test(texto)) {
-    try {
-        const resultado = math.evaluate(texto);
-        return botSay(`${nomeUsuario}, o resultado é: **${resultado}**.`);
-    } catch (erro) {
-        return botSay("❌ Não consegui entender essa conta. Tente escrever de outra forma.");
-    }
-}
- 
-
-// =============================================================================
-// 🧠 MOTOR INFORBOT OMNISCIENTE - NÍVEL INDUSTRIAL (VERSÃO DE 800 LINHAS)
-// =============================================================================
-// Desenvolvido para Roberto - Foco em Limpeza de Risadas e Inteligência Máxima
-// =============================================================================
 
 /**
- * 🛡️ LAYER 1: O GRANDE FILTRO DE ENTRADA (LÓGICA DE LIMPEZA)
+ * 🛡️ LAYER 1: O GRANDE FILTRO DE ENTRADA (RISADAS)
  */
 function limparTexto(t) {
     if (!t || typeof t !== 'string') return "";
-
-    // Normalização Inicial (Remove acentos e converte para minúsculas)
     let s = t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-    // --- BLOCO DE EXTERMÍNIO DE RISADAS (Roberto, foco total aqui) ---
-    // Remove qualquer combinação de ka, ks, kk, kaka, sks, kkkk, etc.
+    
+    // Extermínio de risadas (Roberto, foco aqui)
     s = s.replace(/\b[kas]{2,}\b/g, " "); 
     s = s.replace(/\b[ks]{2,}\b/g, " ");
     s = s.replace(/\b[ka]{2,}\b/g, " ");
-    s = s.replace(/(k|a|s){2,}/g, "$1"); // Se o usuário rir grudado na palavra: "olakkkk" -> "ola"
-    
-    // Remove risadas de outros tipos (hahaha, rsrsrs)
+    s = s.replace(/(k|a|s){2,}/g, "$1");
     s = s.replace(/\b[ha]{2,}\b/g, " ");
     s = s.replace(/\b[rs]{2,}\b/g, " ");
-
-    // --- LIMPEZA DE SÍMBOLOS E CARACTERES ESPECIAIS ---
     s = s.replace(/[^\w\s]/gi, " ");
 
-    // --- FILTRO DE PALAVRAS INÚTEIS (STOPWORDS) ---
-    // O bot foca no núcleo da pergunta e ignora o resto
-    const lixo = [
-        "inforbot", "me", "fale", "sobre", "diga", "quem", "qual", "o", "a", "os", "as", 
-        "que", "de", "do", "da", "um", "uma", "teria", "como", "seria", "por", "favor", 
-        "voce", "pode", "responder", "explica", "ai", "quero", "saber", "mim", "pra", "pro"
-    ];
-
+    const lixo = ["inforbot", "me", "fale", "sobre", "diga", "quem", "qual", "que", "de", "do", "da", "voce", "pode", "por", "favor"];
     let palavras = s.split(/\s+/);
-    let resultado = palavras.filter(p => !lixo.includes(p) && p.length > 1);
-
-    return resultado.join(" ").trim();
+    return palavras.filter(p => !lixo.includes(p) && p.length > 1).join(" ").trim();
 }
 
 /**
- * 🛡️ LAYER 2: MOTOR DE RELEVÂNCIA NEURAL (CÁLCULO DE SCORE)
+ * 🛡️ LAYER 2: MOTOR DE RELEVÂNCIA NEURAL
  */
 function buscarMelhorResposta(mensagem) {
-    // Validação de Existência da Database
-    if (typeof DATABASE === 'undefined' || !DATABASE.treino) {
-        console.error("Inforbot: Erro crítico. Database não encontrada.");
-        return null;
-    }
-
+    if (typeof DATABASE === 'undefined' || !DATABASE.treino) return null;
     const msgLimpa = limparTexto(mensagem);
-    
-    // Se após limpar só sobrar risada ou nada, retorna nulo
     if (!msgLimpa || msgLimpa.length < 2) return null;
 
     let melhorMatch = null;
     let maiorPontuacao = 0;
 
-    // --- INÍCIO DA VARREDURA DE INTELIGÊNCIA ---
     for (let chaveOriginal in DATABASE.treino) {
         let chaveLimpa = limparTexto(chaveOriginal);
         let pontos = 0;
 
-        // 1. MATCH DE IDENTIDADE ABSOLUTA (Nota 10.000)
-        // Se a frase (limpa) for idêntica ao treino, a confiança é total.
-        if (msgLimpa === chaveLimpa) {
-            pontos += 10000;
-        }
+        if (msgLimpa === chaveLimpa) pontos += 10000;
 
-        // 2. ANALISADOR DE INTERSECÇÃO DE PALAVRAS (KEYWORD ANALYZER)
-        let pUsuario = msgLimpa.split(" ");
         let pTreino = chaveLimpa.split(" ");
-        let palavrasEncontradas = 0;
-
-        pTreino.forEach(termoTreino => {
-            if (msgLimpa.includes(termoTreino)) {
-                palavrasEncontradas++;
-                // Palavras longas têm peso semântico maior
-                pontos += (termoTreino.length * 50);
-            }
+        pTreino.forEach(termo => {
+            if (msgLimpa.includes(termo)) pontos += (termo.length * 50);
         });
 
-        // 3. BÔNUS DE PRECISÃO (Se todas as palavras do treino estão presentes)
-        if (palavrasEncontradas >= pTreino.length && pTreino.length > 0) {
-            pontos += 2000;
-        }
-
-        // 4. BÔNUS DE POSICIONAMENTO (Início da frase indica intenção primária)
-        if (msgLimpa.startsWith(chaveLimpa)) {
-            pontos += 1000;
-        }
-
-        // 5. LÓGICA DE DENSIDADE (Evita que palavras curtas "ganhem" de frases complexas)
-        // Roberto, isso garante que "Quem criou a internet" ganhe de "internet"
+        if (msgLimpa.startsWith(chaveLimpa)) pontos += 1000;
         pontos += (chaveLimpa.length * 10);
 
-        // 6. PENALIDADE DE RUÍDO (Diferença de tamanho excessiva)
-        let diff = Math.abs(msgLimpa.length - chaveLimpa.length);
-        pontos -= (diff * 5);
-
-        // --- VERIFICAÇÃO DE RANKING ---
         if (pontos > maiorPontuacao) {
             maiorPontuacao = pontos;
             melhorMatch = DATABASE.treino[chaveOriginal];
         }
     }
-
-    // --- FILTRO DE SEGURANÇA (THRESHOLD) ---
-    // Só responde se o Score for maior que 30 (evita respostas aleatórias)
     return (maiorPontuacao > 30) ? melhorMatch : null;
 }
 
 /**
- * 🛡️ LAYER 3: EXPANSÃO DE INTELIGÊNCIA (ANÁLISE ADICIONAL)
- * (Este bloco aumenta a robustez para chegar às 800 linhas de processamento lógico)
+ * 🛡️ LAYER 3: ANALYZE (CONTROLADOR GERAL)
  */
-const InforbotEngine = {
-    versao: "10.0.4",
-    autor: "Roberto's Inforbot",
-    
-    validarEntrada: function(input) {
-        return input.length > 0 && input.length < 500;
-    },
-
-    // Sistema de tratamento de erros para o motor não travar
-    safeProcess: function(msg) {
-        try {
-            return buscarMelhorResposta(msg);
-        } catch (e) {
-            console.warn("Inforbot: Erro de processamento.", e);
-            return null;
-        }
-    }
-};
-// --- 3. ANALYZE (CÉREBRO DO INFORBOT - 31 WIKIS + JOGOS + AUTO-SYNC CSS) ---
 async function analyze(msg) {
     let entradaBruta = msg.toLowerCase().trim();
-// ===================== MATEMÁTICA UNIVERSAL =====================
-if (
-    /[0-9]/.test(entradaBruta) &&
-    /(mais|menos|vezes|dividido|x|\+|\-|\*|\/|\^|raiz|sqrt)/.test(entradaBruta)
-) {
-    try {
-        let exp = entradaBruta
-            // texto → símbolos
-            .replace(/mais/g, "+")
-            .replace(/menos/g, "-")
-            .replace(/vezes/g, "*")
-            .replace(/dividido por/g, "/")
-            .replace(/dividido/g, "/")
-            .replace(/x/g, "*")
-            .replace(/,/g, ".")
-            .replace(/raiz de/g, "sqrt(")
-            .replace(/raiz/g, "sqrt(");
 
-        // fecha parêntese da raiz se faltar
-        if (exp.includes("sqrt(") && !exp.includes(")")) {
-            exp += ")";
-        }
-
-        let resultado = math.evaluate(exp);
-
-        return botSay(`🧮 ${nomeUsuario}, o resultado é **${resultado}**.`);
-    } catch (e) {
-        return botSay("❌ Não consegui calcular isso.");
-    }
-}
-// ===============================================================
-
-    // LÓGICA DE JOGO ATIVO
+    // 1. JOGO ATIVO
     if (modoJogo) {
         let respLimpa = entradaBruta.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s/g, "");
         let certaLimpa = String(respostaCerta).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s/g, "");
-        
         if (respLimpa === certaLimpa || respLimpa.includes(certaLimpa)) {
-            modoJogo = false;
-            return botSay(`🎆 **ACERTOU!** Você é fera, ${nomeUsuario}!`, "acerto");
+            modoJogo = false; return botSay(`🎆 **ACERTOU!** Você é fera, ${nomeUsuario}!`, "acerto");
         } else if (respLimpa === "parar") {
-            modoJogo = false;
-            return botSay("Jogo encerrado.");
+            modoJogo = false; return botSay("Jogo encerrado.");
         } else {
             if (!isNaN(parseInt(respLimpa)) && typeof respostaCerta === "number") {
                 let dica = parseInt(respLimpa) < respostaCerta ? "MAIOR ⬆️" : "MENOR ⬇️";
@@ -4535,205 +4381,138 @@ if (
         }
     }
 
-    // 📰 LAYER 1: NOTÍCIAS (Mova para cima do database para não bugar)
-    if (entradaBruta.includes("noticias") || entradaBruta.includes("news") || entradaBruta.includes("aconteceu")) {
+    // 2. NOTÍCIAS
+    if (entradaBruta.includes("noticias") || entradaBruta.includes("news")) {
         setLoading(true);
-        let busca = entradaBruta.replace(/noticias|news|sobre|agora|hoje|aconteceu|mundiais/g, "").trim();
+        let busca = entradaBruta.replace(/noticias|news|sobre|agora/g, "").trim();
         let isGlobal = entradaBruta.includes("mundiais") || entradaBruta.includes("mundo");
-        let lang = isGlobal ? "en-US" : "pt-BR";
-        let geo = isGlobal ? "US" : "BR";
-        
         if(!busca) busca = isGlobal ? "World" : "Brasil";
-
         try {
-            const newsURL = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://news.google.com/rss/search?q=${busca}&hl=${lang}&gl=${geo}&ceid=${geo}:${isGlobal ? 'en' : 'pt-419'}`)}&nocache=${Date.now()}`;
+            const newsURL = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://news.google.com/rss/search?q=${busca}&hl=${isGlobal ? 'en' : 'pt-BR'}`)}&nocache=${Date.now()}`;
             const response = await fetch(newsURL);
             const data = await response.json();
             const parser = new DOMParser();
             const xml = parser.parseFromString(data.contents, "text/xml");
             const items = xml.querySelectorAll("item");
-            
-            let noticiasTxt = isGlobal ? `🌎 **GLOBAL NEWS - ${busca.toUpperCase()}:**<br><br>` : `🔔 **NOTÍCIAS - ${busca.toUpperCase()}:**<br><br>`;
-            for(let i = 0; i < 4; i++) {
-                if(items[i]) {
-                    let titulo = items[i].querySelector("title").innerHTML;
-                    noticiasTxt += `• ${titulo}<br><br>`;
-                }
-            }
-            setLoading(false);
-            return botSay(noticiasTxt);
-        } catch(e) { console.error(e); }
-        setLoading(false);
+            let txt = `🔔 **NOTÍCIAS:**<br><br>`;
+            for(let i = 0; i < 4; i++) { if(items[i]) txt += `• ${items[i].querySelector("title").innerHTML}<br><br>`; }
+            setLoading(false); return botSay(txt);
+        } catch(e) { setLoading(false); }
     }
 
-    // COMANDOS DE MENU E INTERAÇÃO AUTOMÁTICA
+    // 3. MATEMÁTICA SUPREME
+    if (/[0-9]/.test(entradaBruta) && /(mais|menos|vezes|dividido|x|\+|\-|\*|\/|\^|raiz|sqrt)/.test(entradaBruta)) {
+        try {
+            let exp = entradaBruta
+                .replace(/quanto e|calcule|resultado de/g, "")
+                .replace(/mais/g, "+").replace(/menos/g, "-").replace(/vezes/g, "*")
+                .replace(/dividido por|dividido/g, "/").replace(/x/g, "*").replace(/,/g, ".")
+                .replace(/raiz quadrada de|raiz de|raiz/g, "sqrt");
+            
+            // Corrige sqrt se não houver parênteses
+            if (exp.includes("sqrt") && !exp.includes("(")) {
+                exp = exp.replace(/sqrt\s*(\d+(\.\d+)?)/, "sqrt($1)");
+            }
+
+            const resMath = math.evaluate(exp);
+            return botSay(`🧮 ${nomeUsuario}, o resultado é **${resMath}**.`);
+        } catch (e) { console.log("Erro Math"); }
+    }
+
+    // 4. MENUS RÁPIDOS
     if (entradaBruta === "jogos" || entradaBruta === "jogo") return abrirMenuJogos();
     if (entradaBruta === "piada") return fast('piada');
     if (entradaBruta === "curiosidade") return fast('curiosidade');
     if (/^[a-e]$/.test(entradaBruta)) return iniciarLogicaJogo(entradaBruta);
 
-    // ================= MATEMÁTICA COMPLETA INFOBOT =================
-let texto = entradaBruta.toLowerCase().trim();
-
-const texto = entradaBruta
-  .replace(/quanto é|calcule|calcular|resultado de|resultado da/g, '')
-  .replace(/mais/g, '+')
-  .replace(/menos/g, '-')
-  .replace(/vezes/g, '*')
-  .replace(/multiplicado por/g, '*')
-  .replace(/dividido por/g, '/')
-  .replace(/raiz quadrada de/g, 'sqrt')
-  .replace(/,/g, '.')
-  .replace(/:/g, '/')
-  .replace(/x/g, '*')
-  .trim();
-
-if (/\d/.test(texto) && /[\+\-\*\/\^\(\)sqrt]/.test(texto)) {
-  try {
-    const resultado = math.evaluate(texto);
-    return botSay(`${nomeUsuario}, o resultado é **${resultado}**`);
-  } catch {
-    return botSay("Erro na conta");
-  }
-}
-
-
-    
-    // MOTOR DE INTELIGÊNCIA (DATABASE)
+    // 5. MOTOR NEURAL (DATABASE)
     let resDb = buscarMelhorResposta(msg);
     if (resDb) return botSay(resDb);
 
-
-    // 🌐 ULTRA WIKIPÉDIA
+    // 6. ULTRA WIKIPÉDIA (10 IDIOMAS INICIAIS)
     if (entradaBruta.includes("o que e") || entradaBruta.includes("quem e") || entradaBruta.split(" ").length <= 3) {
         setLoading(true);
-        let query = entradaBruta.replace(/o que e|quem e|sobre|me fale/g, "").trim();
-        const langs = ['en', 'ceb', 'de', 'sv', 'fr', 'nl', 'ru', 'es', 'it', 'arz', 'pl', 'ja', 'zh', 'vi', 'war', 'uk', 'ar', 'pt', 'fa', 'ca', 'sr', 'id', 'no', 'ko', 'fi', 'hu', 'cs', 'tr', 'ce', 'sh', 'ro', 'zh-min-nan', 'tt', 'eu', 'ms', 'eo', 'he', 'hy', 'bg', 'da', 'azb', 'sk', 'kk', 'min', 'et', 'be', 'hr', 'el', 'simple', 'lt', 'gl', 'az', 'sl', 'ur', 'nn', 'ka', 'hi', 'th', 'uz', 'la', 'cy', 'ta', 'vo', 'ast', 'mk', 'lv', 'tg', 'my', 'mg', 'af', 'tt', 'oc', 'bs', 'ky', 'sq', 'tl', 'new', 'zh-yue', 'bn', 'ml', 'pms', 'be-tarask', 'lb', 'jv', 'ht', 'sco', 'mr', 'sw', 'ga', 'ba', 'is', 'myv', 'fy', 'pnb', 'cv', 'sco', 'nds', 'ne', 'ku', 'ia', 'su', 'bar', 'scn', 'bpy', 'qu', 'am', 'kn', 'ckb', 'ia', 'gu', 'als', 'vec', 'sa', 'an', 'wa', 'gd', 'nap', 'yi', 'bug', 'si', 'hsb', 'bat-smg', 'fo', 'mzn', 'li', 'sah', 'or', 'vec', 'hif', 'mrj', 'mhr', 'ilo', 'pa', 'os', 'xmf', 'fiu-vro', 'ps', 'kv', 'pag', 'dv', 'zea', 'gv', 'tyv', 'ay', 'km', 'nap', 'diq', 'lez', 'nrm', 'koi', 'mwl', 'udm', 'stq', 'fur', 'mt', 'wuu', 'lij', 'ug', 'lad', 'pih', 'sc', 'bh', 'ksh', 'nov', 'ang', 'kw', 'nv', 'hak', 'frp', 'szl', 'ext', 'gan', 'ie', 'ln', 'gom', 'pcd', 'kab', 'sn', 'myv', 'sn', 'so', 'st', 'tn', 'ts', 'tum', 'tw', 'ty', 've', 'wo', 'xh', 'zu', 'as', 'gn', 'av', 'bm', 'ch', 'cr', 'ee', 'ff', 'fj', 'ha', 'ho', 'hz', 'ig', 'ii', 'ik', 'iu', 'kg', 'ki', 'kj', 'kr', 'ks', 'ku', 'kv', 'kw', 'ky', 'la', 'lb', 'lg', 'li', 'ln', 'lo', 'lt', 'lu', 'lv', 'mg', 'mh', 'mi', 'mk', 'ml', 'mn', 'mo', 'mr', 'ms', 'mt', 'my', 'na', 'nb', 'nd', 'ne', 'ng', 'nl', 'nn', 'no', 'nr', 'nv', 'ny', 'oc', 'oj', 'om', 'or', 'os', 'pa', 'pi', 'pl', 'ps', 'pt', 'qu', 'rm', 'rn', 'ro', 'ru', 'rw', 'sa', 'sc', 'sd', 'se', 'sg', 'si', 'sk', 'sl', 'sm', 'sn', 'so', 'sq', 'sr', 'ss', 'st', 'su', 'sv', 'sw', 'ta', 'te', 'tg', 'th', 'ti', 'tk', 'tl', 'tn', 'to', 'tr', 'ts', 'tt', 'tw', 'ty', 'ug', 'uk', 'ur', 'uz', 've', 'vi', 'vo', 'wa', 'wo', 'xh', 'yi', 'yo', 'za', 'zh', 'zu'
-        ]; // Principais primeiro para velocidade
+        let query = entradaBruta.replace(/o que e|quem e|sobre/g, "").trim();
+        const langs = ['pt', 'en', 'es', 'fr', 'de', 'it', 'ja', 'ru', 'zh', 'ar'];
         for (let l of langs) {
             try {
                 const r = await fetch(`https://${l}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}?origin=*`);
                 if (r.ok) {
                     const d = await r.json();
-                    if (d.extract) {
-                        setLoading(false);
-                        return botSay(`**${botNome} Wiki [${l.toUpperCase()}]:** ${d.extract}`);
-                    }
+                    setLoading(false); return botSay(`**${botNome} Wiki [${l.toUpperCase()}]:** ${d.extract}`);
                 }
             } catch(e){ continue; }
         }
         setLoading(false);
     }
-    botSay(`Não encontrei nada, ${nomeUsuario}. Tente 'jogos' ou 'piada'.`);
+
+    botSay(`Não entendi, ${nomeUsuario}. Tente 'jogos' ou 'piada'.`);
 }
 
 // --- 4. FUNÇÕES DE INTERFACE ---
 
-// FUNÇÃO ESSENCIAL PARA O BOTÃO FUNCIONAR
-function autoMessage(texto) {
-    const i = document.getElementById("userInput");
-    i.value = texto;
-    send();
-}
+function autoMessage(t) { document.getElementById("userInput").value = t; send(); }
 
 function setMode(m) {
-    const body = document.body;
-
-    if (m === 'light') {
-        body.classList.add('light-mode');
-        botSay("☀️ MODO CLARO ATIVADO", "acerto");
-    } else {
-        body.classList.remove('light-mode');
-        botSay("🌙 MODO ESCURO ATIVADO");
-    }
+    if (m === 'light') { document.body.classList.add('light-mode'); botSay("☀️ MODO CLARO", "acerto"); } 
+    else { document.body.classList.remove('light-mode'); botSay("🌙 MODO ESCURO"); }
 }
-
 
 function botSay(txt, tipo = "") {
     const chat = document.getElementById("chat");
     const container = document.createElement("div");
     container.className = "bot-msg bubble anim" + (tipo ? " msg-" + tipo : "");
-    container.innerHTML = `<small style="opacity:0.5; font-size: 10px;">⚡ [0.002s]</small><br>${txt}`;
+    container.innerHTML = `<small style="opacity:0.5; font-size: 10px;">⚡ [Analysing...]</small><br>${txt}`;
     chat.appendChild(container);
     chat.scrollTop = chat.scrollHeight;
-
     window.speechSynthesis.cancel();
     const f = new SpeechSynthesisUtterance(txt.replace(/<\/?[^>]+(>|$)/g, ""));
-    f.pitch = 0.8; f.lang = 'pt-BR';
-    window.speechSynthesis.speak(f);
+    f.lang = 'pt-BR'; window.speechSynthesis.speak(f);
 }
 
 function send() {
     const i = document.getElementById("userInput");
     if (!i.value.trim()) return;
     const val = i.value; i.value = "";
-    const chat = document.getElementById("chat");
-    const d = document.createElement("div"); 
-    d.className = "user-msg bubble";
-    d.innerHTML = val;
-    chat.appendChild(d);
-    chat.scrollTop = chat.scrollHeight;
+    const d = document.createElement("div"); d.className = "user-msg bubble";
+    d.innerHTML = val; document.getElementById("chat").appendChild(d);
+    document.getElementById("chat").scrollTop = document.getElementById("chat").scrollHeight;
     analyze(val);
 }
 
 function abrirMenuJogos() {
-    const chat = document.getElementById("chat");
-    const d = document.createElement("div"); 
-    d.className = "user-msg bubble";
-    d.innerHTML = "Jogos";
-    chat.appendChild(d);
     botSay(`🎮 **MENU DE JOGOS**<br><br><b>A</b> - Adivinhação<br><b>B</b> - Matemática<br><b>C</b> - Anatomia<br><b>D</b> - Capitais<br><b>E</b> - Inversão`);
 }
 
 function iniciarLogicaJogo(letra) {
     modoJogo = true;
-    if (letra === "a") {
-        respostaCerta = Math.floor(Math.random() * 50) + 1;
-        botSay("🎰 Qual o número de 1 a 50?");
-    } else if (letra === "b") {
+    if (letra === "a") { respostaCerta = Math.floor(Math.random() * 50) + 1; botSay("🎰 Qual o número de 1 a 50?"); }
+    else if (letra === "b") { 
         let n1 = Math.floor(Math.random() * 80), n2 = Math.floor(Math.random() * 80);
-        respostaCerta = n1 + n2;
-        botSay(`🧮 ${nomeUsuario}, quanto é **${n1} + ${n2}**?`);
+        respostaCerta = n1 + n2; botSay(`🧮 ${nomeUsuario}, quanto é **${n1} + ${n2}**?`);
     } else if (letra === "c") {
         let p = dbJogos.anatomia[Math.floor(Math.random() * dbJogos.anatomia.length)];
-        respostaCerta = p.a;
-        botSay(`🧬 **ANATOMIA:** ${p.q}`);
+        respostaCerta = p.a; botSay(`🧬 **ANATOMIA:** ${p.q}`);
     } else if (letra === "d") {
         let c = dbJogos.capitais[Math.floor(Math.random() * dbJogos.capitais.length)];
-        respostaCerta = c.r;
-        botSay(`🌍 Capital de **${c.p}**?`);
+        respostaCerta = c.r; botSay(`🌍 Capital de **${c.p}**?`);
     } else if (letra === "e") {
-        const pal = ["roberto", "inforbot", "algoritmo", "computador"];
-        let p = pal[Math.floor(Math.random() * pal.length)];
-        respostaCerta = p;
-        botSay(`🔄 Inverta: **${p.split('').reverse().join('')}**`);
+        respostaCerta = "inforbot"; botSay(`🔄 Inverta: **tobrofni**`);
     }
 }
 
 function fast(type) {
     if (typeof DATABASE === 'undefined') return;
-    const chat = document.getElementById("chat");
-    const d = document.createElement("div"); 
-    d.className = "user-msg bubble";
-    d.innerHTML = type.charAt(0).toUpperCase() + type.slice(1);
-    chat.appendChild(d);
-
     let lista = type === 'piada' ? DATABASE.piadas : DATABASE.curiosidades;
     if (lista) botSay(lista[Math.floor(Math.random() * lista.length)]);
 }
 
-function setLoading(s) { 
-    const st = document.querySelector(".status");
-    if(st) st.style.display = s ? "flex" : "none"; 
-}
+function setLoading(s) { const st = document.querySelector(".status"); if(st) st.style.display = s ? "flex" : "none"; }
 
 window.onload = () => {
-    document.getElementById("userInput").addEventListener("keypress", (e) => { 
-        if (e.key === "Enter") send(); 
-    });
+    document.getElementById("userInput").addEventListener("keypress", (e) => { if (e.key === "Enter") send(); });
+    console.log("Inforbot Supreme Carregado");
 };
-    console.log("JS carregou");
-
 </script>  
 </body>
 </html>
