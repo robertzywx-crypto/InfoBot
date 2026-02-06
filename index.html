@@ -4305,88 +4305,78 @@ const dbJogos = {
 };
 
 /**
- * 🛡️ LAYER 1: O GRANDE FILTRO DE ENTRADA (RISADAS)
+ * 🛡️ LAYER 1: O GRANDE FILTRO DE ENTRADA (SUPER LIMPEZA)
+ * Melhora: Agora ele limpa sinais e risadas sem destruir a frase principal.
  */
 function limparTexto(t) {
     if (!t || typeof t !== 'string') return "";
+    
+    // 1. Remove acentos e joga para minúsculo
     let s = t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     
-    // Extermínio de risadas (Roberto, foco aqui)
+    // 2. Mata risadas (kkk, kakaka, sksks, rsrs) - Roberto, foco aqui!
     s = s.replace(/\b[kas]{2,}\b/g, " "); 
     s = s.replace(/\b[ks]{2,}\b/g, " ");
     s = s.replace(/\b[ka]{2,}\b/g, " ");
     s = s.replace(/(k|a|s){2,}/g, "$1");
     s = s.replace(/\b[ha]{2,}\b/g, " ");
     s = s.replace(/\b[rs]{2,}\b/g, " ");
+
+    // 3. Remove sinais (interrogação, exclamação, etc) e mantém só letras e números
     s = s.replace(/[^\w\s]/gi, " ");
 
+    // 4. Limpeza de palavras "vazias" para focar no que importa
     const lixo = ["inforbot", "me", "fale", "sobre", "diga", "quem", "qual", "que", "de", "do", "da", "voce", "pode", "por", "favor"];
     let palavras = s.split(/\s+/);
+    
+    // Filtra e junta de novo
     return palavras.filter(p => !lixo.includes(p) && p.length > 1).join(" ").trim();
 }
 
 /**
- * 🛡️ LAYER 2: MOTOR DE RELEVÂNCIA NEURAL (AJUSTADO)
+ * 🛡️ LAYER 2: MOTOR DE MATCH EXATO (MODO ANTIGO INTELIGENTE)
+ * Melhora: Não chuta mais. Ou é igual ou é nulo.
  */
 function buscarMelhorResposta(mensagem) {
     if (typeof DATABASE === 'undefined' || !DATABASE.treino) return null;
     
     const msgLimpa = limparTexto(mensagem);
     
-    // Se a mensagem sumir após a limpeza (risadas ou lixo), retorna null direto
-    if (!msgLimpa || msgLimpa.length < 2) return null;
+    // Se não sobrou nada após a limpeza, nem tenta
+    if (!msgLimpa) return null;
 
-    let melhorMatch = null;
-    let maiorPontuacao = 0;
-
+    // --- LÓGICA DE MATCH EXATO ---
+    // Varremos o banco e comparamos a frase limpa do usuário com a frase limpa do treino
     for (let chaveOriginal in DATABASE.treino) {
-        let chaveLimpa = limparTexto(chaveOriginal);
-        let pontos = 0;
-
-        // Match Identico (Peso Máximo)
-        if (msgLimpa === chaveLimpa) pontos += 10000;
-
-        let pTreino = chaveLimpa.split(" ");
-        let palavrasEncontradas = 0;
-
-        pTreino.forEach(termo => {
-            if (msgLimpa.includes(termo)) {
-                palavrasEncontradas++;
-                pontos += (termo.length * 60); // Aumentamos o peso por letra
-            }
-        });
-
-        // Bônus por precisão de frase
-        if (palavrasEncontradas >= pTreino.length && pTreino.length > 0) pontos += 2000;
+        let chaveTreinoLimpa = limparTexto(chaveOriginal);
         
-        // Penalidade de Ruído: Se o que o usuário digitou for MUITO maior que a chave do treino
-        let diffTamanho = Math.abs(msgLimpa.length - chaveLimpa.length);
-        pontos -= (diffTamanho * 10); 
-
-        if (pontos > maiorPontuacao) {
-            maiorPontuacao = pontos;
-            melhorMatch = DATABASE.treino[chaveOriginal];
+        // Se forem 100% iguais depois da limpeza, temos a resposta!
+        if (msgLimpa === chaveTreinoLimpa) {
+            return DATABASE.treino[chaveOriginal];
         }
     }
 
-    // 🔥 FILTRO DE RIGOR: Se o score for menor que 100, o Inforbot assume que não entendeu.
-    // Isso impede que letras aleatórias ativem respostas prontas como "Sou o Inforbot".
-    return (maiorPontuacao > 100) ? melhorMatch : null;
+    // Se passou por tudo e não foi 100% igual, retorna nulo para não "alucinar"
+    return null;
 }
+
 /**
  * 🛡️ LAYER 3: ANALYZE (CONTROLADOR GERAL)
  */
 async function analyze(msg) {
     let entradaBruta = msg.toLowerCase().trim();
 
-    // 1. JOGO ATIVO
+    // --- 1. JOGO ATIVO ---
     if (modoJogo) {
         let respLimpa = entradaBruta.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s/g, "");
         let certaLimpa = String(respostaCerta).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s/g, "");
+        
         if (respLimpa === certaLimpa || respLimpa.includes(certaLimpa)) {
-            modoJogo = false; return botSay(`🎆 **ACERTOU!** Você é fera, ${nomeUsuario}!`, "acerto");
+            modoJogo = false; 
+            return botSay(`🎆 **ACERTOU!** Você é fera, ${nomeUsuario}!`, "acerto");
         } else if (respLimpa === "parar") {
-            modoJogo = false; return botSay("Jogo encerrado.");
+            modoJogo = false; 
+            return botSay("Jogo encerrado.");
         } else {
             if (!isNaN(parseInt(respLimpa)) && typeof respostaCerta === "number") {
                 let dica = parseInt(respLimpa) < respostaCerta ? "MAIOR ⬆️" : "MENOR ⬇️";
@@ -4396,7 +4386,13 @@ async function analyze(msg) {
         }
     }
 
-    // 2. NOTÍCIAS
+    // --- 2. BUSCA NO TREINO (MODO EXATO) ---
+    let respostaTreino = buscarMelhorResposta(msg);
+    if (respostaTreino) {
+        return botSay(respostaTreino);
+    }
+
+    // --- 3. NOTÍCIAS ---
     if (entradaBruta.includes("noticias") || entradaBruta.includes("news")) {
         setLoading(true);
         let busca = entradaBruta.replace(/noticias|news|sobre|agora/g, "").trim();
@@ -4411,11 +4407,12 @@ async function analyze(msg) {
             const items = xml.querySelectorAll("item");
             let txt = `🔔 **NOTÍCIAS:**<br><br>`;
             for(let i = 0; i < 4; i++) { if(items[i]) txt += `• ${items[i].querySelector("title").innerHTML}<br><br>`; }
-            setLoading(false); return botSay(txt);
+            setLoading(false); 
+            return botSay(txt);
         } catch(e) { setLoading(false); }
     }
 
-    // 3. MATEMÁTICA SUPREME
+    // --- 4. MATEMÁTICA SUPREME ---
     if (/[0-9]/.test(entradaBruta) && /(mais|menos|vezes|dividido|x|\+|\-|\*|\/|\^|raiz|sqrt)/.test(entradaBruta)) {
         try {
             let exp = entradaBruta
@@ -4424,7 +4421,6 @@ async function analyze(msg) {
                 .replace(/dividido por|dividido/g, "/").replace(/x/g, "*").replace(/,/g, ".")
                 .replace(/raiz quadrada de|raiz de|raiz/g, "sqrt");
             
-            // Corrige sqrt se não houver parênteses
             if (exp.includes("sqrt") && !exp.includes("(")) {
                 exp = exp.replace(/sqrt\s*(\d+(\.\d+)?)/, "sqrt($1)");
             }
@@ -4434,35 +4430,33 @@ async function analyze(msg) {
         } catch (e) { console.log("Erro Math"); }
     }
 
-    // 4. MENUS RÁPIDOS
+    // --- 5. MENUS RÁPIDOS ---
     if (entradaBruta === "jogos" || entradaBruta === "jogo") return abrirMenuJogos();
     if (entradaBruta === "piada") return fast('piada');
     if (entradaBruta === "curiosidade") return fast('curiosidade');
     if (/^[a-e]$/.test(entradaBruta)) return iniciarLogicaJogo(entradaBruta);
 
-    // 5. MOTOR NEURAL (DATABASE)
-    let resDb = buscarMelhorResposta(msg);
-    if (resDb) return botSay(resDb);
-
-    // 6. ULTRA WIKIPÉDIA (10 IDIOMAS INICIAIS)
+    // --- 6. ULTRA WIKIPÉDIA (BUSCA GLOBAL) ---
     if (entradaBruta.includes("o que e") || entradaBruta.includes("quem e") || entradaBruta.split(" ").length <= 3) {
         setLoading(true);
         let query = entradaBruta.replace(/o que e|quem e|sobre/g, "").trim();
-        const langs = ['pt', 'en', 'es', 'fr', 'de', 'it', 'ja', 'ru', 'zh', 'ar','nl', 'pl', 'sv', 'vi', 'war', 'uk', 'fa', 'ca', 'sr', 'id', 'no', 'ko', 'fi', 'hu', 'cs', 'tr', 'ce', 'sh', 'ro', 'zh-min-nan', 'tt', 'eu', 'ms', 'eo', 'he', 'hy', 'bg', 'da', 'azb', 'sk', 'kk', 'min', 'et', 'be', 'hr', 'el', 'simple', 'lt', 'gl', 'az', 'sl', 'ur', 'nn', 'ka', 'hi', 'th', 'uz', 'la', 'cy', 'ta', 'vo', 'ast', 'mk', 'lv', 'tg', 'my', 'mg', 'af', 'oc', 'bs', 'ky', 'sq', 'tl', 'new', 'zh-yue', 'bn', 'ml', 'pms', 'be-tarask', 'lb', 'jv', 'ht', 'sco', 'mr', 'sw', 'ga', 'ba', 'is', 'myv', 'fy', 'pnb', 'cv', 'nds', 'ne', 'ku', 'ia', 'su', 'bar', 'scn', 'bpy', 'qu', 'am', 'kn', 'ckb', 'gu', 'als', 'vec', 'sa', 'an', 'wa', 'gd', 'nap', 'yi', 'bug', 'si', 'hsb', 'bat-smg', 'fo', 'mzn', 'li', 'sah', 'or', 'hif', 'mrj', 'mhr', 'ilo', 'pa', 'os', 'xmf', 'fiu-vro', 'ps', 'kv', 'pag', 'dv', 'zea', 'gv', 'tyv', 'ay', 'km', 'diq', 'lez', 'nrm', 'koi', 'mwl', 'udm', 'stq', 'fur', 'mt', 'wuu', 'lij', 'ug', 'lad', 'pih', 'sc', 'bh', 'ksh', 'nov', 'ang', 'kw', 'nv', 'hak', 'frp', 'szl', 'ext', 'gan', 'ie', 'ln', 'gom', 'pcd', 'kab', 'sn', 'so', 'st', 'tn', 'ts', 'tum', 'tw', 'ty', 've', 'wo', 'xh', 'zu', 'as', 'gn', 'av', 'bm', 'ch', 'cr', 'ee', 'ff', 'fj', 'ha', 'ho', 'hz', 'ig', 'ii', 'ik', 'iu', 'kg', 'ki', 'kj', 'kr', 'ks', 'lg', 'li', 'lo', 'lu', 'lv', 'mg', 'mh', 'mi', 'mk', 'ml', 'mn', 'mo', 'mr', 'ms', 'mt', 'my', 'na', 'nb', 'nd', 'ne', 'ng', 'nl', 'nn', 'no', 'nr', 'nv', 'ny', 'oc', 'oj', 'om', 'or', 'os', 'pa', 'pi', 'pl', 'ps', 'rm', 'rn', 'rw', 'sa', 'sc', 'sd', 'se', 'sg', 'si', 'sk', 'sl', 'sm', 'sn', 'so', 'sq', 'sr', 'ss', 'st', 'su', 'sv', 'sw', 'ta', 'te', 'tg', 'th', 'ti', 'tk', 'tl', 'tn', 'to', 'tr', 'ts', 'tt', 'tw', 'ty', 'ug', 'uk', 'ur', 'uz', 've', 'vi', 'vo', 'wa', 'wo', 'xh', 'yi', 'yo', 'za', 'zh', 'zu', 'ace', 'ady', 'alt', 'ami', 'anp', 'arc', 'ary', 'atj', 'avk', 'awa', 'ban', 'bcl', 'be-x-old', 'bjn', 'blk', 'bm', 'bxr', 'cbk-zam', 'cdo', 'cho', 'chr', 'chy', 'co', 'crh', 'dag', 'din', 'dty', 'dz', 'eml', 'fat', 'ff', 'fng', 'frp', 'fur', 'gaa', 'gag', 'gcr', 'glk', 'gor', 'got', 'guc', 'gur', 'guw', 'ha', 'hak', 'hif', 'hyw', 'ig', 'ii', 'ik', 'inh', 'iu', 'jam', 'jbo', 'kbd', 'kbp', 'kg', 'ki', 'kj', 'kl', 'krc', 'kri', 'krj', 'ks', 'ksh', 'kwn', 'lad', 'lbe', 'lez', 'lfn', 'lg', 'lij', 'lld', 'lmo', 'ln', 'lo', 'lrc', 'ltg', 'lus', 'mad', 'mai', 'mdf', 'mfe', 'min', 'mni', 'mnw', 'mo', 'mt', 'mus', 'mwl', 'myv', 'mzn', 'nah', 'nan', 'nap', 'nqo', 'nso', 'nv', 'ny', 'olo', 'om', 'pag', 'pam', 'pap', 'pcd', 'pcm', 'pi', 'pih', 'pnb', 'pnt', 'pwn', 'rmy', 'rn', 'roa-rup', 'roa-tara', 'rue', 'rw', 'sah', 'sat', 'sba', 'scn', 'sd', 'se', 'sg', 'shi', 'shn', 'shy', 'skr', 'sm', 'smn', 'sn', 'srn', 'ss', 'st', 'stq', 'sty', 'su', 'szl', 'szy', 'tcy', 'tet', 'ti', 'tk', 'tl', 'tn', 'to', 'tpi', 'trv', 'ts', 'tt', 'tum', 'tw', 'ty', 'tyv', 'udm', 'ug', 've', 'vec', 'vep', 'vls', 'vro', 'wa', 'war', 'wo', 'wuu', 'xal', 'xh', 'xmf', 'yo', 'za', 'zea', 'zgh', 'zu',
-];
+        const langs = ['pt', 'en', 'es', 'fr', 'de', 'it', 'ja', 'ru', 'zh', 'ar', 'nl', 'pl', 'sv', 'vi', 'war', 'uk', 'fa', 'ca', 'sr', 'id', 'no', 'ko', 'fi', 'hu', 'cs', 'tr', 'ce', 'sh', 'ro', 'zh-min-nan', 'tt', 'eu', 'ms', 'eo', 'he', 'hy', 'bg', 'da', 'azb', 'sk', 'kk', 'min', 'et', 'be', 'hr', 'el', 'simple', 'lt', 'gl', 'az', 'sl', 'ur', 'nn', 'ka', 'hi', 'th', 'uz', 'la', 'cy', 'ta', 'vo', 'ast', 'mk', 'lv', 'tg', 'my', 'mg', 'af', 'oc', 'bs', 'ky', 'sq', 'tl', 'new', 'zh-yue', 'bn', 'ml', 'pms', 'be-tarask', 'lb', 'jv', 'ht', 'sco', 'mr', 'sw', 'ga', 'ba', 'is', 'myv', 'fy', 'pnb', 'cv', 'nds', 'ne', 'ku', 'ia', 'su', 'bar', 'scn', 'bpy', 'qu', 'am', 'kn', 'ckb', 'gu', 'als', 'vec', 'sa', 'an', 'wa', 'gd', 'nap', 'yi', 'bug', 'si', 'hsb', 'bat-smg', 'fo', 'mzn', 'li', 'sah', 'or', 'hif', 'mrj', 'mhr', 'ilo', 'pa', 'os', 'xmf', 'fiu-vro', 'ps', 'kv', 'pag', 'dv', 'zea', 'gv', 'tyv', 'ay', 'km', 'diq', 'lez', 'nrm', 'koi', 'mwl', 'udm', 'stq', 'fur', 'mt', 'wuu', 'lij', 'ug', 'lad', 'pih', 'sc', 'bh', 'ksh', 'nov', 'ang', 'kw', 'nv', 'hak', 'frp', 'szl', 'ext', 'gan', 'ie', 'ln', 'gom', 'pcd', 'kab', 'sn', 'so', 'st', 'tn', 'ts', 'tum', 'tw', 'ty', 've', 'wo', 'xh', 'zu', 'as', 'gn', 'av', 'bm', 'ch', 'cr', 'ee', 'ff', 'fj', 'ha', 'ho', 'hz', 'ig', 'ii', 'ik', 'iu', 'kg', 'ki', 'kj', 'kr', 'ks', 'lg', 'li', 'lo', 'lu', 'lv', 'mg', 'mh', 'mi', 'mk', 'ml', 'mn', 'mo', 'mr', 'ms', 'mt', 'my', 'na', 'nb', 'nd', 'ne', 'ng', 'nl', 'nn', 'no', 'nr', 'nv', 'ny', 'oc', 'oj', 'om', 'or', 'os', 'pa', 'pi', 'pl', 'ps', 'rm', 'rn', 'rw', 'sa', 'sc', 'sd', 'se', 'sg', 'si', 'sk', 'sl', 'sm', 'sn', 'so', 'sq', 'sr', 'ss', 'st', 'su', 'sv', 'sw', 'ta', 'te', 'tg', 'th', 'ti', 'tk', 'tl', 'tn', 'to', 'tr', 'ts', 'tt', 'tw', 'ty', 'ug', 'uk', 'ur', 'uz', 've', 'vi', 'vo', 'wa', 'wo', 'xh', 'yi', 'yo', 'za', 'zh', 'zu', 'ace', 'ady', 'alt', 'ami', 'anp', 'arc', 'ary', 'atj', 'avk', 'awa', 'ban', 'bcl', 'be-x-old', 'bjn', 'blk', 'bm', 'bxr', 'cbk-zam', 'cdo', 'cho', 'chr', 'chy', 'co', 'crh', 'dag', 'din', 'dty', 'dz', 'eml', 'fat', 'ff', 'fng', 'frp', 'fur', 'gaa', 'gag', 'gcr', 'glk', 'gor', 'got', 'guc', 'gur', 'guw', 'ha', 'hak', 'hif', 'hyw', 'ig', 'ii', 'ik', 'inh', 'iu', 'jam', 'jbo', 'kbd', 'kbp', 'kg', 'ki', 'kj', 'kl', 'krc', 'kri', 'krj', 'ks', 'ksh', 'kwn', 'lad', 'lbe', 'lez', 'lfn', 'lg', 'lij', 'lld', 'lmo', 'ln', 'lo', 'lrc', 'ltg', 'lus', 'mad', 'mai', 'mdf', 'mfe', 'min', 'mni', 'mnw', 'mo', 'mt', 'mus', 'mwl', 'myv', 'mzn', 'nah', 'nan', 'nap', 'nqo', 'nso', 'nv', 'ny', 'olo', 'om', 'pag', 'pam', 'pap', 'pcd', 'pcm', 'pi', 'pih', 'pnb', 'pnt', 'pwn', 'rmy', 'rn', 'roa-rup', 'roa-tara', 'rue', 'rw', 'sah', 'sat', 'sba', 'scn', 'sd', 'se', 'sg', 'shi', 'shn', 'shy', 'skr', 'sm', 'smn', 'sn', 'srn', 'ss', 'st', 'stq', 'sty', 'su', 'szl', 'szy', 'tcy', 'tet', 'ti', 'tk', 'tl', 'tn', 'to', 'tpi', 'trv', 'ts', 'tt', 'tum', 'tw', 'ty', 'tyv', 'udm', 'ug', 've', 'vec', 'vep', 'vls', 'vro', 'wa', 'war', 'wo', 'wuu', 'xal', 'xh', 'xmf', 'yo', 'za', 'zea', 'zgh', 'zu'];
+        
         for (let l of langs) {
             try {
                 const r = await fetch(`https://${l}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}?origin=*`);
                 if (r.ok) {
                     const d = await r.json();
-                    setLoading(false); return botSay(`**${botNome} Wiki [${l.toUpperCase()}]:** ${d.extract}`);
+                    setLoading(false); 
+                    return botSay(`**${botNome} Wiki [${l.toUpperCase()}]:** ${d.extract}`);
                 }
             } catch(e){ continue; }
         }
-        setLoading(false);
     }
 
-    botSay(`Não entendi, ${nomeUsuario}. Tente 'jogos' ou 'piada'.`);
+    // --- 7. RESPOSTA PADRÃO SE NÃO ACHAR NADA ---
+    setLoading(false);
+    return botSay("Procurei, mas ainda me falta informações...");
 }
 
 // --- 4. FUNÇÕES DE INTERFACE ---
