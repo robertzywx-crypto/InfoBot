@@ -4506,13 +4506,45 @@ async function analyze(msg) {
     let resDb = buscarMelhorResposta(msg);
     if (resDb) return botSay(resDb);
 
-    // MATEMÁTICA
-    if (/[0-9]/.test(entradaBruta) && /[\+\-\*\/\^\(\)Vvx:]/.test(entradaBruta)) {
-        try {
-            let exp = entradaBruta.replace(/x/g, "*").replace(/:/g, "/").replace(/v/g, "sqrt").replace(/V/g, "sqrt").replace(/,/g, ".");
-            return botSay(`${nomeUsuario}, o resultado é: **${math.evaluate(exp)}**.`);
-        } catch(e) {}
+  // ================= MATEMÁTICA COMPLETA INFOBOT =================
+let texto = entradaBruta.toLowerCase().trim();
+
+// ====== MATEMÁTICA POR ESCRITO ======
+texto = texto
+    .replace(/quanto é/g, "")
+    .replace(/calcule/g, "")
+    .replace(/mais/g, "+")
+    .replace(/menos/g, "-")
+    .replace(/vezes/g, "*")
+    .replace(/multiplicado por/g, "*")
+    .replace(/dividido por/g, "/")
+    .replace(/elevado a/g, "^")
+    .replace(/ao quadrado/g, "^2")
+    .replace(/ao cubo/g, "^3")
+    .replace(/raiz de (\d+(\.\d+)?)/g, "sqrt($1)")
+    .replace(/por cento/g, "%");
+
+// ====== SINAIS E ATALHOS ======
+texto = texto
+    .replace(/x/g, "*")
+    .replace(/:/g, "/")
+    .replace(/,/g, ".")
+    .replace(/√(\d+(\.\d+)?)/g, "sqrt($1)")
+    .replace(/v(\d+(\.\d+)?)/g, "sqrt($1)");
+
+// ====== PORCENTAGEM ======
+texto = texto.replace(/(\d+(\.\d+)?)%/g, "($1/100)");
+
+// ====== DETECÇÃO DE CONTA ======
+if (/[0-9]/.test(texto) && /[\+\-\*\/\^]/.test(texto)) {
+    try {
+        const resultado = math.evaluate(texto);
+        return botSay(`${nomeUsuario}, o resultado é: **${resultado}**.`);
+    } catch (erro) {
+        return botSay("❌ Não consegui entender essa conta. Tente escrever de outra forma.");
     }
+}
+ 
 
     // 🌐 ULTRA WIKIPÉDIA
     if (entradaBruta.includes("o que e") || entradaBruta.includes("quem e") || entradaBruta.split(" ").length <= 3) {
