@@ -4483,6 +4483,37 @@ const InforbotEngine = {
 // --- 3. ANALYZE (CÉREBRO DO INFORBOT - 31 WIKIS + JOGOS + AUTO-SYNC CSS) ---
 async function analyze(msg) {
     let entradaBruta = msg.toLowerCase().trim();
+// ===================== MATEMÁTICA UNIVERSAL =====================
+if (
+    /[0-9]/.test(entradaBruta) &&
+    /(mais|menos|vezes|dividido|x|\+|\-|\*|\/|\^|raiz|sqrt)/.test(entradaBruta)
+) {
+    try {
+        let exp = entradaBruta
+            // texto → símbolos
+            .replace(/mais/g, "+")
+            .replace(/menos/g, "-")
+            .replace(/vezes/g, "*")
+            .replace(/dividido por/g, "/")
+            .replace(/dividido/g, "/")
+            .replace(/x/g, "*")
+            .replace(/,/g, ".")
+            .replace(/raiz de/g, "sqrt(")
+            .replace(/raiz/g, "sqrt(");
+
+        // fecha parêntese da raiz se faltar
+        if (exp.includes("sqrt(") && !exp.includes(")")) {
+            exp += ")";
+        }
+
+        let resultado = math.evaluate(exp);
+
+        return botSay(`🧮 ${nomeUsuario}, o resultado é **${resultado}**.`);
+    } catch (e) {
+        return botSay("❌ Não consegui calcular isso.");
+    }
+}
+// ===============================================================
 
     // LÓGICA DE JOGO ATIVO
     if (modoJogo) {
@@ -4544,41 +4575,28 @@ async function analyze(msg) {
     // ================= MATEMÁTICA COMPLETA INFOBOT =================
 let texto = entradaBruta.toLowerCase().trim();
 
-// ====== MATEMÁTICA POR ESCRITO ======
-texto = texto
-    .replace(/quanto é/g, "")
-    .replace(/calcule/g, "")
-    .replace(/mais/g, "+")
-    .replace(/menos/g, "-")
-    .replace(/vezes/g, "*")
-    .replace(/multiplicado por/g, "*")
-    .replace(/dividido por/g, "/")
-    .replace(/elevado a/g, "^")
-    .replace(/ao quadrado/g, "^2")
-    .replace(/ao cubo/g, "^3")
-    .replace(/raiz de (\d+(\.\d+)?)/g, "sqrt($1)")
-    .replace(/por cento/g, "%");
+const texto = entradaBruta
+  .replace(/quanto é|calcule|calcular|resultado de|resultado da/g, '')
+  .replace(/mais/g, '+')
+  .replace(/menos/g, '-')
+  .replace(/vezes/g, '*')
+  .replace(/multiplicado por/g, '*')
+  .replace(/dividido por/g, '/')
+  .replace(/raiz quadrada de/g, 'sqrt')
+  .replace(/,/g, '.')
+  .replace(/:/g, '/')
+  .replace(/x/g, '*')
+  .trim();
 
-// ====== SINAIS E ATALHOS ======
-texto = texto
-    .replace(/x/g, "*")
-    .replace(/:/g, "/")
-    .replace(/,/g, ".")
-    .replace(/√(\d+(\.\d+)?)/g, "sqrt($1)")
-    .replace(/v(\d+(\.\d+)?)/g, "sqrt($1)");
-
-// ====== PORCENTAGEM ======
-texto = texto.replace(/(\d+(\.\d+)?)%/g, "($1/100)");
-
-// ====== DETECÇÃO DE CONTA ======
-if (/[0-9]/.test(texto) && /[\+\-\*\/\^]/.test(texto)) {
-    try {
-        const resultado = math.evaluate(texto);
-        return botSay(`${nomeUsuario}, o resultado é: **${resultado}**.`);
-    } catch (erro) {
-        return botSay("❌ Não consegui entender essa conta. Tente escrever de outra forma.");
-    }
+if (/\d/.test(texto) && /[\+\-\*\/\^\(\)sqrt]/.test(texto)) {
+  try {
+    const resultado = math.evaluate(texto);
+    return botSay(`${nomeUsuario}, o resultado é **${resultado}**`);
+  } catch {
+    return botSay("Erro na conta");
+  }
 }
+
 
     
     // MOTOR DE INTELIGÊNCIA (DATABASE)
