@@ -4461,42 +4461,48 @@ async function analyze(msg) {
     if (entradaBruta === "curiosidade") return fast('curiosidade');
     if (/^[a-e]$/.test(entradaBruta)) return iniciarLogicaJogo(entradaBruta);
 
-// --- 6. ULTRA WIKIPÉDIA (AJUSTADA) ---
-    // Adicionamos um filtro para NÃO entrar aqui se a palavra for um comando conhecido
+// --- 6. ULTRA WIKIPÉDIA INTEGRADA (VERSÃO CORRIGIDA) ---
     const comandos = ["noticias", "news", "jogos", "jogo", "piada", "curiosidade"];
     
-    if (!comandos.includes(entradaBruta) && (entradaBruta.includes("o que e") || entradaBruta.includes("quem e") || (entradaBruta.split(" ").length <= 3 && entradaBruta.length > 3))) {
+    if (!comandos.includes(entradaBruta)) {
         setLoading(true);
-        // ... resto do seu código da wiki (o fetch e o loop de langs)
-        const langs = ['pt', 'en', 'es', 'fr', 'de', 'it', 'ja', 'ru', 'zh', 'ar', 'nl', 'pl', 'sv', 'vi', 'war', 'uk', 'fa', 'ca', 'sr', 'id', 'no', 'ko', 'fi', 'hu', 'cs', 'tr', 'ce', 'sh', 'ro', 'zh-min-nan', 'tt', 'eu', 'ms', 'eo', 'he', 'hy', 'bg', 'da', 'azb', 'sk', 'kk', 'min', 'et', 'be', 'hr', 'el', 'simple', 'lt', 'gl', 'az', 'sl', 'ur', 'nn', 'ka', 'hi', 'th', 'uz', 'la', 'cy', 'ta', 'vo', 'ast', 'mk', 'lv', 'tg', 'my', 'mg', 'af', 'oc', 'bs', 'ky', 'sq', 'tl', 'new', 'zh-yue', 'bn', 'ml', 'pms', 'be-tarask', 'lb', 'jv', 'ht', 'sco', 'mr', 'sw', 'ga', 'ba', 'is', 'myv', 'fy', 'pnb', 'cv', 'nds', 'ne', 'ku', 'ia', 'su', 'bar', 'scn', 'bpy', 'qu', 'am', 'kn', 'ckb', 'gu', 'als', 'vec', 'sa', 'an', 'wa', 'gd', 'nap', 'yi', 'bug', 'si', 'hsb', 'bat-smg', 'fo', 'mzn', 'li', 'sah', 'or', 'hif', 'mrj', 'mhr', 'ilo', 'pa', 'os', 'xmf', 'fiu-vro', 'ps', 'kv', 'pag', 'dv', 'zea', 'gv', 'tyv', 'ay', 'km', 'diq', 'lez', 'nrm', 'koi', 'mwl', 'udm', 'stq', 'fur', 'mt', 'wuu', 'lij', 'ug', 'lad', 'pih', 'sc', 'bh', 'ksh', 'nov', 'ang', 'kw', 'nv', 'hak', 'frp', 'szl', 'ext', 'gan', 'ie', 'ln', 'gom', 'pcd', 'kab', 'sn', 'so', 'st', 'tn', 'ts', 'tum', 'tw', 'ty', 've', 'wo', 'xh', 'zu', 'as', 'gn', 'av', 'bm', 'ch', 'cr', 'ee', 'ff', 'fj', 'ha', 'ho', 'hz', 'ig', 'ii', 'ik', 'iu', 'kg', 'ki', 'kj', 'kr', 'ks', 'lg', 'li', 'lo', 'lu', 'lv', 'mg', 'mh', 'mi', 'mk', 'ml', 'mn', 'mo', 'mr', 'ms', 'mt', 'my', 'na', 'nb', 'nd', 'ne', 'ng', 'nl', 'nn', 'no', 'nr', 'nv', 'ny', 'oc', 'oj', 'om', 'or', 'os', 'pa', 'pi', 'pl', 'ps', 'rm', 'rn', 'rw', 'sa', 'sc', 'sd', 'se', 'sg', 'si', 'sk', 'sl', 'sm', 'sn', 'so', 'sq', 'sr', 'ss', 'st', 'su', 'sv', 'sw', 'ta', 'te', 'tg', 'th', 'ti', 'tk', 'tl', 'tn', 'to', 'tr', 'ts', 'tt', 'tw', 'ty', 'ug', 'uk', 'ur', 'uz', 've', 'vi', 'vo', 'wa', 'wo', 'xh', 'yi', 'yo', 'za', 'zh', 'zu', 'ace', 'ady', 'alt', 'ami', 'anp', 'arc', 'ary', 'atj', 'avk', 'awa', 'ban', 'bcl', 'be-x-old', 'bjn', 'blk', 'bm', 'bxr', 'cbk-zam', 'cdo', 'cho', 'chr', 'chy', 'co', 'crh', 'dag', 'din', 'dty', 'dz', 'eml', 'fat', 'ff', 'fng', 'frp', 'fur', 'gaa', 'gag', 'gcr', 'glk', 'gor', 'got', 'guc', 'gur', 'guw', 'ha', 'hak', 'hif', 'hyw', 'ig', 'ii', 'ik', 'inh', 'iu', 'jam', 'jbo', 'kbd', 'kbp', 'kg', 'ki', 'kj', 'kl', 'krc', 'kri', 'krj', 'ks', 'ksh', 'kwn', 'lad', 'lbe', 'lez', 'lfn', 'lg', 'lij', 'lld', 'lmo', 'ln', 'lo', 'lrc', 'ltg', 'lus', 'mad', 'mai', 'mdf', 'mfe', 'min', 'mni', 'mnw', 'mo', 'mt', 'mus', 'mwl', 'myv', 'mzn', 'nah', 'nan', 'nap', 'nqo', 'nso', 'nv', 'ny', 'olo', 'om', 'pag', 'pam', 'pap', 'pcd', 'pcm', 'pi', 'pih', 'pnb', 'pnt', 'pwn', 'rmy', 'rn', 'roa-rup', 'roa-tara', 'rue', 'rw', 'sah', 'sat', 'sba', 'scn', 'sd', 'se', 'sg', 'shi', 'shn', 'shy', 'skr', 'sm', 'smn', 'sn', 'srn', 'ss', 'st', 'stq', 'sty', 'su', 'szl', 'szy', 'tcy', 'tet', 'ti', 'tk', 'tl', 'tn', 'to', 'tpi', 'trv', 'ts', 'tt', 'tum', 'tw', 'ty', 'tyv', 'udm', 'ug', 've', 'vec', 'vep', 'vls', 'vro', 'wa', 'war', 'wo', 'wuu', 'xal', 'xh', 'xmf', 'yo', 'za', 'zea', 'zgh', 'zu'];
-        // --- BUSCA DE FOTO NA WIKIDATA (ADICIONE ANTES DO LOOP LANGS) ---
+        const tInicioWiki = performance.now();
         let fotoURL = "";
+
+        // Tenta buscar a foto na Wikidata primeiro (Sem travar o resto)
         try {
-            const resData = await fetch(`https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(entradaBruta)}&language=pt&format=json&origin=*`);
+            const resData = await fetch(`https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(msg)}&language=pt&format=json&origin=*`);
             const dataS = await resData.json();
-            if (dataS.search && dataS.search.length > 0) {
+            if (dataS && dataS.search && dataS.search.length > 0) {
                 const id = dataS.search[0].id;
                 const resImg = await fetch(`https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${id}&props=claims&format=json&origin=*`);
                 const dataI = await resImg.json();
-                const claims = dataI.entities[id].claims;
-                if (claims && claims.P18) {
-                    const imgName = claims.P18[0].mainsnak.datavalue.value;
+                if (dataI.entities[id].claims?.P18) {
+                    const imgName = dataI.entities[id].claims.P18[0].mainsnak.datavalue.value;
                     fotoURL = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(imgName).replace(/%20/g, "_")}?width=400`;
                 }
             }
-        } catch (e) { console.log("Erro foto"); }
+        } catch (e) { console.log("Erro na foto, seguindo para o texto..."); }
+
+        // Agora o seu Loop de línguas original
+        const langs = ['pt', 'en', 'es', 'fr', 'de', 'it', 'ja', 'ru', 'zh', 'ar', 'nl', 'pl', 'sv', 'vi', 'war', 'uk', 'fa', 'ca', 'sr', 'id', 'no', 'ko', 'fi', 'hu', 'cs', 'tr', 'ce', 'sh', 'ro', 'zh-min-nan', 'tt', 'eu', 'ms', 'eo', 'he', 'hy', 'bg', 'da', 'azb', 'sk', 'kk', 'min', 'et', 'be', 'hr', 'el', 'simple', 'lt', 'gl', 'az', 'sl', 'ur', 'nn', 'ka', 'hi', 'th', 'uz', 'la', 'cy', 'ta', 'vo', 'ast', 'mk', 'lv', 'tg', 'my', 'mg', 'af', 'oc', 'bs', 'ky', 'sq', 'tl', 'new', 'zh-yue', 'bn', 'ml', 'pms', 'be-tarask', 'lb', 'jv', 'ht', 'sco', 'mr', 'sw', 'ga', 'ba', 'is', 'myv', 'fy', 'pnb', 'cv', 'nds', 'ne', 'ku', 'ia', 'su', 'bar', 'scn', 'bpy', 'qu', 'am', 'kn', 'ckb', 'gu', 'als', 'vec', 'sa', 'an', 'wa', 'gd', 'nap', 'yi', 'bug', 'si', 'hsb', 'bat-smg', 'fo', 'mzn', 'li', 'sah', 'or', 'hif', 'mrj', 'mhr', 'ilo', 'pa', 'os', 'xmf', 'fiu-vro', 'ps', 'kv', 'pag', 'dv', 'zea', 'gv', 'tyv', 'ay', 'km', 'diq', 'lez', 'nrm', 'koi', 'mwl', 'udm', 'stq', 'fur', 'mt', 'wuu', 'lij', 'ug', 'lad', 'pih', 'sc', 'bh', 'ksh', 'nov', 'ang', 'kw', 'nv', 'hak', 'frp', 'szl', 'ext', 'gan', 'ie', 'ln', 'gom', 'pcd', 'kab', 'sn', 'so', 'st', 'tn', 'ts', 'tum', 'tw', 'ty', 've', 'wo', 'xh', 'zu', 'as', 'gn', 'av', 'bm', 'ch', 'cr', 'ee', 'ff', 'fj', 'ha', 'ho', 'hz', 'ig', 'ii', 'ik', 'iu', 'kg', 'ki', 'kj', 'kr', 'ks', 'lg', 'li', 'lo', 'lu', 'lv', 'mg', 'mh', 'mi', 'mk', 'ml', 'mn', 'mo', 'mr', 'ms', 'mt', 'my', 'na', 'nb', 'nd', 'ne', 'ng', 'nl', 'nn', 'no', 'nr', 'nv', 'ny', 'oc', 'oj', 'om', 'or', 'os', 'pa', 'pi', 'pl', 'ps', 'rm', 'rn', 'rw', 'sa', 'sc', 'sd', 'se', 'sg', 'si', 'sk', 'sl', 'sm', 'sn', 'so', 'sq', 'sr', 'ss', 'st', 'su', 'sv', 'sw', 'ta', 'te', 'tg', 'th', 'ti', 'tk', 'tl', 'tn', 'to', 'tr', 'ts', 'tt', 'tw', 'ty', 'ug', 'uk', 'ur', 'uz', 've', 'vi', 'vo', 'wa', 'wo', 'xh', 'yi', 'yo', 'za', 'zh', 'zu', 'ace', 'ady', 'alt', 'ami', 'anp', 'arc', 'ary', 'atj', 'avk', 'awa', 'ban', 'bcl', 'be-x-old', 'bjn', 'blk', 'bm', 'bxr', 'cbk-zam', 'cdo', 'cho', 'chr', 'chy', 'co', 'crh', 'dag', 'din', 'dty', 'dz', 'eml', 'fat', 'ff', 'fng', 'frp', 'fur', 'gaa', 'gag', 'gcr', 'glk', 'gor', 'got', 'guc', 'gur', 'guw', 'ha', 'hak', 'hif', 'hyw', 'ig', 'ii', 'ik', 'inh', 'iu', 'jam', 'jbo', 'kbd', 'kbp', 'kg', 'ki', 'kj', 'kl', 'krc', 'kri', 'krj', 'ks', 'ksh', 'kwn', 'lad', 'lbe', 'lez', 'lfn', 'lg', 'lij', 'lld', 'lmo', 'ln', 'lo', 'lrc', 'ltg', 'lus', 'mad', 'mai', 'mdf', 'mfe', 'min', 'mni', 'mnw', 'mo', 'mt', 'mus', 'mwl', 'myv', 'mzn', 'nah', 'nan', 'nap', 'nqo', 'nso', 'nv', 'ny', 'olo', 'om', 'pag', 'pam', 'pap', 'pcd', 'pcm', 'pi', 'pih', 'pnb', 'pnt', 'pwn', 'rmy', 'rn', 'roa-rup', 'roa-tara', 'rue', 'rw', 'sah', 'sat', 'sba', 'scn', 'sd', 'se', 'sg', 'shi', 'shn', 'shy', 'skr', 'sm', 'smn', 'sn', 'srn', 'ss', 'st', 'stq', 'sty', 'su', 'szl', 'szy', 'tcy', 'tet', 'ti', 'tk', 'tl', 'tn', 'to', 'tpi', 'trv', 'ts', 'tt', 'tum', 'tw', 'ty', 'tyv', 'udm', 'ug', 've', 'vec', 'vep', 'vls', 'vro', 'wa', 'war', 'wo', 'wuu', 'xal', 'xh', 'xmf', 'yo', 'za', 'zea', 'zgh', 'zu'];
+        
         for (let l of langs) {
             try {
-                const r = await fetch(`https://${l}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}?origin=*`);
+                const r = await fetch(`https://${l}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(msg)}?origin=*`);
                 if (r.ok) {
-                   let imagemHtml = fotoURL ? `<br><img src="${fotoURL}" style="max-width:100%; border-radius:15px; margin-top:10px; border:2px solid var(--accent); box-shadow: var(--neon-blue);">` : "";
+                    const d = await r.json();
+                    const tFimWiki = performance.now();
+                    const analise = ((tFimWiki - tInicioWiki) / 1000).toFixed(2);
+                    
+                    let imagemHtml = fotoURL ? `<br><img src="${fotoURL}" style="max-width:100%; border-radius:15px; margin-top:10px; border:2px solid var(--accent); box-shadow: var(--neon-blue);">` : "";
+                    
                     setLoading(false);
-                    return botSay(`**${botNome} Wiki [${l.toUpperCase()}]:**<br>${d.extract}${imagemHtml}`);
+                    return botSay(`**${botNome} Wiki [${l.toUpperCase()}]:**<br>${d.extract}${imagemHtml}<br><br><small>🕒 Análise: ${analise}s ⚙️</small>`);
                 }
-            } catch(e){ continue; }
+            } catch(e) { continue; }
         }
     }
-
     // --- 7. RESPOSTA PADRÃO SE NÃO ACHAR NADA ---
     setLoading(false);
     return botSay("Procurei, mas ainda me falta informações...");
