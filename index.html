@@ -4417,26 +4417,51 @@ async function analyze(msg) {
         return botSay(respostaTreino);
     }
 
-    // --- 3. NOTÍCIAS ---
+// --- 3. NOTÍCIAS (BRASIL + MUNDO) ---
     if (entradaBruta.includes("noticias") || entradaBruta.includes("news")) {
         setLoading(true);
+        const tInicioNews = performance.now();
+        
+        // Prioridade: se não especificar, busca Brasil. Se disser "mundo", busca World.
         let busca = entradaBruta.replace(/noticias|news|sobre|agora/g, "").trim();
-        let isGlobal = entradaBruta.includes("mundiais") || entradaBruta.includes("mundo");
-        if(!busca) busca = isGlobal ? "World" : "Brasil";
+        let isGlobal = entradaBruta.includes("mundo") || entradaBruta.includes("mundiais") || entradaBruta.includes("global");
+        
+        if(!busca) {
+            busca = isGlobal ? "World News" : "Brasil";
+        }
+
+        // Define o idioma da busca (pt-BR para Brasil, en para Mundo)
+        let langNews = isGlobal ? "en" : "pt-BR";
+        let ceid = isGlobal ? "US:en" : "BR:pt-419";
+
         try {
-            const newsURL = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://news.google.com/rss/search?q=${busca}&hl=${isGlobal ? 'en' : 'pt-BR'}`)}&nocache=${Date.now()}`;
+            const newsURL = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://news.google.com/rss/search?q=${busca}&hl=${langNews}&gl=${isGlobal ? 'US' : 'BR'}&ceid=${ceid}`)}&nocache=${Date.now()}`;
             const response = await fetch(newsURL);
             const data = await response.json();
             const parser = new DOMParser();
             const xml = parser.parseFromString(data.contents, "text/xml");
             const items = xml.querySelectorAll("item");
-            let txt = `🔔 **NOTÍCIAS:**<br><br>`;
-            for(let i = 0; i < 4; i++) { if(items[i]) txt += `• ${items[i].querySelector("title").innerHTML}<br><br>`; }
-            setLoading(false); 
-            return botSay(txt);
-        } catch(e) { setLoading(false); }
-    }
+            
+            let txt = `🔔 **INFORBOT NEWS [${isGlobal ? 'GLOBAL' : 'BRASIL'}]:**<br><br>`;
+            
+            // Pega as 5 principais notícias
+            for(let i = 0; i < 5; i++) { 
+                if(items[i]) {
+                    let titulo = items[i].querySelector("title").innerHTML;
+                    txt += `• ${titulo}<br><br>`; 
+                }
+            }
 
+            const tFimNews = performance.now();
+            const analise = ((tFimNews - tInicioNews) / 1000).toFixed(2);
+            
+            setLoading(false); 
+            return botSay(`${txt}<small>🕒 Análise: ${analise}s ⚙️</small>`);
+        } catch(e) { 
+            setLoading(false);
+            return botSay("Inforbot: Erro ao buscar notícias mundiais.");
+        }
+    }
     // --- 4. MATEMÁTICA SUPREME ---
     if (/[0-9]/.test(entradaBruta) && /(mais|menos|vezes|dividido|x|\+|\-|\*|\/|\^|raiz|sqrt)/.test(entradaBruta)) {
         try {
