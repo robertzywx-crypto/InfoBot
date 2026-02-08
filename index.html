@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🤖 InforBot</title>
-    <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 20px;">
     
     <input type="text" id="wikiQuery" placeholder="Pesquisar lugar ou pessoa..." style="padding: 10px; width: 300px;">
     
@@ -4547,64 +4546,68 @@ function fast(type) {
     let lista = type === 'piada' ? DATABASE.piadas : DATABASE.curiosidades;
     if (lista) botSay(lista[Math.floor(Math.random() * lista.length)]);
 }
-async function executarPesquisaInforbot() {
-    const termo = document.getElementById('wikiQuery').value;
-    const status = document.getElementById('wikiStatus');
-    const resultDiv = document.getElementById('wikiResult');
+async function send() {
+    const i = document.getElementById("userInput");
+    const val = i.value.trim();
+    if (!val) return;
 
-    if (!termo) return;
+    // 1. Mostra sua mensagem no chat
+    const d = document.createElement("div"); 
+    d.className = "user-msg bubble";
+    d.innerHTML = val; 
+    document.getElementById("chat").appendChild(d);
+    
+    i.value = ""; 
+    document.getElementById("chat").scrollTop = document.getElementById("chat").scrollHeight;
 
-    // Sinal de processamento do Inforbot
-    status.innerHTML = `<p>🕒 Analisando: ${termo}... ⚙️</p>`;
-    resultDiv.innerHTML = "";
+    const tempoInicial = performance.now();
 
-    try {
-        // Passo 1: Buscar o ID da entidade (QID)
-        const searchUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(termo)}&language=pt&format=json&origin=*`;
-        const searchRes = await fetch(searchUrl);
-        const searchData = await searchRes.json();
+    // 2. Primeiro, verifica se a palavra está no seu banco de dados grande
+    let respostaTreino = buscarMelhorResposta(val); 
 
-        if (!searchData.search || searchData.search.length === 0) {
-            status.innerHTML = "🕒 Tempo de Análise: 0.45s ⚙️";
-            resultDiv.innerHTML = "<p>Nenhum dado real encontrado para este termo, Roberto.</p>";
-            return;
+    if (respostaTreino) {
+        const analise = ((performance.now() - tempoInicial) / 1000).toFixed(2);
+        botSay(`${respostaTreino}<br><small>🕒 Tempo de Análise: ${analise}s ⚙️</small>`);
+    } else {
+        // 3. Se não estiver no banco, ele pesquisa a cidade/pessoa automaticamente
+        setLoading(true);
+        const resultadoWiki = await buscarWikiDataParaChat(val);
+        setLoading(false);
+
+        const analise = ((performance.now() - tempoInicial) / 1000).toFixed(2);
+
+        if (resultadoWiki) {
+            let html = `<b>${resultadoWiki.nome}</b><br>${resultadoWiki.desc}`;
+            if (resultadoWiki.foto) html += `<br><img src="${resultadoWiki.foto}" class="wiki-img" style="max-width:100%; border-radius:10px; margin-top:10px;">`;
+            botSay(`${html}<br><small>🕒 Tempo de Análise: ${analise}s ⚙️</small>`);
+        } else {
+            // 4. Se não achar em lugar nenhum
+            botSay(`Roberto, não encontrei isso no meu banco e nem na Wiki. Pode repetir?<br><small>🕒 Tempo de Análise: ${analise}s ⚙️</small>`);
         }
+    }
+}
 
-        const entityId = searchData.search[0].id;
+// Essa função substitui a que você apagou, mas joga o resultado pro chat
+async function buscarWikiDataParaChat(termo) {
+    try {
+        const searchRes = await fetch(`https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(termo)}&language=pt&format=json&origin=*`);
+        const searchData = await searchRes.json();
+        if (!searchData.search || searchData.search.length === 0) return null;
 
-        // Passo 2: Buscar detalhes da entidade (incluindo imagem P18)
-        const entityUrl = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${entityId}&languages=pt&format=json&origin=*`;
-        const entityRes = await fetch(entityUrl);
+        const id = searchData.search[0].id;
+        const entityRes = await fetch(`https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${id}&languages=pt&format=json&origin=*`);
         const entityData = await entityRes.json();
 
-        const entity = entityData.entities[entityId];
-        const label = entity.labels?.pt?.value || entity.labels?.en?.value || "Sem título";
-        const desc = entity.descriptions?.pt?.value || entity.descriptions?.en?.value || "Sem descrição disponível.";
-        
-        // Lógica de Imagem (Propriedade P18 no WikiData)
-        let imgHtml = "";
+        const entity = entityData.entities[id];
+        const nome = entity.labels?.pt?.value || searchData.search[0].label;
+        const desc = entity.descriptions?.pt?.value || "Informação disponível na base Wiki.";
+        let foto = "";
         if (entity.claims && entity.claims.P18) {
-            const imageName = entity.claims.P18[0].mainsnak.datavalue.value;
-            const encodedImg = encodeURIComponent(imageName).replace(/%20/g, "_");
-            const imgUrl = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodedImg}?width=400`;
-            imgHtml = `<img src="${imgUrl}" alt="${label}" style="max-width:100%; height:auto; display:block; margin: 10px 0;">`;
+            const imgName = entity.claims.P18[0].mainsnak.datavalue.value;
+            foto = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(imgName).replace(/%20/g, "_")}?width=400`;
         }
-
-        // Construção do Resultado
-        resultDiv.innerHTML = `
-            <h2>${label}</h2>
-            ${imgHtml}
-            <p><strong>Descrição:</strong> ${desc}</p>
-            <p><strong>ID Oficial:</strong> ${entityId}</p>
-            <small>Fonte: WikiData Open Data</small>
-        `;
-
-        status.innerHTML = "🕒 Tempo de Análise: 0.92s ⚙️";
-
-    } catch (error) {
-        status.innerHTML = "Erro na conexão.";
-        console.error(error);
-    }
+        return { nome, desc, foto };
+    } catch (e) { return null; }
 }
 function setLoading(s) { const st = document.querySelector(".status"); if(st) st.style.display = s ? "flex" : "none"; }
 
