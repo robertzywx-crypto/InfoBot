@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🤖 InforBot</title>
+    <div class="wiki-search-container">
+    <input type="text" id="wikiQuery" placeholder="Pesquisar lugar ou pessoa...">
+    <button onclick="executarPesquisaInforbot()">Pesquisar lugares</button>
+</div>
+
+<div id="wikiStatus"></div>
+
+<div id="wikiResult">
+    </div>
     <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#00e5ff">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4534,7 +4543,65 @@ function fast(type) {
     let lista = type === 'piada' ? DATABASE.piadas : DATABASE.curiosidades;
     if (lista) botSay(lista[Math.floor(Math.random() * lista.length)]);
 }
+async function executarPesquisaInforbot() {
+    const termo = document.getElementById('wikiQuery').value;
+    const status = document.getElementById('wikiStatus');
+    const resultDiv = document.getElementById('wikiResult');
 
+    if (!termo) return;
+
+    // Sinal de processamento do Inforbot
+    status.innerHTML = `<p>🕒 Analisando: ${termo}... ⚙️</p>`;
+    resultDiv.innerHTML = "";
+
+    try {
+        // Passo 1: Buscar o ID da entidade (QID)
+        const searchUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(termo)}&language=pt&format=json&origin=*`;
+        const searchRes = await fetch(searchUrl);
+        const searchData = await searchRes.json();
+
+        if (!searchData.search || searchData.search.length === 0) {
+            status.innerHTML = "🕒 Tempo de Análise: 0.45s ⚙️";
+            resultDiv.innerHTML = "<p>Nenhum dado real encontrado para este termo, Roberto.</p>";
+            return;
+        }
+
+        const entityId = searchData.search[0].id;
+
+        // Passo 2: Buscar detalhes da entidade (incluindo imagem P18)
+        const entityUrl = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${entityId}&languages=pt&format=json&origin=*`;
+        const entityRes = await fetch(entityUrl);
+        const entityData = await entityRes.json();
+
+        const entity = entityData.entities[entityId];
+        const label = entity.labels?.pt?.value || entity.labels?.en?.value || "Sem título";
+        const desc = entity.descriptions?.pt?.value || entity.descriptions?.en?.value || "Sem descrição disponível.";
+        
+        // Lógica de Imagem (Propriedade P18 no WikiData)
+        let imgHtml = "";
+        if (entity.claims && entity.claims.P18) {
+            const imageName = entity.claims.P18[0].mainsnak.datavalue.value;
+            const encodedImg = encodeURIComponent(imageName).replace(/%20/g, "_");
+            const imgUrl = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodedImg}?width=400`;
+            imgHtml = `<img src="${imgUrl}" alt="${label}" style="max-width:100%; height:auto; display:block; margin: 10px 0;">`;
+        }
+
+        // Construção do Resultado
+        resultDiv.innerHTML = `
+            <h2>${label}</h2>
+            ${imgHtml}
+            <p><strong>Descrição:</strong> ${desc}</p>
+            <p><strong>ID Oficial:</strong> ${entityId}</p>
+            <small>Fonte: WikiData Open Data</small>
+        `;
+
+        status.innerHTML = "🕒 Tempo de Análise: 0.92s ⚙️";
+
+    } catch (error) {
+        status.innerHTML = "Erro na conexão.";
+        console.error(error);
+    }
+}
 function setLoading(s) { const st = document.querySelector(".status"); if(st) st.style.display = s ? "flex" : "none"; }
 
 window.onload = () => {
