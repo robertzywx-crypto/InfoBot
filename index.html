@@ -4,18 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🤖 InforBot</title>
-    
-    <input type="text" id="wikiQuery" placeholder="Pesquisar lugar ou pessoa..." style="padding: 10px; width: 300px;">
-    
-    <button onclick="executarPesquisaInforbot()" style="padding: 10px 20px; cursor: pointer;">
-        Pesquisar na Wiki
-    </button>
-
-    <div id="wikiStatus" class="analyzing"></div>
-
-    <div id="wikiResult" style="width: 100%; max-width: 600px; margin-top: 20px;">
-        </div>
-</div>
     <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#00e5ff">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4315,7 +4303,32 @@ const dbJogos = {
         {p: "Portugal", r: "lisboa"}, {p: "Alemanha", r: "berlim"}, {p: "China", r: "pequim"}
     ]
 };
+// --- FUNÇÃO AUXILIAR WIKIDATA (COLE ABAIXO DO dbJogos) ---
+async function buscarWikidata(termo) {
+    try {
+        // Passo 1: Busca o ID do termo
+        const sUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(termo)}&language=pt&format=json&origin=*`;
+        const sRes = await fetch(sUrl);
+        const sData = await sRes.json();
+        if (!sData.search || sData.search.length === 0) return null;
 
+        const id = sData.search[0].id;
+        // Passo 2: Pega os detalhes e a imagem (P18)
+        const eUrl = `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${id}&languages=pt&format=json&origin=*`;
+        const eRes = await fetch(eUrl);
+        const eData = await eRes.json();
+        const ent = eData.entities[id];
+
+        const nome = ent.labels?.pt?.value || sData.search[0].label;
+        const desc = ent.descriptions?.pt?.value || "Informação disponível na base Wiki.";
+        let foto = "";
+        if (ent.claims?.P18) {
+            const imgN = ent.claims.P18[0].mainsnak.datavalue.value;
+            foto = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(imgN).replace(/%20/g, "_")}?width=400`;
+        }
+        return { nome, desc, foto };
+    } catch (e) { return null; }
+}
 /**
  * 🛡️ LAYER 1: O GRANDE FILTRO DE ENTRADA (SUPER LIMPEZA)
  * Melhora: Agora ele limpa sinais e risadas sem destruir a frase principal.
@@ -4456,14 +4469,29 @@ async function analyze(msg) {
         setLoading(true);
         // ... resto do seu código da wiki (o fetch e o loop de langs)
         const langs = ['pt', 'en', 'es', 'fr', 'de', 'it', 'ja', 'ru', 'zh', 'ar', 'nl', 'pl', 'sv', 'vi', 'war', 'uk', 'fa', 'ca', 'sr', 'id', 'no', 'ko', 'fi', 'hu', 'cs', 'tr', 'ce', 'sh', 'ro', 'zh-min-nan', 'tt', 'eu', 'ms', 'eo', 'he', 'hy', 'bg', 'da', 'azb', 'sk', 'kk', 'min', 'et', 'be', 'hr', 'el', 'simple', 'lt', 'gl', 'az', 'sl', 'ur', 'nn', 'ka', 'hi', 'th', 'uz', 'la', 'cy', 'ta', 'vo', 'ast', 'mk', 'lv', 'tg', 'my', 'mg', 'af', 'oc', 'bs', 'ky', 'sq', 'tl', 'new', 'zh-yue', 'bn', 'ml', 'pms', 'be-tarask', 'lb', 'jv', 'ht', 'sco', 'mr', 'sw', 'ga', 'ba', 'is', 'myv', 'fy', 'pnb', 'cv', 'nds', 'ne', 'ku', 'ia', 'su', 'bar', 'scn', 'bpy', 'qu', 'am', 'kn', 'ckb', 'gu', 'als', 'vec', 'sa', 'an', 'wa', 'gd', 'nap', 'yi', 'bug', 'si', 'hsb', 'bat-smg', 'fo', 'mzn', 'li', 'sah', 'or', 'hif', 'mrj', 'mhr', 'ilo', 'pa', 'os', 'xmf', 'fiu-vro', 'ps', 'kv', 'pag', 'dv', 'zea', 'gv', 'tyv', 'ay', 'km', 'diq', 'lez', 'nrm', 'koi', 'mwl', 'udm', 'stq', 'fur', 'mt', 'wuu', 'lij', 'ug', 'lad', 'pih', 'sc', 'bh', 'ksh', 'nov', 'ang', 'kw', 'nv', 'hak', 'frp', 'szl', 'ext', 'gan', 'ie', 'ln', 'gom', 'pcd', 'kab', 'sn', 'so', 'st', 'tn', 'ts', 'tum', 'tw', 'ty', 've', 'wo', 'xh', 'zu', 'as', 'gn', 'av', 'bm', 'ch', 'cr', 'ee', 'ff', 'fj', 'ha', 'ho', 'hz', 'ig', 'ii', 'ik', 'iu', 'kg', 'ki', 'kj', 'kr', 'ks', 'lg', 'li', 'lo', 'lu', 'lv', 'mg', 'mh', 'mi', 'mk', 'ml', 'mn', 'mo', 'mr', 'ms', 'mt', 'my', 'na', 'nb', 'nd', 'ne', 'ng', 'nl', 'nn', 'no', 'nr', 'nv', 'ny', 'oc', 'oj', 'om', 'or', 'os', 'pa', 'pi', 'pl', 'ps', 'rm', 'rn', 'rw', 'sa', 'sc', 'sd', 'se', 'sg', 'si', 'sk', 'sl', 'sm', 'sn', 'so', 'sq', 'sr', 'ss', 'st', 'su', 'sv', 'sw', 'ta', 'te', 'tg', 'th', 'ti', 'tk', 'tl', 'tn', 'to', 'tr', 'ts', 'tt', 'tw', 'ty', 'ug', 'uk', 'ur', 'uz', 've', 'vi', 'vo', 'wa', 'wo', 'xh', 'yi', 'yo', 'za', 'zh', 'zu', 'ace', 'ady', 'alt', 'ami', 'anp', 'arc', 'ary', 'atj', 'avk', 'awa', 'ban', 'bcl', 'be-x-old', 'bjn', 'blk', 'bm', 'bxr', 'cbk-zam', 'cdo', 'cho', 'chr', 'chy', 'co', 'crh', 'dag', 'din', 'dty', 'dz', 'eml', 'fat', 'ff', 'fng', 'frp', 'fur', 'gaa', 'gag', 'gcr', 'glk', 'gor', 'got', 'guc', 'gur', 'guw', 'ha', 'hak', 'hif', 'hyw', 'ig', 'ii', 'ik', 'inh', 'iu', 'jam', 'jbo', 'kbd', 'kbp', 'kg', 'ki', 'kj', 'kl', 'krc', 'kri', 'krj', 'ks', 'ksh', 'kwn', 'lad', 'lbe', 'lez', 'lfn', 'lg', 'lij', 'lld', 'lmo', 'ln', 'lo', 'lrc', 'ltg', 'lus', 'mad', 'mai', 'mdf', 'mfe', 'min', 'mni', 'mnw', 'mo', 'mt', 'mus', 'mwl', 'myv', 'mzn', 'nah', 'nan', 'nap', 'nqo', 'nso', 'nv', 'ny', 'olo', 'om', 'pag', 'pam', 'pap', 'pcd', 'pcm', 'pi', 'pih', 'pnb', 'pnt', 'pwn', 'rmy', 'rn', 'roa-rup', 'roa-tara', 'rue', 'rw', 'sah', 'sat', 'sba', 'scn', 'sd', 'se', 'sg', 'shi', 'shn', 'shy', 'skr', 'sm', 'smn', 'sn', 'srn', 'ss', 'st', 'stq', 'sty', 'su', 'szl', 'szy', 'tcy', 'tet', 'ti', 'tk', 'tl', 'tn', 'to', 'tpi', 'trv', 'ts', 'tt', 'tum', 'tw', 'ty', 'tyv', 'udm', 'ug', 've', 'vec', 'vep', 'vls', 'vro', 'wa', 'war', 'wo', 'wuu', 'xal', 'xh', 'xmf', 'yo', 'za', 'zea', 'zgh', 'zu'];
-        
+        // --- BUSCA DE FOTO NA WIKIDATA (ADICIONE ANTES DO LOOP LANGS) ---
+        let fotoURL = "";
+        try {
+            const resData = await fetch(`https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(entradaBruta)}&language=pt&format=json&origin=*`);
+            const dataS = await resData.json();
+            if (dataS.search && dataS.search.length > 0) {
+                const id = dataS.search[0].id;
+                const resImg = await fetch(`https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${id}&props=claims&format=json&origin=*`);
+                const dataI = await resImg.json();
+                const claims = dataI.entities[id].claims;
+                if (claims && claims.P18) {
+                    const imgName = claims.P18[0].mainsnak.datavalue.value;
+                    fotoURL = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(imgName).replace(/%20/g, "_")}?width=400`;
+                }
+            }
+        } catch (e) { console.log("Erro foto"); }
         for (let l of langs) {
             try {
                 const r = await fetch(`https://${l}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}?origin=*`);
                 if (r.ok) {
-                    const d = await r.json();
-                    setLoading(false); 
-                    return botSay(`**${botNome} Wiki [${l.toUpperCase()}]:** ${d.extract}`);
+                   let imagemHtml = fotoURL ? `<br><img src="${fotoURL}" style="max-width:100%; border-radius:15px; margin-top:10px; border:2px solid var(--accent); box-shadow: var(--neon-blue);">` : "";
+                    setLoading(false);
+                    return botSay(`**${botNome} Wiki [${l.toUpperCase()}]:**<br>${d.extract}${imagemHtml}`);
                 }
             } catch(e){ continue; }
         }
@@ -4546,71 +4574,7 @@ function fast(type) {
     let lista = type === 'piada' ? DATABASE.piadas : DATABASE.curiosidades;
     if (lista) botSay(lista[Math.floor(Math.random() * lista.length)]);
 }
-async function send() {
-    const i = document.getElementById("userInput");
-    const val = i.value.trim();
-    if (!val) return;
-
-    // 1. Mostra sua mensagem no chat
-    const d = document.createElement("div"); 
-    d.className = "user-msg bubble";
-    d.innerHTML = val; 
-    document.getElementById("chat").appendChild(d);
-    
-    i.value = ""; 
-    document.getElementById("chat").scrollTop = document.getElementById("chat").scrollHeight;
-
-    const tempoInicial = performance.now();
-
-    // 2. Primeiro, verifica se a palavra está no seu banco de dados grande
-    let respostaTreino = buscarMelhorResposta(val); 
-
-    if (respostaTreino) {
-        const analise = ((performance.now() - tempoInicial) / 1000).toFixed(2);
-        botSay(`${respostaTreino}<br><small>🕒 Tempo de Análise: ${analise}s ⚙️</small>`);
-    } else {
-        // 3. Se não estiver no banco, ele pesquisa a cidade/pessoa automaticamente
-        setLoading(true);
-        const resultadoWiki = await buscarWikiDataParaChat(val);
-        setLoading(false);
-
-        const analise = ((performance.now() - tempoInicial) / 1000).toFixed(2);
-
-        if (resultadoWiki) {
-            let html = `<b>${resultadoWiki.nome}</b><br>${resultadoWiki.desc}`;
-            if (resultadoWiki.foto) html += `<br><img src="${resultadoWiki.foto}" class="wiki-img" style="max-width:100%; border-radius:10px; margin-top:10px;">`;
-            botSay(`${html}<br><small>🕒 Tempo de Análise: ${analise}s ⚙️</small>`);
-        } else {
-            // 4. Se não achar em lugar nenhum
-            botSay(`Roberto, não encontrei isso no meu banco e nem na Wiki. Pode repetir?<br><small>🕒 Tempo de Análise: ${analise}s ⚙️</small>`);
-        }
-    }
-}
-
-// Essa função substitui a que você apagou, mas joga o resultado pro chat
-async function buscarWikiDataParaChat(termo) {
-    try {
-        const searchRes = await fetch(`https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(termo)}&language=pt&format=json&origin=*`);
-        const searchData = await searchRes.json();
-        if (!searchData.search || searchData.search.length === 0) return null;
-
-        const id = searchData.search[0].id;
-        const entityRes = await fetch(`https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${id}&languages=pt&format=json&origin=*`);
-        const entityData = await entityRes.json();
-
-        const entity = entityData.entities[id];
-        const nome = entity.labels?.pt?.value || searchData.search[0].label;
-        const desc = entity.descriptions?.pt?.value || "Informação disponível na base Wiki.";
-        let foto = "";
-        if (entity.claims && entity.claims.P18) {
-            const imgName = entity.claims.P18[0].mainsnak.datavalue.value;
-            foto = `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(imgName).replace(/%20/g, "_")}?width=400`;
-        }
-        return { nome, desc, foto };
-    } catch (e) { return null; }
-}
 function setLoading(s) { const st = document.querySelector(".status"); if(st) st.style.display = s ? "flex" : "none"; }
-
 window.onload = () => {
     document.getElementById("userInput").addEventListener("keypress", (e) => { if (e.key === "Enter") send(); });
     console.log("Inforbot Supreme Carregado");
