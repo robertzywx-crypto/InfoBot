@@ -6595,45 +6595,6 @@ async function analyze(msg) {
         setLoading(false);
     }
     
-// --- 6.3 WIKIMEDIA COMMONS (VERSÃO FOTO DIRETA) ---
-    if (entradaBruta.includes("imagem de") || entradaBruta.includes("foto de") || entradaBruta.includes("mostre")) {
-        setLoading(true);
-        const tInicioCommons = performance.now();
-        let busca = entradaBruta.replace(/imagem de|foto de|arquivo|mostre|busque/g, "").trim();
-        
-        try {
-            // Buscamos o título do arquivo de imagem
-            const apiURL = `https://commons.wikimedia.org/w/api.php?action=query&format=json&generator=search&gsrnamespace=6&gsrsearch=${encodeURIComponent(busca)}&gsrlimit=1&prop=imageinfo&iiprop=url&origin=*`;
-            
-            fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(apiURL)}`)
-                .then(response => response.json())
-                .then(data => {
-                    const res = JSON.parse(data.contents);
-                    
-                    if (res.query && res.query.pages) {
-                        const pages = res.query.pages;
-                        const pageId = Object.keys(pages)[0];
-                        const imgURL = pages[pageId].imageinfo[0].url; // Link direto da imagem
-                        
-                        const tFimCommons = performance.now();
-                        const analise = ((tFimCommons - tInicioCommons) / 1000).toFixed(2);
-
-                        setLoading(false);
-                        return botSay(`🖼️ **Inforbot Commons:** Achei esta imagem de "${busca}":<br><br><img src="${imgURL}" style="max-width:100%; border-radius:15px; border:2px solid var(--accent); box-shadow: 0 4px 15px rgba(0,0,0,0.3);"><br><br><small>🕒 Análise: ${analise}s ⚙️</small>`);
-                    } else {
-                        setLoading(false);
-                        return botSay(`🖼️ **Inforbot:** Não encontrei fotos de "${busca}" no acervo.`);
-                    }
-                })
-                .catch(err => {
-                    setLoading(false);
-                    return botSay("Inforbot: Erro ao carregar imagem.");
-                });
-        } catch (e) {
-            setLoading(false);
-        }
-        return;
-    }
 
 // --- 6.4 WIKISOURCE (VERSÃO BUSCA INTELIGENTE) ---
     if (entradaBruta.includes("leia") || entradaBruta.includes("texto de") || entradaBruta.includes("livro")) {
