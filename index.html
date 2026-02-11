@@ -297,7 +297,7 @@ input:focus {
 
     <div id="chat" class="chat">
         <div class="bot-msg">
-            <div class="bubble">🤖 o que procura pra hoje chefe??⏳</div>
+            <div class="bubble">🤖 o que procura pra hoje chefe?⏳</div>
         </div>
     </div>
 
@@ -6557,48 +6557,34 @@ async function analyze(msg) {
         }
     }
 
-// --- 6.2 WIKIHOW (VERSÃO COMPLETA + FOTO + PROXY) ---
+// --- 6.2 WIKIHOW (VERSÃO TEXTO COMPLETO - DIRETA) ---
     if (entradaBruta.startsWith("como")) {
         setLoading(true);
-        const tInicioWikiHow = performance.now();
         let busca = entradaBruta.replace(/como|fazer|limpar|inforbot/g, "").trim();
-        
         try {
-            // Usamos o proxy para o WikiHow não bloquear o Inforbot
-            const apiURL = `https://pt.wikihow.com/api.php?action=query&format=json&prop=pageimages|extracts&exintro&explaintext&pithumbsize=500&generator=search&gsrsearch=${encodeURIComponent(busca)}&origin=*`;
-            const proxyURL = `https://api.allorigins.win/get?url=${encodeURIComponent(apiURL)}`;
-
-            const response = await fetch(proxyURL);
+            // Buscamos o extrato (texto) diretamente para não vir cortado
+            const wikiHowURL = `https://pt.wikihow.com/api.php?action=query&format=json&prop=extracts&exintro&explaintext&generator=search&gsrsearch=${encodeURIComponent(busca)}&origin=*`;
+            const response = await fetch(wikiHowURL);
             const data = await response.json();
-            const contents = JSON.parse(data.contents);
-
-            if (contents.query && contents.query.pages) {
-                const pages = contents.query.pages;
+            
+            if (data.query && data.query.pages) {
+                const pages = data.query.pages;
                 const pageId = Object.keys(pages)[0];
                 const page = pages[pageId];
                 
-                // Texto completo até 800 caracteres
-                let resumo = page.extract ? page.extract : "Resumo não disponível.";
-                if (resumo.length > 800) { resumo = resumo.substring(0, 800) + "..."; }
-
-                // Foto de capa
-                let fotoHtml = page.thumbnail ? `<br><img src="${page.thumbnail.source}" style="max-width:100%; border-radius:15px; margin-top:10px; border:2px solid #555;">` : "";
-
-                const tFimWikiHow = performance.now();
-                const analise = ((tFimWikiHow - tInicioWikiHow) / 1000).toFixed(2);
+                // Pegamos o texto completo que a API enviou
+                let textoCompleto = page.extract;
 
                 setLoading(false);
-                return botSay(`💡 **WikiHow [Tutorial]:** Para ${page.title}:<br><br>${resumo}${fotoHtml}<br><br>🔗 <a href="https://pt.wikihow.com/${encodeURIComponent(page.title)}" target="_blank">Ver passo a passo</a><br><small>🕒 Análise: ${analise}s ⚙️</small>`);
-            } else {
-                setLoading(false);
-                return botSay("Inforbot: Não encontrei um tutorial para isso.");
+                return botSay(`💡 **WikiHow [Tutorial]:** Para "${page.title}":<br><br>${textoCompleto}<br><br>🔗 <a href="https://pt.wikihow.com/${encodeURIComponent(page.title)}" target="_blank">Ler completo no site</a>`);
             }
         } catch (e) { 
             console.log("Erro WikiHow");
             setLoading(false); 
         }
+        setLoading(false);
     }
-
+    
 // --- 6.3 WIKIMEDIA COMMONS (VERSÃO FOTO REAL) ---
     if (entradaBruta.includes("imagem de") || entradaBruta.includes("foto de") || entradaBruta.includes("arquivo")) {
         setLoading(true);
