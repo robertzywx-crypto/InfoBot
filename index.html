@@ -6557,40 +6557,47 @@ async function analyze(msg) {
         }
     }
 
-// --- 6.2 WIKIHOW (VERSÃO TEXTO COMPLETO) ---
+// --- 6.2 WIKIHOW (VERSÃO COMPLETA + FOTO + PROXY) ---
     if (entradaBruta.startsWith("como")) {
         setLoading(true);
+        const tInicioWikiHow = performance.now();
         let busca = entradaBruta.replace(/como|fazer|limpar|inforbot/g, "").trim();
+        
         try {
-            // 1. Primeiro ele acha o título exato
-            const searchURL = `https://pt.wikihow.com/api.php?action=query&format=json&list=search&srsearch=${encodeURIComponent(busca)}&origin=*`;
-            const resSearch = await fetch(searchURL);
-            const dataSearch = await resSearch.json();
-            
-            if (dataSearch.query.search.length > 0) {
-                const tituloExato = dataSearch.query.search[0].title;
-                
-                // 2. Agora ele busca o texto da introdução (sem cortes!)
-                const docURL = `https://pt.wikihow.com/api.php?action=query&format=json&prop=extracts&exintro&explaintext&titles=${encodeURIComponent(tituloExato)}&origin=*`;
-                const resDoc = await fetch(docURL);
-                const dataDoc = await resDoc.json();
-                
-                const pages = dataDoc.query.pages;
-                const pageId = Object.keys(pages)[0];
-                let resumoCompleto = pages[pageId].extract;
+            // Usamos o proxy para o WikiHow não bloquear o Inforbot
+            const apiURL = `https://pt.wikihow.com/api.php?action=query&format=json&prop=pageimages|extracts&exintro&explaintext&pithumbsize=500&generator=search&gsrsearch=${encodeURIComponent(busca)}&origin=*`;
+            const proxyURL = `https://api.allorigins.win/get?url=${encodeURIComponent(apiURL)}`;
 
-                // Se o resumo for muito grande, pegamos os primeiros 800 caracteres para não travar a fala
-                if (resumoCompleto.length > 800) {
-                    resumoCompleto = resumoCompleto.substring(0, 800) + "...";
-                }
+            const response = await fetch(proxyURL);
+            const data = await response.json();
+            const contents = JSON.parse(data.contents);
+
+            if (contents.query && contents.query.pages) {
+                const pages = contents.query.pages;
+                const pageId = Object.keys(pages)[0];
+                const page = pages[pageId];
+                
+                // Texto completo até 800 caracteres
+                let resumo = page.extract ? page.extract : "Resumo não disponível.";
+                if (resumo.length > 800) { resumo = resumo.substring(0, 800) + "..."; }
+
+                // Foto de capa
+                let fotoHtml = page.thumbnail ? `<br><img src="${page.thumbnail.source}" style="max-width:100%; border-radius:15px; margin-top:10px; border:2px solid #555;">` : "";
+
+                const tFimWikiHow = performance.now();
+                const analise = ((tFimWikiHow - tInicioWikiHow) / 1000).toFixed(2);
 
                 setLoading(false);
-                return botSay(`💡 **WikiHow [Tutorial]:** Para ${tituloExato}:<br><br>${resumoCompleto}<br><br>🔗 <a href="https://pt.wikihow.com/${encodeURIComponent(tituloExato)}" target="_blank">Ler tutorial completo</a>`);
+                return botSay(`💡 **WikiHow [Tutorial]:** Para ${page.title}:<br><br>${resumo}${fotoHtml}<br><br>🔗 <a href="https://pt.wikihow.com/${encodeURIComponent(page.title)}" target="_blank">Ver passo a passo</a><br><small>🕒 Análise: ${analise}s ⚙️</small>`);
+            } else {
+                setLoading(false);
+                return botSay("Inforbot: Não encontrei um tutorial para isso.");
             }
-        } catch (e) { setLoading(false); }
-        setLoading(false);
+        } catch (e) { 
+            console.log("Erro WikiHow");
+            setLoading(false); 
+        }
     }
-    
 
 // --- 6.3 WIKIMEDIA COMMONS (VERSÃO FOTO REAL) ---
     if (entradaBruta.includes("imagem de") || entradaBruta.includes("foto de") || entradaBruta.includes("arquivo")) {
