@@ -6445,37 +6445,45 @@ async function analyze(msg) {
         return botSay(respostaTreino);
     }
 
-// --- 3. NOTÍCIAS (BRASIL + MUNDO) ---
+    // --- 3. NOTÍCIAS (BRASIL + MUNDO) - VERSÃO SUPREME ---
     if (entradaBruta.includes("noticias") || entradaBruta.includes("news")) {
         setLoading(true);
         const tInicioNews = performance.now();
         
-        // Prioridade: se não especificar, busca Brasil. Se disser "mundo", busca World.
         let busca = entradaBruta.replace(/noticias|news|sobre|agora/g, "").trim();
         let isGlobal = entradaBruta.includes("mundo") || entradaBruta.includes("mundiais") || entradaBruta.includes("global");
         
-        if(!busca) {
-            busca = isGlobal ? "World News" : "Brasil";
-        }
+        if(!busca) { busca = isGlobal ? "World" : "Brasil"; }
 
-        // Define o idioma da busca (pt-BR para Brasil, en para Mundo)
         let langNews = isGlobal ? "en" : "pt-BR";
+        let gl = isGlobal ? "US" : "BR";
         let ceid = isGlobal ? "US:en" : "BR:pt-419";
 
         try {
-            const newsURL = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://news.google.com/rss/search?q=${busca}&hl=${langNews}&gl=${isGlobal ? 'US' : 'BR'}&ceid=${ceid}`)}&nocache=${Date.now()}`;
-            const response = await fetch(newsURL);
+            // Nova URL com bypass de cache e busca otimizada
+            const rssURL = `https://news.google.com/rss/search?q=${encodeURIComponent(busca)}&hl=${langNews}&gl=${gl}&ceid=${ceid}`;
+            const proxyURL = `https://api.allorigins.win/get?url=${encodeURIComponent(rssURL)}&timestamp=${Date.now()}`;
+
+            const response = await fetch(proxyURL);
             const data = await response.json();
+            
             const parser = new DOMParser();
             const xml = parser.parseFromString(data.contents, "text/xml");
             const items = xml.querySelectorAll("item");
             
-            let txt = `🔔 **INFORBOT NEWS [${isGlobal ? 'GLOBAL' : 'BRASIL'}]:**<br><br>`;
+            let txt = `🔔 **INFORBOT NEWS [${isGlobal ? 'MUNDO' : 'BRASIL'}]:**<br><br>`;
             
-            // Pega as 5 principais notícias
+            if (items.length === 0) {
+                setLoading(false);
+                return botSay("Inforbot: Não encontrei notícias recentes sobre esse tema.");
+            }
+
+            // Pega as 5 principais notícias e limpa o título
             for(let i = 0; i < 5; i++) { 
                 if(items[i]) {
-                    let titulo = items[i].querySelector("title").innerHTML;
+                    let titulo = items[i].querySelector("title").textContent;
+                    // Remove o nome da fonte no final (ex: - G1) para ficar mais limpo
+                    titulo = titulo.split(" - ")[0]; 
                     txt += `• ${titulo}<br><br>`; 
                 }
             }
@@ -6486,10 +6494,12 @@ async function analyze(msg) {
             setLoading(false); 
             return botSay(`${txt}<small>🕒 Análise: ${analise}s ⚙️</small>`);
         } catch(e) { 
+            console.log("Erro News:", e);
             setLoading(false);
-            return botSay("Inforbot: Erro ao buscar notícias mundiais.");
+            return botSay("Inforbot: Erro na conexão com o servidor de notícias.");
         }
     }
+
     // --- 4. MATEMÁTICA SUPREME ---
     if (/[0-9]/.test(entradaBruta) && /(mais|menos|vezes|dividido|x|\+|\-|\*|\/|\^|raiz|sqrt)/.test(entradaBruta)) {
         try {
