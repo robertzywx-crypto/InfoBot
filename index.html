@@ -6514,30 +6514,38 @@ async function analyze(msg) {
     if (entradaBruta === "curiosidade") return fast('curiosidade');
     if (/^[a-e]$/.test(entradaBruta)) return iniciarLogicaJogo(entradaBruta);
 
-// --- 6.1 FANDOM (JOGOS E PERSONAGENS) ---
+// --- 6.1 FANDOM (VERSÃO TURBO) ---
     if (entradaBruta.includes("personagem") || entradaBruta.includes("fandom") || entradaBruta.includes("jogo")) {
         setLoading(true);
-        // O Inforbot tenta descobrir de qual jogo você está falando
+        const tInicioFandom = performance.now();
         let termo = entradaBruta.replace(/fandom|sobre|personagem|o jogo|quem e/g, "").trim();
         
-        // Exemplo: Se você disser "Personagem Mario", ele busca na wiki do Mario
-        // Se não souber o jogo, ele busca na Fandom Geral
         try {
+            // Usamos o timeout para não deixar o bot travado
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), 5000); // Se demorar mais de 5 segundos, ele para
+
             const fandomURL = `https://www.fandom.com/api.php?action=query&format=json&list=search&srsearch=${encodeURIComponent(termo)}&origin=*`;
-            const response = await fetch(fandomURL);
+            const response = await fetch(fandomURL, { signal: controller.signal });
             const data = await response.json();
-            
-            if (data.query.search.length > 0) {
+            clearTimeout(id);
+
+            if (data.query.search && data.query.search.length > 0) {
                 let resumo = data.query.search[0].snippet.replace(/<\/?[^>]+(>|$)/g, "");
+                const tFimFandom = performance.now();
+                const analise = ((tFimFandom - tInicioFandom) / 1000).toFixed(2);
+                
                 setLoading(false);
-                return botSay(`🎮 **Fandom [Geral]:** Achei isso sobre ${termo}: ${resumo}...`);
+                return botSay(`🎮 **Fandom:** Sobre ${termo}: ${resumo}... <br><br><small>🕒 Análise: ${analise}s ⚙️</small>`);
             }
         } catch (e) { 
-            console.log("Erro Fandom"); 
-            setLoading(false);
+            console.log("Fandom demorou demais, pulando..."); 
         }
+        setLoading(false);
     }
 
+
+    
 // --- 6.2 WIKIHOW (PASSO A PASSO) ---
     if (entradaBruta.startsWith("como")) {
         setLoading(true);
