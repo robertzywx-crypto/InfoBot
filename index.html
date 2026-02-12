@@ -7016,16 +7016,15 @@ async function analyze(msg) {
         return;
     }
 
-    // --- 6.14 PARANORMAL WIKI (LENDAS E FENÔMENOS) ---
-    if (entradaBruta.includes("lenda") || entradaBruta.includes("paranormal") || entradaBruta.includes("fantasma") || entradaBruta.includes("assombrado") || entradaBruta.includes("misterio")) {
+// --- 6.14 PARANORMAL WIKI (VERSÃO BLINDADA) ---
+    if (entradaBruta.includes("lenda") || entradaBruta.includes("paranormal") || entradaBruta.includes("fantasma") || entradaBruta.includes("misterio") || entradaBruta.includes("sobrenatural") || entradaBruta.includes("assombrada")) {
         setLoading(true);
         const tInicioPara = performance.now();
         
-        // Limpa o comando para buscar a lenda ou fenômeno
-        let termoPara = entradaBruta.replace(/me fale sobre a lenda da|me fale sobre o|quem e o|lenda|paranormal|fantasma|assombrado|misterio|sobre/g, "").trim();
+        // Limpeza simplificada para evitar que o Inforbot apague o nome do mistério por engano
+        let termoPara = entradaBruta.replace(/me fale sobre a lenda da|me fale sobre o|o que e a|quem e|lenda|paranormal|fantasma|sobre/g, "").trim();
         
         try {
-            // Busca na base de dados focada em folclore e paranormalidade
             const paraURL = `https://pt.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro&explaintext&titles=${encodeURIComponent(termoPara)}&redirects=1&origin=*`;
             
             fetch(paraURL)
@@ -7037,21 +7036,21 @@ async function analyze(msg) {
 
                     if (pageId !== "-1") {
                         let resumoPara = page.extract;
-                        if (resumoPara.length > 600) resumoPara = resumoPara.substring(0, 600) + "...";
+                        if (resumoPara.length > 550) resumoPara = resumoPara.substring(0, 550) + "...";
 
                         const tFimPara = performance.now();
                         const analise = ((tFimPara - tInicioPara) / 1000).toFixed(3);
 
                         setLoading(false);
-                        return botSay(`👻 **Inforbot [Paranormal Wiki]:** Sobre **${page.title}**:<br><br>${resumoPara}<br><br><small>🕒 Análise: ${analise}s ⚖️</small>`);
+                        return botSay(`👻 **Inforbot [Paranormal Wiki]:** Localizei registros sobre **${page.title}**:<br><br>${resumoPara}<br><br><small>🕒 Análise: ${analise}s ⚖️</small>`);
                     } else {
                         setLoading(false);
-                        return botSay(`👻 **Inforbot:** Não encontrei registros paranormais sobre "${termoPara}". Talvez seja um mistério ainda não catalogado.`);
+                        return botSay(`👻 **Inforbot:** Não achei nada sobre "${termoPara}" nos arquivos paranormais.`);
                     }
                 })
                 .catch(err => {
                     setLoading(false);
-                    return botSay("👻 **Inforbot:** Erro ao acessar os arquivos ocultos.");
+                    return botSay("👻 **Inforbot:** Erro ao acessar o arquivo sobrenatural.");
                 });
         } catch (e) {
             setLoading(false);
