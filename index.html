@@ -7058,47 +7058,52 @@ async function analyze(msg) {
         return;
     }
 
-    // --- 6.15 UFOLOGIA WIKI (ALIENS E AVISTAMENTOS) ---
-    if (entradaBruta.includes("alien") || entradaBruta.includes("ufologia") || entradaBruta.includes("ovni") || entradaBruta.includes("ufo") || entradaBruta.includes("extraterrestre") || entradaBruta.includes("disco voador")) {
+// --- 6.15 UFOLOGIA WIKI (VERSÃO CORRIGIDA) ---
+    if (entradaBruta.includes("alien") || entradaBruta.includes("ufologia") || entradaBruta.includes("ovni") || entradaBruta.includes("ufo") || entradaBruta.includes("extraterrestre")) {
         setLoading(true);
         const tInicioUfo = performance.now();
         
-        // Limpeza para focar no caso ou espécie alienígena
+        // Limpeza para pegar o nome do caso ou objeto
         let termoUfo = entradaBruta.replace(/me fale sobre o|me fale sobre a|o que e o|o que e um|alien|ufologia|ovni|ufo|extraterrestre|sobre/g, "").trim();
         
-        try {
-            const ufoURL = `https://pt.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro&explaintext&titles=${encodeURIComponent(termoUfo)}&redirects=1&origin=*`;
-            
-            fetch(ufoURL)
-                .then(response => response.json())
-                .then(data => {
-                    const pages = data.query.pages;
-                    const pageId = Object.keys(pages)[0];
-                    const page = pages[pageId];
+        // Se o termo ficar vazio, usamos um padrão
+        if (termoUfo === "") termoUfo = "Ufologia";
 
-                    if (pageId !== "-1") {
-                        let resumoUfo = page.extract;
-                        if (resumoUfo.length > 600) resumoUfo = resumoUfo.substring(0, 600) + "...";
+        const ufoURL = `https://pt.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro&explaintext&titles=${encodeURIComponent(termoUfo)}&redirects=1&origin=*`;
+        
+        fetch(ufoURL)
+            .then(response => {
+                if (!response.ok) throw new Error();
+                return response.json();
+            })
+            .then(data => {
+                const pages = data.query.pages;
+                const pageId = Object.keys(pages)[0];
+                const page = pages[pageId];
 
-                        const tFimUfo = performance.now();
-                        const analise = ((tFimUfo - tInicioUfo) / 1000).toFixed(3);
+                if (pageId !== "-1") {
+                    let resumoUfo = page.extract;
+                    if (resumoUfo.length > 600) resumoUfo = resumoUfo.substring(0, 600) + "...";
 
-                        setLoading(false);
-                        return botSay(`🛸 **Inforbot [Ufologia Wiki]:** Registros sobre **${page.title}**:<br><br>${resumoUfo}<br><br><small>🕒 Análise: ${analise}s ⚖️</small>`);
-                    } else {
-                        setLoading(false);
-                        return botSay(`🛸 **Inforbot:** Não encontrei registros ufológicos sobre "${termoUfo}". O arquivo pode estar classificado como secreto.`);
-                    }
-                })
-                .catch(err => {
+                    const tFimUfo = performance.now();
+                    const analise = ((tFimUfo - tInicioUfo) / 1000).toFixed(3);
+
                     setLoading(false);
-                    return botSay("🛸 **Inforbot:** Falha na comunicação com a base de Ufologia.");
-                });
-        } catch (e) {
-            setLoading(false);
-        }
+                    return botSay(`🛸 **Inforbot [Ufologia Wiki]:** Registros sobre **${page.title}**:<br><br>${resumoUfo}<br><br><small>🕒 Análise: ${analise}s ⚖️</small>`);
+                } else {
+                    setLoading(false);
+                    return botSay(`🛸 **Inforbot:** Não encontrei registros de "${termoUfo}" nos arquivos da Área 51.`);
+                }
+            })
+            .catch(() => {
+                setLoading(false);
+                // Se falhar, tentamos uma busca genérica por "Ufologia" para não deixar o usuário no vácuo
+                return botSay("🛸 **Inforbot:** Erro de sinal intergalático (Conexão falhou). Tente pesquisar apenas 'Ufologia'.");
+            });
         return;
     }
+
+    
     
 // --- 6. ULTRA WIKIPÉDIA INTEGRADA (VERSÃO CORRIGIDA) ---
     const comandos = ["noticias", "news", "jogos", "jogo", "piada", "curiosidade"];
