@@ -7363,6 +7363,50 @@ async function analyze(msg) {
         }
         return;
     } 
+
+    // --- 6.22 WEBMASTER WIKI (CRIAÇÃO DE INTERFACES E UI/UX) ---
+    if (entradaBruta.includes("interface") || entradaBruta.includes("design") || entradaBruta.includes("web") || entradaBruta.includes("ux") || entradaBruta.includes("ui") || entradaBruta.includes("responsivo") || entradaBruta.includes("frontend")) {
+        setLoading(true);
+        const tInicioWeb = performance.now();
+        
+        // Limpeza para focar no conceito de interface ou design
+        let termoWeb = entradaBruta.replace(/me fale sobre|o que e|interface|design|criacao de|sobre/g, "").trim();
+        
+        if (termoWeb === "") termoWeb = "Interface gráfica do utilizador";
+
+        try {
+            const webURL = `https://pt.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro&explaintext&titles=${encodeURIComponent(termoWeb)}&redirects=1&origin=*`;
+            
+            fetch(webURL)
+                .then(response => response.json())
+                .then(data => {
+                    const pages = data.query.pages;
+                    const pageId = Object.keys(pages)[0];
+                    const page = pages[pageId];
+
+                    if (pageId !== "-1") {
+                        let resumoWeb = page.extract;
+                        if (resumoWeb.length > 600) resumoWeb = resumoWeb.substring(0, 600) + "...";
+
+                        const tFimWeb = performance.now();
+                        const analise = ((tFimWeb - tInicioWeb) / 1000).toFixed(3);
+
+                        setLoading(false);
+                        return botSay(`🎨 **Inforbot [WebMaster Wiki]:** Conceito de **${page.title}**:<br><br>${resumoWeb}<br><br><small>🕒 Análise: ${analise}s ⚖️</small>`);
+                    } else {
+                        setLoading(false);
+                        return botSay(`🎨 **Inforbot:** Não encontrei detalhes sobre o conceito de interface "${termoWeb}".`);
+                    }
+                })
+                .catch(err => {
+                    setLoading(false);
+                    return botSay("🎨 **Inforbot:** Erro ao carregar a folha de estilo de dados.");
+                });
+        } catch (e) {
+            setLoading(false);
+        }
+        return;
+    }
     
 // --- 6. ULTRA WIKIPÉDIA INTEGRADA (VERSÃO CORRIGIDA) ---
     const comandos = ["noticias", "news", "jogos", "jogo", "piada", "curiosidade"];
