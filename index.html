@@ -6889,7 +6889,50 @@ async function analyze(msg) {
         return;
     }
 
+// --- 6.11 ARTCYCLOPEDIA (ARTES E MUSEUS) ---
+    if (entradaBruta.includes("arte") || entradaBruta.includes("pintor") || entradaBruta.includes("quadro") || entradaBruta.includes("museu") || entradaBruta.includes("escultura")) {
+        setLoading(true);
+        const tInicioArt = performance.now();
+        
+        // Limpa o comando para buscar o artista ou obra
+        let termoArt = entradaBruta.replace(/me fale sobre o quadro|quem pintou o|pintor|arte|quadro|museu|escultura|sobre/g, "").trim();
+        
+        try {
+            // Busca na base de dados focada em história da arte
+            const artURL = `https://pt.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro&explaintext&titles=${encodeURIComponent(termoArt)}&redirects=1&origin=*`;
+            
+            fetch(artURL)
+                .then(response => response.json())
+                .then(data => {
+                    const pages = data.query.pages;
+                    const pageId = Object.keys(pages)[0];
+                    const page = pages[pageId];
 
+                    if (pageId !== "-1") {
+                        let resumoArt = page.extract;
+                        if (resumoArt.length > 600) resumoArt = resumoArt.substring(0, 600) + "...";
+
+                        const tFimArt = performance.now();
+                        const analise = ((tFimArt - tInicioArt) / 1000).toFixed(3);
+
+                        setLoading(false);
+                        return botSay(`🎨 **Inforbot [ArtCyclopedia]:** Sobre **${page.title}**:<br><br>${resumoArt}<br><br><small>🕒 Análise: ${analise}s ⚖️</small>`);
+                    } else {
+                        setLoading(false);
+                        return botSay(`🎨 **Inforbot:** Não encontrei registros artísticos para "${termoArt}".`);
+                    }
+                })
+                .catch(err => {
+                    setLoading(false);
+                    return botSay("🎨 **Inforbot:** Erro ao conectar com a galeria de dados.");
+                });
+        } catch (e) {
+            setLoading(false);
+        }
+        return;
+    }
+
+    
     
 // --- 6. ULTRA WIKIPÉDIA INTEGRADA (VERSÃO CORRIGIDA) ---
     const comandos = ["noticias", "news", "jogos", "jogo", "piada", "curiosidade"];
