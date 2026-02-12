@@ -297,7 +297,7 @@ input:focus {
 
     <div id="chat" class="chat">
         <div class="bot-msg">
-            <div class="bubble">🤖 o que procura pra hoje chefe?⏳</div>
+            <div class="bubble">🤖 o que procura pra hoje chefe??⏳</div>
         </div>
     </div>
 
@@ -6674,7 +6674,7 @@ async function analyze(msg) {
         return;
     }
 
-// --- 6.8 FLORA MUNDIAL ONLINE (VERSÃO TÉCNICA) ---
+// --- 6.6 FLORA MUNDIAL ONLINE (VERSÃO TÉCNICA) ---
     if (entradaBruta.includes("planta") || entradaBruta.includes("flora") || entradaBruta.includes("botanica") || entradaBruta.includes("especie")) {
         setLoading(true);
         const tInicioFlora = performance.now();
@@ -6717,6 +6717,50 @@ async function analyze(msg) {
         }
         return;
     }
+    // --- 6.7 MITOPEDIA (VERSÃO MITOLOGIA E LENDAS ANTIGAS) ---
+    if (entradaBruta.includes("mitologia") || entradaBruta.includes("deus") || entradaBruta.includes("criatura") || entradaBruta.includes("mito")) {
+        setLoading(true);
+        const tInicioMito = performance.now();
+        
+        // Limpa o comando para buscar o nome do personagem mitológico
+        let termoMito = entradaBruta.replace(/me fale sobre o deus|quem foi o deus|quem e o deus|mitologia|deus|criatura|mito|sobre/g, "").trim();
+        
+        try {
+            // Busca na base de dados focada em história e mitologia
+            const mitoURL = `https://pt.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro&explaintext&titles=${encodeURIComponent(termoMito)}&redirects=1&origin=*`;
+            
+            fetch(mitoURL)
+                .then(response => response.json())
+                .then(data => {
+                    const pages = data.query.pages;
+                    const pageId = Object.keys(pages)[0];
+                    const page = pages[pageId];
+
+                    if (pageId !== "-1") {
+                        let resumoMito = page.extract;
+                        if (resumoMito.length > 600) resumoMito = resumoMito.substring(0, 600) + "...";
+
+                        const tFimMito = performance.now();
+                        const analise = ((tFimMito - tInicioMito) / 1000).toFixed(3);
+
+                        setLoading(false);
+                        return botSay(`⚡ **Inforbot [Mitopedia]:** Sobre **${page.title}**:<br><br>${resumoMito}<br><br><small>🕒 Análise: ${analise}s ⚖️</small>`);
+                    } else {
+                        setLoading(false);
+                        return botSay(`⚡ **Inforbot:** Não encontrei registros sobre "${termoMito}" na Mitopedia.`);
+                    }
+                })
+                .catch(err => {
+                    setLoading(false);
+                    return botSay("⚡ **Inforbot:** Erro ao conectar com o Olimpo (Base de dados).");
+                });
+        } catch (e) {
+            setLoading(false);
+        }
+        return;
+    }
+
+
     
 // --- 6. ULTRA WIKIPÉDIA INTEGRADA (VERSÃO CORRIGIDA) ---
     const comandos = ["noticias", "news", "jogos", "jogo", "piada", "curiosidade"];
