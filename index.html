@@ -6889,16 +6889,16 @@ async function analyze(msg) {
         return;
     }
 
-// --- 6.11 ARTCYCLOPEDIA (ARTES E MUSEUS) ---
-    if (entradaBruta.includes("arte") || entradaBruta.includes("pintor") || entradaBruta.includes("quadro") || entradaBruta.includes("museu") || entradaBruta.includes("escultura")) {
+// --- 6.11 ARTCYCLOPEDIA (VERSÃO REVISADA) ---
+    if (entradaBruta.includes("arte") || entradaBruta.includes("pintor") || entradaBruta.includes("museu") || entradaBruta.includes("obra") || entradaBruta.includes("escultor")) {
         setLoading(true);
         const tInicioArt = performance.now();
         
-        // Limpa o comando para buscar o artista ou obra
-        let termoArt = entradaBruta.replace(/me fale sobre o quadro|quem pintou o|pintor|arte|quadro|museu|escultura|sobre/g, "").trim();
+        // Limpeza mais agressiva para o termo de busca não ir sujo
+        let termoArt = entradaBruta.replace(/me fale sobre o|me fale sobre a|quem foi o|quem foi a|quem pintou|obra|arte|pintor|museu|sobre/g, "").trim();
         
         try {
-            // Busca na base de dados focada em história da arte
+            // Usando o endpoint de busca da Wikipédia que é o mais estável para nomes de artistas
             const artURL = `https://pt.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro&explaintext&titles=${encodeURIComponent(termoArt)}&redirects=1&origin=*`;
             
             fetch(artURL)
@@ -6910,21 +6910,21 @@ async function analyze(msg) {
 
                     if (pageId !== "-1") {
                         let resumoArt = page.extract;
-                        if (resumoArt.length > 600) resumoArt = resumoArt.substring(0, 600) + "...";
+                        if (resumoArt.length > 500) resumoArt = resumoArt.substring(0, 500) + "...";
 
                         const tFimArt = performance.now();
                         const analise = ((tFimArt - tInicioArt) / 1000).toFixed(3);
 
                         setLoading(false);
-                        return botSay(`🎨 **Inforbot [ArtCyclopedia]:** Sobre **${page.title}**:<br><br>${resumoArt}<br><br><small>🕒 Análise: ${analise}s ⚖️</small>`);
+                        return botSay(`🎨 **Inforbot [ArtCyclopedia]:** Localizei a obra/artista **${page.title}**:<br><br>${resumoArt}<br><br><small>🕒 Análise: ${analise}s ⚖️</small>`);
                     } else {
                         setLoading(false);
-                        return botSay(`🎨 **Inforbot:** Não encontrei registros artísticos para "${termoArt}".`);
+                        return botSay(`🎨 **Inforbot:** Não achei "${termoArt}" na galeria. Tente digitar o nome completo do artista.`);
                     }
                 })
                 .catch(err => {
                     setLoading(false);
-                    return botSay("🎨 **Inforbot:** Erro ao conectar com a galeria de dados.");
+                    return botSay("🎨 **Inforbot:** A galeria está fechada agora (Erro de conexão).");
                 });
         } catch (e) {
             setLoading(false);
