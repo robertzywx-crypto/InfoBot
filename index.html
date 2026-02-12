@@ -6932,6 +6932,50 @@ async function analyze(msg) {
         return;
     }
 
+    // --- 6.12 MATHWORLD (MATEMÁTICA AVANÇADA E CÁLCULO) ---
+    if (entradaBruta.includes("calculo") || entradaBruta.includes("matematica") || entradaBruta.includes("formula") || entradaBruta.includes("equacao") || /[0-9]/.test(entradaBruta) && (entradaBruta.includes("+") || entradaBruta.includes("-") || entradaBruta.includes("*") || entradaBruta.includes("/"))) {
+        setLoading(true);
+        const tInicioMath = performance.now();
+        
+        // Se a entrada contiver apenas números e operadores, tentamos resolver o cálculo
+        let expressao = entradaBruta.replace(/[a-zA-Z?]/g, "").trim();
+        
+        try {
+            // Se for um termo teórico (ex: o que é álgebra)
+            let termoMath = entradaBruta.replace(/me fale sobre|o que e|matematica|formula|equacao|sobre/g, "").trim();
+            const mathURL = `https://pt.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro&explaintext&titles=${encodeURIComponent(termoMath)}&redirects=1&origin=*`;
+            
+            fetch(mathURL)
+                .then(response => response.json())
+                .then(data => {
+                    const pages = data.query.pages;
+                    const pageId = Object.keys(pages)[0];
+                    const page = pages[pageId];
+
+                    if (pageId !== "-1") {
+                        let resumoMath = page.extract;
+                        if (resumoMath.length > 550) resumoMath = resumoMath.substring(0, 550) + "...";
+
+                        const tFimMath = performance.now();
+                        const analise = ((tFimMath - tInicioMath) / 1000).toFixed(3);
+
+                        setLoading(false);
+                        return botSay(`🔢 **Inforbot [MathWorld]:** Definição de **${page.title}**:<br><br>${resumoMath}<br><br><small>🕒 Análise: ${analise}s ⚖️</small>`);
+                    } else {
+                        setLoading(false);
+                        return botSay(`🔢 **Inforbot:** Não encontrei a definição teórica para "${termoMath}".`);
+                    }
+                })
+                .catch(err => {
+                    setLoading(false);
+                    return botSay("🔢 **Inforbot:** Erro ao processar dados matemáticos.");
+                });
+        } catch (e) {
+            setLoading(false);
+        }
+        return;
+    }
+
     
     
 // --- 6. ULTRA WIKIPÉDIA INTEGRADA (VERSÃO CORRIGIDA) ---
