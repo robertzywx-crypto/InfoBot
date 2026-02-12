@@ -6932,17 +6932,15 @@ async function analyze(msg) {
         return;
     }
 
-    // --- 6.12 MATHWORLD (MATEMÁTICA AVANÇADA E CÁLCULO) ---
-    if (entradaBruta.includes("calculo") || entradaBruta.includes("matematica") || entradaBruta.includes("formula") || entradaBruta.includes("equacao") || /[0-9]/.test(entradaBruta) && (entradaBruta.includes("+") || entradaBruta.includes("-") || entradaBruta.includes("*") || entradaBruta.includes("/"))) {
+// --- 6.12 MATHWORLD (MATEMÁTICA AVANÇADA - VERSÃO CORRIGIDA) ---
+    if (entradaBruta.includes("matematica") || entradaBruta.includes("formula") || entradaBruta.includes("calculo") || entradaBruta.includes("equacao") || entradaBruta.includes("geometria") || entradaBruta.includes("algebra")) {
         setLoading(true);
         const tInicioMath = performance.now();
         
-        // Se a entrada contiver apenas números e operadores, tentamos resolver o cálculo
-        let expressao = entradaBruta.replace(/[a-zA-Z?]/g, "").trim();
+        // Limpeza focada em extrair o termo matemático puro
+        let termoMath = entradaBruta.replace(/me fale sobre a|me fale sobre o|o que e a|o que e o|matematica|formula|equacao|calculo|sobre/g, "").trim();
         
         try {
-            // Se for um termo teórico (ex: o que é álgebra)
-            let termoMath = entradaBruta.replace(/me fale sobre|o que e|matematica|formula|equacao|sobre/g, "").trim();
             const mathURL = `https://pt.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro&explaintext&titles=${encodeURIComponent(termoMath)}&redirects=1&origin=*`;
             
             fetch(mathURL)
@@ -6963,7 +6961,7 @@ async function analyze(msg) {
                         return botSay(`🔢 **Inforbot [MathWorld]:** Definição de **${page.title}**:<br><br>${resumoMath}<br><br><small>🕒 Análise: ${analise}s ⚖️</small>`);
                     } else {
                         setLoading(false);
-                        return botSay(`🔢 **Inforbot:** Não encontrei a definição teórica para "${termoMath}".`);
+                        return botSay(`🔢 **Inforbot:** Não encontrei a definição de "${termoMath}" na base matemática.`);
                     }
                 })
                 .catch(err => {
