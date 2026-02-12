@@ -7280,47 +7280,43 @@ async function analyze(msg) {
         return;
     }
 
-    // --- 6.20 SKEPTICWIKI (MITOS E CETICISMO) ---
-    if (entradaBruta.includes("ceticismo") || entradaBruta.includes("falacia") || entradaBruta.includes("pseudociencia") || entradaBruta.includes("desmistificar") || entradaBruta.includes("mito") || entradaBruta.includes("racional")) {
+// --- 6.20 SKEPTICWIKI (VERSÃO REVISADA E FORTE) ---
+    if (entradaBruta.includes("ceticismo") || entradaBruta.includes("falacia") || entradaBruta.includes("pseudociencia") || entradaBruta.includes("desmistificar") || (entradaBruta.includes("mito") && (entradaBruta.includes("cientifico") || entradaBruta.includes("urbano") || entradaBruta.includes("racional")))) {
         setLoading(true);
         const tInicioSkeptic = performance.now();
         
-        // Limpeza para focar no mito ou conceito a ser analisado
+        // Limpeza precisa para não sobrar sujeira na busca
         let termoSkeptic = entradaBruta.replace(/me fale sobre o mito do|me fale sobre o mito da|o que e o|desmistificar|ceticismo|falacia|mito|racional|sobre/g, "").trim();
         
-        if (termoSkeptic === "") termoSkeptic = "Ceticismo científico";
+        if (termoSkeptic === "") termoSkeptic = "Ceticismo";
 
-        try {
-            const skepticURL = `https://pt.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro&explaintext&titles=${encodeURIComponent(termoSkeptic)}&redirects=1&origin=*`;
-            
-            fetch(skepticURL)
-                .then(response => response.json())
-                .then(data => {
-                    const pages = data.query.pages;
-                    const pageId = Object.keys(pages)[0];
-                    const page = pages[pageId];
+        const skepticURL = `https://pt.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro&explaintext&titles=${encodeURIComponent(termoSkeptic)}&redirects=1&origin=*`;
+        
+        fetch(skepticURL)
+            .then(response => response.json())
+            .then(data => {
+                const pages = data.query.pages;
+                const pageId = Object.keys(pages)[0];
+                const page = pages[pageId];
 
-                    if (pageId !== "-1") {
-                        let resumoSkeptic = page.extract;
-                        if (resumoSkeptic.length > 600) resumoSkeptic = resumoSkeptic.substring(0, 600) + "...";
+                if (pageId !== "-1") {
+                    let resumoSkeptic = page.extract;
+                    if (resumoSkeptic.length > 550) resumoSkeptic = resumoSkeptic.substring(0, 550) + "...";
 
-                        const tFimSkeptic = performance.now();
-                        const analise = ((tFimSkeptic - tInicioSkeptic) / 1000).toFixed(3);
+                    const tFimSkeptic = performance.now();
+                    const analise = ((tFimSkeptic - tInicioSkeptic) / 1000).toFixed(3);
 
-                        setLoading(false);
-                        return botSay(`🔍 **Inforbot [SkepticWiki]:** Análise racional sobre **${page.title}**:<br><br>${resumoSkeptic}<br><br><small>🕒 Análise: ${analise}s ⚖️</small>`);
-                    } else {
-                        setLoading(false);
-                        return botSay(`🔍 **Inforbot:** Não encontrei dados para desmistificar "${termoSkeptic}". O mistério permanece.`);
-                    }
-                })
-                .catch(err => {
                     setLoading(false);
-                    return botSay("🔍 **Inforbot:** Erro ao processar a lógica cética (Conexão falhou).");
-                });
-        } catch (e) {
-            setLoading(false);
-        }
+                    return botSay(`🔍 **Inforbot [SkepticWiki]:** Analisando **${page.title}** sob a lógica:<br><br>${resumoSkeptic}<br><br><small>🕒 Análise: ${analise}s ⚖️</small>`);
+                } else {
+                    setLoading(false);
+                    return botSay(`🔍 **Inforbot:** Não encontrei dados para analisar "${termoSkeptic}" nesta base.`);
+                }
+            })
+            .catch(() => {
+                setLoading(false);
+                return botSay("🔍 **Inforbot:** Falha na conexão com os servidores de lógica.");
+            });
         return;
     }
 
