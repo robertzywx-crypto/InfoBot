@@ -6501,24 +6501,139 @@ async function analyze(msg) {
         }
     }
 
-    // --- 4. MATEMÁTICA SUPREME ---
-    if (/[0-9]/.test(entradaBruta) && /(mais|menos|vezes|dividido|x|\+|\-|\*|\/|\^|raiz|sqrt)/.test(entradaBruta)) {
-        try {
-            let exp = entradaBruta
-                .replace(/quanto e|calcule|resultado de/g, "")
-                .replace(/mais/g, "+").replace(/menos/g, "-").replace(/vezes/g, "*")
-                .replace(/dividido por|dividido/g, "/").replace(/x/g, "*").replace(/,/g, ".")
-                .replace(/raiz quadrada de|raiz de|raiz/g, "sqrt");
-            
-            if (exp.includes("sqrt") && !exp.includes("(")) {
-                exp = exp.replace(/sqrt\s*(\d+(\.\d+)?)/, "sqrt($1)");
+// --- 4. MATEMÁTICA SUPREME ULTRA PRO MAX V5 (FINAL BOSS EDITION) ---
+// Processamento Inforbot: Analisando... 🔍
+
+// Filtro de detecção com multiplicação real (×, ·, x) e divisão real (÷, :)
+if (/[0-9]/.test(entradaBruta) && 
+   (/(mais|menos|vezes|dividido|x|·|×|\*|\+|\-|\/|÷|:|\\|\^|raiz|sqrt|√|log|sin|cos|tan|fatorial|!|elevado|porcento|%|pi|π|e|\(|\)|mod|abs)/i.test(entradaBruta) || entradaBruta.includes('='))) {
+
+    try {
+        let expOriginal = entradaBruta;
+        let entradaTratada = entradaBruta.toLowerCase()
+            .replace(/quanto é|quanto e|calcule|resultado de|resolve|me diga|o valor de/gi, "")
+            .replace(/,/g, ".")
+            .trim();
+
+        // =============================
+        // 🔥 SISTEMA DE EQUAÇÕES V5
+        // =============================
+        if (entradaTratada.includes('=') && /[a-z]/i.test(entradaTratada)) {
+
+            let partes = entradaTratada.split('=');
+            if (partes.length !== 2) {
+                return botSay(`⚠️ Equação inválida.`);
             }
 
-            const resMath = math.evaluate(exp);
-            return botSay(`🧮 ${nomeUsuario}, o resultado é **${resMath}**.`);
-        } catch (e) { console.log("Erro Math"); }
-    }
+            const tratarLado = (lado) => {
+                return lado
+                    .replace(/(\d)([a-z])/g, "$1*$2")
+                    .replace(/([a-z])(\d)/g, "$1*$2")
+                    .replace(/\)([a-z])/g, ")*$1")
+                    .replace(/([a-z])\(/g, "$1*(");
+            };
 
+            let ladoEsq = tratarLado(partes[0]);
+            let ladoDir = tratarLado(partes[1]);
+
+            let variaveis = entradaTratada.match(/[a-z]/gi);
+            let variavel = variaveis ? variaveis[0] : null;
+
+            if (!variavel) {
+                return botSay(`⚠️ Não encontrei variável na equação.`);
+            }
+
+            let eqSimplificada = math.simplify(`${ladoEsq} - (${ladoDir})`);
+            let b = eqSimplificada.evaluate({ [variavel]: 0 });
+            let a = eqSimplificada.evaluate({ [variavel]: 1 }) - b;
+
+            if (a === 0) {
+                if (b === 0) {
+                    return botSay(`📐 **Inforbot Álgebra**:\nA equação possui infinitas soluções.`);
+                } else {
+                    return botSay(`📐 **Inforbot Álgebra**:\nA equação não possui solução.`);
+                }
+            }
+
+            let xFinal = -b / a;
+
+            if (isFinite(xFinal)) {
+                return botSay(
+                    `📐 **Inforbot Álgebra V5**:\nEquação: \`${expOriginal}\`\nValor de **${variavel}** = **${parseFloat(xFinal.toFixed(6))}**`
+                );
+            }
+        }
+
+        // =============================
+        // 🔥 EXPRESSÕES NORMAIS
+        // =============================
+
+        let exp = entradaTratada
+            // Sinais de Multiplicação (Adicionados: x, ×, ·, vezes)
+            .replace(/vezes|multiplicado por|×|·/g, "*")
+            
+            // Sinais de Divisão
+            .replace(/dividido por|dividido|÷|:|\\/g, "/")
+            
+            // Lógica para 'x': Só vira '*' se não houver '=' (para não quebrar equações)
+            .replace(/(\d)\s*x\s*(\d)/g, "$1*$2") // Transforma '2 x 3' em '2*3'
+            .replace(/x/g, (match) => entradaTratada.includes('=') ? 'x' : '*')
+
+            .replace(/mais/g, "+")
+            .replace(/menos/g, "-")
+
+            .replace(/elevado a|ao quadrado/g, "^")
+            .replace(/raiz quadrada de|raiz de|raiz|√/g, "sqrt")
+
+            .replace(/seno|sen/g, "sin")
+            .replace(/cosseno/g, "cos")
+            .replace(/tangente/g, "tan")
+            .replace(/logaritmo de|log de/g, "log10")
+            .replace(/ln de/g, "log")
+
+            .replace(/(\d+(\.\d+)?)\s*%\s*de\s*(\d+(\.\d+)?)/g, "($1/100)*$3")
+            .replace(/(\d+(\.\d+)?)\s*%|(\d+(\.\d+)?)\s*porcento/g, "($1/100)")
+
+            .replace(/fatorial de (\d+)/g, "$1!")
+            .replace(/mod/g, "%")
+            .replace(/π|pi/g, "pi")
+            .replace(/\be\b/g, "e")
+            .replace(/\s+/g, "");
+
+        // --- Correções inteligentes ---
+        exp = exp.replace(/sqrt(\d+(\.\d+)?)/g, "sqrt($1)");
+        exp = exp.replace(/log10(\d+(\.\d+)?)/g, "log10($1)");
+        exp = exp.replace(/log(\d+(\.\d+)?)/g, "log($1)");
+
+        exp = exp.replace(/(\d)\(/g, "$1*(");
+        exp = exp.replace(/\)(\d)/g, ")*$1");
+        exp = exp.replace(/\)\(/g, ")*(");
+
+        exp = exp.replace(/(\d+)!/g, "factorial($1)");
+
+        // Segurança máxima
+        exp = exp.replace(/[^0-9+\-*/().^sqrtpilogeinactfactorial%]/g, "");
+
+        const resMath = math.evaluate(exp);
+
+        if (resMath === undefined || resMath === null || !isFinite(resMath)) {
+            return botSay(`⚠️ Resultado inválido.`);
+        }
+
+        const resFormatado =
+            Number.isInteger(resMath)
+                ? resMath
+                : parseFloat(resMath.toFixed(8));
+
+        return botSay(
+            `🧮 **Inforbot Math V5**:\nExpressão: \`${expOriginal}\`\nResultado: **${resFormatado}**`
+        );
+
+    } catch (e) {
+        console.log("Erro Math:", e);
+        return botSay(`⚠️ O Inforbot não entendeu essa conta. Verifique os símbolos!`);
+    }
+}
     // --- 5. MENUS RÁPIDOS ---
     if (entradaBruta === "jogos" || entradaBruta === "jogo") return abrirMenuJogos();
     if (entradaBruta === "piada") return fast('piada');
