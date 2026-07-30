@@ -6446,60 +6446,80 @@ async function analyze(msg) {
         return botSay(respostaTreino);
     }
 
-    // --- 3. NOTÍCIAS (BRASIL + MUNDO) - VERSÃO SUPREME ---
-    if (entradaBruta.includes("noticias") || entradaBruta.includes("news")) {
-        setLoading(true);
-        const tInicioNews = performance.now();
-        
-        let busca = entradaBruta.replace(/noticias|news|sobre|agora/g, "").trim();
-        let isGlobal = entradaBruta.includes("mundo") || entradaBruta.includes("mundiais") || entradaBruta.includes("global");
-        
-        if(!busca) { busca = isGlobal ? "World" : "Brasil"; }
+   // --- 3. NOTÍCIAS (BRASIL + MUNDO) - VERSÃO MELHORADA ---
+if (entradaBruta.includes("noticias") || entradaBruta.includes("news")) {
+    setLoading(true);
+    const tInicioNews = performance.now();
 
-        let langNews = isGlobal ? "en" : "pt-BR";
-        let gl = isGlobal ? "US" : "BR";
-        let ceid = isGlobal ? "US:en" : "BR:pt-419";
+    let busca = entradaBruta.replace(/noticias|news|sobre|agora/g, "").trim();
+    let isGlobal = entradaBruta.includes("mundo") || entradaBruta.includes("mundiais") || entradaBruta.includes("global");
 
-        try {
-            // Nova URL com bypass de cache e busca otimizada
-            const rssURL = `https://news.google.com/rss/search?q=${encodeURIComponent(busca)}&hl=${langNews}&gl=${gl}&ceid=${ceid}`;
-            const proxyURL = `https://api.allorigins.win/get?url=${encodeURIComponent(rssURL)}&timestamp=${Date.now()}`;
+    if (!busca) { busca = isGlobal ? "World" : "Brasil"; }
 
-            const response = await fetch(proxyURL);
-            const data = await response.json();
-            
-            const parser = new DOMParser();
-            const xml = parser.parseFromString(data.contents, "text/xml");
-            const items = xml.querySelectorAll("item");
-            
-            let txt = `🔔 **INFORBOT NEWS [${isGlobal ? 'MUNDO' : 'BRASIL'}]:**<br><br>`;
-            
-            if (items.length === 0) {
-                setLoading(false);
-                return botSay("Inforbot: Não encontrei notícias recentes sobre esse tema.");
-            }
+    let langNews = isGlobal ? "en" : "pt-BR";
+    let gl = isGlobal ? "US" : "BR";
+    // ajuste para pt-BR
+    let ceid = isGlobal ? "US:en" : "BR:pt-BR";
 
-            // Pega as 5 principais notícias e limpa o título
-            for(let i = 0; i < 5; i++) { 
-                if(items[i]) {
-                    let titulo = items[i].querySelector("title").textContent;
-                    // Remove o nome da fonte no final (ex: - G1) para ficar mais limpo
-                    titulo = titulo.split(" - ")[0]; 
-                    txt += `• ${titulo}<br><br>`; 
-                }
-            }
+    // timeout de 8s
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-            const tFimNews = performance.now();
-            const analise = ((tFimNews - tInicioNews) / 1000).toFixed(2);
-            
-            setLoading(false); 
-            return botSay(`${txt}<small>🕒 Análise: ${analise}s ⚙️</small>`);
-        } catch(e) { 
-            console.log("Erro News:", e);
+    try {
+        // construir a URL do RSS (usamos http no caminho para r.jina.ai aceitar)
+        const rssPath = `news.google.com/rss/search?q=${encodeURIComponent(busca)}&hl=${encodeURIComponent(langNews)}&gl=${encodeURIComponent(gl)}&ceid=${encodeURIComponent(ceid)}`;
+        const proxyURL = `https://r.jina.ai/http://${rssPath}`;
+
+        const response = await fetch(proxyURL, { signal: controller.signal, cache: 'no-store' });
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
             setLoading(false);
-            return botSay("Inforbot: Erro na conexão com o servidor de notícias.");
+            console.error("News fetch status:", response.status, response.statusText);
+            return botSay("Inforbot: Erro ao buscar notícias (status " + response.status + ").");
         }
+
+        const text = await response.text();
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(text, "text/xml");
+
+        const items = xml.querySelectorAll("item");
+
+        if (!items || items.length === 0) {
+            setLoading(false);
+            return botSay("Inforbot: Não encontrei notícias recentes sobre esse tema.");
+        }
+
+        let txt = `🔔 **INFORBOT NEWS [${isGlobal ? 'MUNDO' : 'BRASIL'}]:**<br><br>`;
+
+        // pega até 5
+        for (let i = 0; i < Math.min(5, items.length); i++) {
+            const it = items[i];
+            const titleEl = it.querySelector("title");
+            const linkEl = it.querySelector("link");
+            let titulo = titleEl ? titleEl.textContent.trim() : "Sem título";
+            // tenta limpar "- Fonte" no fim do título (mas não remove se for parte do título)
+            const parts = titulo.split(" - ");
+            if (parts.length > 1) titulo = parts.slice(0, -1).join(" - ");
+            const link = linkEl ? linkEl.textContent.trim() : "";
+            txt += `• ${titulo}${link ? ` — <a href="${link}" target="_blank" rel="nofollow">ler</a>` : ""}<br><br>`;
+        }
+
+        const tFimNews = performance.now();
+        const analise = ((tFimNews - tInicioNews) / 1000).toFixed(2);
+
+        setLoading(false);
+        return botSay(`${txt}<small>🕒 Análise: ${analise}s ⚙️</small>`);
+    } catch (e) {
+        setLoading(false);
+        if (e.name === 'AbortError') {
+            console.error("Erro News: timeout/abort", e);
+            return botSay("Inforbot: A busca demorou demais e foi cancelada (timeout). Tente novamente.");
+        }
+        console.error("Erro News:", e);
+        return botSay("Inforbot: Erro na conexão com o servidor de notícias.");
     }
+}
 
 // --- 4. MATEMÁTICA SUPREME ULTRA PRO MAX V5 (FINAL BOSS EDITION) ---
 // Processamento Inforbot: Analisando... 🔍
