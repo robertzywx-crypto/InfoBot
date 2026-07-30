@@ -6446,7 +6446,7 @@ async function analyze(msg) {
         return botSay(respostaTreino);
     }
 
-   // --- 3. NOTÍCIAS (BRASIL + MUNDO) - VERSÃO MELHORADA ---
+// --- NOTÍCIAS — versão usando NewsAPI (recomendado) ---
 if (entradaBruta.includes("noticias") || entradaBruta.includes("news")) {
     setLoading(true);
     const tInicioNews = performance.now();
@@ -6454,56 +6454,59 @@ if (entradaBruta.includes("noticias") || entradaBruta.includes("news")) {
     let busca = entradaBruta.replace(/noticias|news|sobre|agora/g, "").trim();
     let isGlobal = entradaBruta.includes("mundo") || entradaBruta.includes("mundiais") || entradaBruta.includes("global");
 
-    if (!busca) { busca = isGlobal ? "World" : "Brasil"; }
+    if (!busca) { busca = ""; } // vazio significa top-headlines
+    const apiKey = NEWSAPI_KEY || ""; // <-- NÃO deixe exposto: idealmente chame seu backend que contém a chave
+    if (!apiKey) {
+        setLoading(false);
+        return botSay("Inforbot: chave de API de notícias não configurada. Configure NEWSAPI_KEY no backend.");
+    }
 
-    let langNews = isGlobal ? "en" : "pt-BR";
-    let gl = isGlobal ? "US" : "BR";
-    // ajuste para pt-BR
-    let ceid = isGlobal ? "US:en" : "BR:pt-BR";
-
-    // timeout de 8s
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 8000);
 
     try {
-        // construir a URL do RSS (usamos http no caminho para r.jina.ai aceitar)
-        const rssPath = `news.google.com/rss/search?q=${encodeURIComponent(busca)}&hl=${encodeURIComponent(langNews)}&gl=${encodeURIComponent(gl)}&ceid=${encodeURIComponent(ceid)}`;
-        const proxyURL = `https://r.jina.ai/http://${rssPath}`;
+        // montamos endpoint: /v2/top-headlines para país especifico ou /v2/everything para busca
+        let url;
+        if (busca) {
+            // busca específica (conteúdo global)
+            url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(busca)}&language=${isGlobal ? 'en' : 'pt'}&pageSize=5&sortBy=publishedAt&apiKey=${apiKey}`;
+        } else {
+            // top-headlines por país
+            const country = isGlobal ? 'us' : 'br';
+            url = `https://newsapi.org/v2/top-headlines?country=${country}&pageSize=5&apiKey=${apiKey}`;
+        }
 
-        const response = await fetch(proxyURL, { signal: controller.signal, cache: 'no-store' });
+        const resp = await fetch(url, { signal: controller.signal, cache: 'no-store' });
         clearTimeout(timeoutId);
 
-        if (!response.ok) {
+        if (!resp.ok) {
             setLoading(false);
-            console.error("News fetch status:", response.status, response.statusText);
-            return botSay("Inforbot: Erro ao buscar notícias (status " + response.status + ").");
+            console.error("NewsAPI fetch status:", resp.status, resp.statusText);
+            if (resp.status === 401 || resp.status === 403) {
+                return botSay("Inforbot: Erro 401/403 — chave de API inválida ou sem permissão. Verifique a configuração da API.");
+            }
+            return botSay("Inforbot: Erro ao buscar notícias (status " + resp.status + ").");
         }
 
-        const text = await response.text();
-        const parser = new DOMParser();
-        const xml = parser.parseFromString(text, "text/xml");
-
-        const items = xml.querySelectorAll("item");
-
-        if (!items || items.length === 0) {
+        const json = await resp.json();
+        if (!json.articles || json.articles.length === 0) {
             setLoading(false);
-            return botSay("Inforbot: Não encontrei notícias recentes sobre esse tema.");
+            return botSay("Inforbot: Não encontrei notícias relevantes para essa busca.");
         }
 
+        // Monta saída com fonte, data, resumo e link
         let txt = `🔔 **INFORBOT NEWS [${isGlobal ? 'MUNDO' : 'BRASIL'}]:**<br><br>`;
-
-        // pega até 5
-        for (let i = 0; i < Math.min(5, items.length); i++) {
-            const it = items[i];
-            const titleEl = it.querySelector("title");
-            const linkEl = it.querySelector("link");
-            let titulo = titleEl ? titleEl.textContent.trim() : "Sem título";
-            // tenta limpar "- Fonte" no fim do título (mas não remove se for parte do título)
-            const parts = titulo.split(" - ");
-            if (parts.length > 1) titulo = parts.slice(0, -1).join(" - ");
-            const link = linkEl ? linkEl.textContent.trim() : "";
-            txt += `• ${titulo}${link ? ` — <a href="${link}" target="_blank" rel="nofollow">ler</a>` : ""}<br><br>`;
-        }
+        json.articles.forEach((a) => {
+            const title = a.title || "Sem título";
+            const source = (a.source && a.source.name) ? a.source.name : "Fonte desconhecida";
+            const date = a.publishedAt ? new Date(a.publishedAt).toLocaleString() : "";
+            const desc = a.description ? a.description : (a.content ? a.content.split('…')[0] : "");
+            const urlLink = a.url ? a.url : "";
+            txt += `• <strong>${title}</strong><br>`;
+            txt += `  <em>${source}${date ? ' — ' + date : ''}</em><br>`;
+            if (desc) txt += `  ${desc}<br>`;
+            if (urlLink) txt += `  <a href="${urlLink}" target="_blank" rel="noopener">ler notícia</a><br><br>`;
+        });
 
         const tFimNews = performance.now();
         const analise = ((tFimNews - tInicioNews) / 1000).toFixed(2);
@@ -6511,6 +6514,7 @@ if (entradaBruta.includes("noticias") || entradaBruta.includes("news")) {
         setLoading(false);
         return botSay(`${txt}<small>🕒 Análise: ${analise}s ⚙️</small>`);
     } catch (e) {
+        clearTimeout(timeoutId);
         setLoading(false);
         if (e.name === 'AbortError') {
             console.error("Erro News: timeout/abort", e);
